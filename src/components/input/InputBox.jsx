@@ -2,12 +2,8 @@
 //import colors from '../../styles/colors';
 //import fontSet from '../../styles/fonts';
 
-import InputBox from "../../components/input/InputBox";
-
-export default function Main() {
+export default function InputBox() {
   return (
-    <>
-      <InputBox />
-    </>
+    <div>칩</div> // 코드 작성 시 삭제!
   );
 }

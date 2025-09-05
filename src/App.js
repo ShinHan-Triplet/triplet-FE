@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import "./App.css";
 import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
@@ -8,10 +8,12 @@ import Trip from "./pages/trip/Trip";
 import Card from "./pages/card/Card";
 import Login from "./pages/login/Login";
 
-function App() {
+function AppLayout() {
+  const location = useLocation();
+  const hideFooter = location.pathname.startsWith("/mypage") || location.pathname === "/login";
+
   return (
-    <BrowserRouter>
-      <div className="App">
+    <div className="App">
         <Header />
         <Routes>
           <Route path="/" element={<Main />} />
@@ -20,8 +22,15 @@ function App() {
           <Route path="/trip" element={<Trip />} />
           <Route path="/card" element={<Card />} />
         </Routes>
-        <Footer />
+        {!hideFooter && <Footer />}
       </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppLayout />
     </BrowserRouter>
   );
 }

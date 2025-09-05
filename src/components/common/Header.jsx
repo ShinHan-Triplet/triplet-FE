@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import styled from 'styled-components';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 
-import colors from '../../styles/colors';
-import fontSet from '../../styles/fonts';
+import colors from "../../styles/colors";
+import fontSet from "../../styles/fonts";
 
-import logo from '../../assets/logo/logo.svg';
-import userIcon from '../../assets/icon/user.svg';
-import bellIcon from '../../assets/icon/bell.svg';
+import logo from "../../assets/logo/logo.svg";
+import userIcon from "../../assets/icon/user.svg";
+import bellIcon from "../../assets/icon/bell.svg";
 
 export default function Header({ onTabChange }) {
   const navigate = useNavigate();
@@ -74,7 +74,10 @@ const HeaderWrap = styled.header`
   width: 100%;
   height: 100px;
   background: ${colors.white};
-  box-shadow: 0 2px 10px rgba(18, 24, 40, 0.06);
+  position: sticky; 
+  top: 0;
+  box-shadow: 0px 6px 10px rgba(112, 112, 112, 0.1);
+  z-index: 1000; 
   display: flex;
   justify-content: center;
   align-items: center;

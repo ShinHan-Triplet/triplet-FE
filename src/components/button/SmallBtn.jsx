@@ -25,7 +25,7 @@ const Btn = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 32px;
+  padding: 12px 16px;
   border-radius: 10px;
   border: none;
 

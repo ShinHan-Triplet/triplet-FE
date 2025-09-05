@@ -1,12 +1,14 @@
-// src/components/common/Empty.jsx
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
+import logo from "../../assets/logo/logo2.png";
 
-export default function Empty({ icon, title, desc, action, className }) {
+export default function Empty({ title, desc, action, className }) {
   return (
     <EmptyWrap className={className}>
-      {icon && <IconBox>{icon}</IconBox>}
+      <IconBox>
+        <img src={logo} alt="Triplet" />
+      </IconBox>
       {title && <Title>{title}</Title>}
       {desc && <Desc>{desc}</Desc>}
       {action && <ActionBox>{action}</ActionBox>}
@@ -27,6 +29,7 @@ const IconBox = styled.div`
     width: 100px;
     height: auto;
     display: block;
+    opacity: 30%;
   }
 `;
 
@@ -42,19 +45,4 @@ const Desc = styled.div`
 
 const ActionBox = styled.div`
   margin-top: 12px;
-
-  button {
-    ${fontSet.body2_m};
-    height: 44px;
-    padding: 0 20px;
-    background: ${colors.blue500};
-    color: ${colors.white};
-    border: 0;
-    border-radius: 10px;
-    cursor: pointer;
-
-    &:hover {
-      background: ${colors.blue400};
-    }
-  }
 `;

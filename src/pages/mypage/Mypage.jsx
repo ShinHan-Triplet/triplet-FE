@@ -8,6 +8,7 @@ import profile from "../../assets/img/test_profile.png"
 import Mygather from "./Mygather";
 import MyCard from "./MyCard";
 import MyTrip from "./MyTrip";
+import MediumBtn from "../../components/button/MediumBtn";
 
 export default function Mypage() {
   const [activeTab, setActiveTab] = useState("gather");
@@ -45,7 +46,12 @@ export default function Mypage() {
             </NavItem>
           </NavCard>
 
-          <DeleteBtn>계정삭제</DeleteBtn>
+          <MediumBtn
+            label="계정 삭제"
+            bgColor={colors.white}
+            textColor={colors.error}
+            width={210}
+          />
         </Sidebar>
 
         <Content>
@@ -57,8 +63,6 @@ export default function Mypage() {
     </MypageWrap>
   );
 }
-
-/* ===== styles ===== */
 
 const MypageWrap = styled.div`
   width: 100%;
@@ -72,7 +76,7 @@ const Container = styled.div`
   margin: 0 auto;
   display: grid;
   grid-template-columns: 250px 1fr;
-  gap: 24px;
+  gap: 20px;
 `;
 
 const CardBase = styled.div`
@@ -85,10 +89,12 @@ const CardBase = styled.div`
 const Sidebar = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
+  align-items: center;
 `;
 
 const ProfileCard = styled(CardBase)`
+align-self: stretch;
   padding: 24px 20px;
   display: flex;
   align-items: center;
@@ -121,6 +127,7 @@ const Birth = styled.div`
 `;
 
 const NavCard = styled(CardBase)`
+  align-self: stretch;
   padding: 12px;
   display: flex;
   flex-direction: column;

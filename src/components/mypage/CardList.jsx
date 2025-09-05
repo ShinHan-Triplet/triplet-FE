@@ -1,4 +1,3 @@
-// src/components/mypage/CardList.jsx
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
@@ -98,7 +97,7 @@ const CardWrap = styled.div`
 
   padding: 20px;
   background: ${colors.white};
-  border: 1px solid ${colors.gray200};
+  border: 1px solid ${colors.gray300};
   border-radius: 12px;
   box-shadow: ${shadows.card};
 `;

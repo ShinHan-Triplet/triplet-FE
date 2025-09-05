@@ -1,13 +1,7 @@
 //import styled from 'styled-components';
-//import colors from '../../styles/colors';
+// import colors from "../../styles/colors";
 //import fontSet from '../../styles/fonts';
 
-import InputBox from "../../components/input/InputBox";
-
 export default function Main() {
-  return (
-    <>
-      <InputBox />
-    </>
-  );
+  return <></>;
 }

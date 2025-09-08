@@ -25,7 +25,7 @@ const IconBtn = styled.button`
   background: transparent;
   border: none;
   cursor: pointer;
-  margin-left: auto;
+  padding: 0;
   
   img {
     width: 24px;

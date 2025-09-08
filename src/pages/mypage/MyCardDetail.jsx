@@ -4,13 +4,14 @@ import fontSet from "../../styles/fonts";
 import shadows from "../../styles/shadows";
 import BackBtn from "../../components/button/BackBtn";
 import DetailBtn from "../../components/button/DetailBtn";
-import SmallBtn from "../../components/button/SmallBtn";
+// import SmallBtn from "../../components/button/SmallBtn";
 import MediumBtn from "../../components/button/MediumBtn";
-import InputBox from "../../components/input/InputBox";
+// import InputBox from "../../components/input/InputBox";
+import defaultThumb from "../../assets/img/test_thumbnail.png";
 
 import { useParams } from "react-router-dom";
 
-const thumbnailUrl = "https://via.placeholder.com/110x110.png?text=Card";
+const thumbnailUrl = defaultThumb;
 const cards = [
   {
     id: 1,
@@ -20,6 +21,7 @@ const cards = [
     status: "active",
     maskedNumber: "1234-56**-****-5678",
     linkedAccount: "111-234-5678",
+    card_pw: 1234
   },
   {
     id: 2,
@@ -29,6 +31,7 @@ const cards = [
     status: "waiting",
     maskedNumber: "6666-58**-****-7070",
     linkedAccount: "777-654-9999",
+    card_pw: 9876
   },
   {
     id: 3,
@@ -38,6 +41,7 @@ const cards = [
     status: "paused",
     maskedNumber: "0202-12**-****-9876",
     linkedAccount: "987-654-3210",
+    card_pw: 2468
   },
 ];
 
@@ -96,7 +100,9 @@ const handleReport = () => {
         <BackBtn url="/mypage?tab=card" text="내 카드 목록" />
 
         <DetailGrid>
-          <CardImg aria-label="카드 이미지" />
+          <CardImg>
+            <img src={card.thumbnail} alt="카드 이미지" />
+          </CardImg>
           <Right>
             <Status style={{ color: statusColor }}>{statusText}</Status>
             <HeaderRow>
@@ -105,11 +111,11 @@ const handleReport = () => {
                 <Divider>|</Divider>
                 <Nickname>{card.nickname}</Nickname>
               </TitleWrap>
-              <DetailBtn url={`/mypage/card/${card.id}/history`} text="카드내역 보기" />
             </HeaderRow>
+            <DetailBtn url={`/mypage/card/${card.id}/history`} text="카드내역 보기" />
 
             <DetailRow>
-              <Section>
+            <Section>
               <SectionTitle>주요 혜택</SectionTitle>
               <BenefitList>
                 {benefits.map((b, i) => (
@@ -121,7 +127,7 @@ const handleReport = () => {
               </BenefitList>
             </Section>
 
-            <Section>
+            {/* <Section>
               <SectionTitle>비밀번호 수정</SectionTitle>
               <PwdRow>
                 <InputBox
@@ -136,7 +142,7 @@ const handleReport = () => {
                   width={120}
                 />
               </PwdRow>
-            </Section>
+            </Section> */}
             </DetailRow>
           </Right>
         </DetailGrid>
@@ -149,6 +155,7 @@ const handleReport = () => {
               bgColor={colors.gray100}
               textColor={isWaiting ? colors.gray400 : colors.gray800}
               width={160}
+              hoverBgColor={colors.gray200}
             />
           </DisableWrap>
           <MediumBtn
@@ -157,6 +164,7 @@ const handleReport = () => {
             bgColor={colors.gray100}
             textColor={colors.error}
             width={160}
+            hoverBgColor={colors.gray200}
           />
         </ActionRow>
       </CardDetail>
@@ -199,7 +207,6 @@ const DetailGrid = styled.div`
 const CardImg = styled.div`
   width: 340px;
   height: 340px;
-  background: ${colors.gray200};
 `;
 
 const Right = styled.div`
@@ -244,13 +251,13 @@ const Nickname = styled.span`
 const DetailRow = styled.div`
   display: flex;
   flex-direction: column;
-  margin-top: 32px;
   gap: 32px;
 `;
 
 const Section = styled.section`
   display: flex;
   flex-direction: column;
+  margin-top: 52px;
   gap: 16px;
 `;
 
@@ -270,6 +277,7 @@ const BenefitList = styled.ul`
 
 const BenefitItem = styled.li`
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
   line-height: 1.6;
@@ -285,12 +293,12 @@ const BenefitContent = styled.span`
   color: ${colors.gray600};
 `;
 
-const PwdRow = styled.div`
-  display: flex;
-  padding-left: 10px;
-  gap: 10px;
-  align-items: center;
-`;
+// const PwdRow = styled.div`
+//   display: flex;
+//   padding-left: 10px;
+//   gap: 10px;
+//   align-items: center;
+// `;
 
 const ActionRow = styled.div`
   display: flex;

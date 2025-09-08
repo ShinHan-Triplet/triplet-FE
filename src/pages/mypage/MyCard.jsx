@@ -1,13 +1,45 @@
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
+import { useNavigate } from "react-router-dom";
 
 import CardList from "../../components/mypage/CardList";
 
 export default function MyCard() {
+    const navigate = useNavigate();
     // 추후에 데이터 받아오도록 수정
-  const thumbnailUrl =
+    const thumbnailUrl =
     "https://via.placeholder.com/110x110.png?text=Card";
+
+    const cards = [
+    {
+      id: 1,
+      thumbnail: thumbnailUrl,
+      name: "HJW BABO 체크",
+      nickname: "카드 별칭띠예",
+      status: "active",
+      maskedNumber: "1234-56**-****-5678",
+      linkedAccount: "111-234-5678",
+    },
+    {
+      id: 2,
+      thumbnail: thumbnailUrl,
+      name: "MUKJJANG 체크",
+      nickname: "쩝쩝박사",
+      status: "waiting",
+      maskedNumber: "6666-58**-****-7070",
+      linkedAccount: "777-654-9999",
+    },
+    {
+      id: 3,
+      thumbnail: thumbnailUrl,
+      name: "UP&DOWN 체크",
+      nickname: "다운카드",
+      status: "paused",
+      maskedNumber: "0202-12**-****-9876",
+      linkedAccount: "987-654-3210",
+    },
+  ];
 
   return (
     <Wrapper>
@@ -27,33 +59,18 @@ export default function MyCard() {
             }
         /> */}
 
-      <CardList
-        thumbnail={thumbnailUrl}
-        name="HJW BABO 체크"
-        subLabel="카드 별칭띠예"
-        status="active"
-        maskedNumber="1234-56**-****-5678"
-        linkedAccount="111-234-5678"
-        onManage={() => console.log("카드 관리 이동")}
-      />
-      <CardList
-        thumbnail={thumbnailUrl}
-        name="MUKJJANG 체크"
-        subLabel="쩝쩝박사"
-        status="waiting"
-        maskedNumber="6666-58**-****-7070"
-        linkedAccount="777-654-9999"
-        onManage={() => console.log("카드 관리 이동")}
-      />
-      <CardList
-        thumbnail={thumbnailUrl}
-        name="UP&DOWN 체크"
-        subLabel="다운카드"
-        status="paused"
-        maskedNumber="0202-12**-****-9876"
-        linkedAccount="987-654-3210"
-        onManage={() => console.log("카드 관리 이동")}
-      />
+      {cards.map((card) => (
+        <CardList
+          key={card.id}
+          thumbnail={card.thumbnail}
+          name={card.name}
+          nickname={card.nickname}
+          status={card.status}
+          maskedNumber={card.maskedNumber}
+          linkedAccount={card.linkedAccount}
+          onDetail={() => navigate(`/mypage/card/${card.id}`)}
+        />
+      ))}
     </Wrapper>
   );
 }

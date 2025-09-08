@@ -1,10 +1,12 @@
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
+import { useNavigate } from "react-router-dom";
 
 import TripList from "../../components/mypage/TripList";
 
 export default function MyTrip() {
+  const navigate = useNavigate();
     // 더미 데이터 예시 (나중에 API 연결)
   const trips = [
     {
@@ -55,14 +57,14 @@ export default function MyTrip() {
   return (
     <Wrapper>
         <Grid>
-            {trips.map((t) => (
+            {trips.map((trip) => (
                 <TripList
-                key={t.id}
-                thumbnail={t.thumbnail}
-                title={t.title}
-                members={t.members}
-                dateRange={t.dateRange}
-                onDetail={() => console.log("상세보기:", t.id)}
+                key={trip.id}
+                thumbnail={trip.thumbnail}
+                title={trip.title}
+                members={trip.members}
+                dateRange={trip.dateRange}
+                onDetail={() => navigate(`/mypage/trip/${trip.id}`)}
                 />
             ))}
         </Grid>

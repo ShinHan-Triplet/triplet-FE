@@ -1,12 +1,14 @@
 import styled from "styled-components";
 import fontSet from "../../styles/fonts";
+import colors from "../../styles/colors";
 
 export default function MediumBtn({
   label,
   onClick,
-  bgColor,
-  textColor,
+  bgColor = colors.blue400,
+  textColor = colors.white,
   width,
+  hoverBgColor = colors.blue500,
 }) {
   return (
     <Btn
@@ -14,6 +16,7 @@ export default function MediumBtn({
       $bgColor={bgColor}
       $textColor={textColor}
       $width={width}
+      $hoverBgColor={hoverBgColor}
     >
       {label}
     </Btn>
@@ -28,6 +31,7 @@ const Btn = styled.button`
   padding: 12px 32px;
   border-radius: 10px;
   border: none;
+  cursor: pointer;
 
   background: ${({ $bgColor }) => $bgColor};
   color: ${({ $textColor }) => $textColor};
@@ -39,4 +43,14 @@ const Btn = styled.button`
       : typeof $width === "number"
       ? `${$width}px`
       : $width};
+
+  &:hover:not(:disabled) {
+    background: ${({ $hoverBgColor }) => $hoverBgColor};
+    color: ${({ $textColor }) => $textColor};
+  }
+
+  &:active:not(:disabled) {
+    background: ${({ $hoverBgColor }) => $hoverBgColor};
+    color: ${({ $textColor }) => $textColor};
+  }
 `;

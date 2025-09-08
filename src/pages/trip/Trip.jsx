@@ -3,12 +3,44 @@ import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
+import MediumBtn from "../../components/button/MediumBtn";
 import ThemeBtn from "../../components/button/ThemeBtn";
+import InputBox from "../../components/input/InputBox";
 import { DateRangePicker } from "./components/DateRange";
 import { useState } from "react";
+import LargeBtn from "../../components/button/LargeBtn";
+import { useNavigate } from "react-router-dom";
 
 export default function Trip() {
   const [range, setRange] = useState({ start: null, end: null });
+
+  const navigate = useNavigate();
+
+  const toStartOfDay = (d) =>
+    new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDaysInclusive = (s, e) => {
+    if (!s || !e) return 0;
+    const start = toStartOfDay(s);
+    const end = toStartOfDay(e);
+    return Math.round((end - start) / 86400000) + 1;
+  };
+
+  const nextPage = () => {
+    if (!range.start || !range.end) {
+      alert("여행 일정을 선택해주세요.");
+      return;
+    }
+    const days = diffDaysInclusive(range.start, range.end);
+
+    // state에 안전하게 밀리초 타임스탬프를 넣어 전달 (타임존 이슈 방지)
+    navigate("/tripcost", {
+      state: {
+        startMs: range.start.getTime(),
+        endMs: range.end.getTime(),
+        days,
+      },
+    });
+  };
 
   return (
     <Container>
@@ -24,6 +56,10 @@ export default function Trip() {
           <Contents>
             <Detail>
               <DetailTitle>여행 이름</DetailTitle>
+              <InputBox
+                placeholder="여행 제목은 알아보기 쉽게 작성해주세요"
+                width={700}
+              ></InputBox>
             </Detail>
             <Detail>
               <DetailTitle>여행 테마</DetailTitle>
@@ -62,10 +98,31 @@ export default function Trip() {
             </Detail>
             <Detail>
               <DetailTitle>여행 대표사진</DetailTitle>
+              <Photo>
+                <InputBox
+                  placeholder="파일을 선택해주세요"
+                  width={520}
+                ></InputBox>
+                <MediumBtn
+                  label="파일선택"
+                  bgColor={colors.blue400}
+                  textColor={colors.white}
+                  width={160}
+                ></MediumBtn>
+              </Photo>
             </Detail>
           </Contents>
         </Fill>
       </div>
+      <BtnSpace>
+        <LargeBtn
+          label="다음"
+          onClick={nextPage}
+          bgColor={colors.blue400}
+          textColor={colors.white}
+          width={180}
+        ></LargeBtn>
+      </BtnSpace>
     </Container>
   );
 }
@@ -111,6 +168,14 @@ const BlueTitle = styled.div`
   margin-bottom: 24px;
 `;
 
+const Photo = styled.div`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+`;
+
 const Detail = styled.div`
   display: flex;
   flex-direction: row;
@@ -127,6 +192,14 @@ const DetailTitle = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
+`;
+
+const BtnSpace = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 60px;
 `;
 
 const MainTitle = styled.div`

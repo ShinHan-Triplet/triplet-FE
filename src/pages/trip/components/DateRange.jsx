@@ -6,6 +6,7 @@ import calendar from "../../../assets/icon/calendar-gray.svg";
 import close from "../../../assets/icon/close.svg";
 import left from "../../../assets/icon/chevron-left-s.svg";
 import right from "../../../assets/icon/chevron-right-s.svg";
+// import shadows from "../../../styles/shadows";
 
 /**
  * Lightweight, dependency‑free DateRangePicker (styled-components version)
@@ -107,7 +108,7 @@ const FieldButton = styled.button`
   color: ${colors.black};
   border: 1px solid ${colors.gray400};
   border-radius: 10px;
-  padding: 12px 16px;
+  padding: 12px 32px;
   text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -149,9 +150,10 @@ const Popover = styled.div`
   margin-top: 8px;
   width: 360px;
   background: ${colors.white};
+  border: 1px solid ${colors.gray200};
   border-radius: 10px;
   padding: 14px;
-  box-shadow: 0 12px 24px ${colors.gray300};
+  box-shadow: 0 4px 20px ${colors.gray200};
 `;
 
 const Header = styled.div`
@@ -169,6 +171,7 @@ const NavBtn = styled.button`
   background: transparent;
   border-radius: 10px;
   padding: 8px;
+  cursor: pointer;
   ${(p) =>
     p.disabled &&
     css`

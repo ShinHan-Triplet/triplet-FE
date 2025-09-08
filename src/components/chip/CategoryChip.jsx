@@ -16,7 +16,7 @@ const BG_BY_TYPE = {
   insurance: colors.blue50,
   food: colors.green50,
   transport: colors.yellow50,
-  leisure: colors.pruple50,
+  leisure: colors.purple50,
   etc: colors.pink50,
 };
 
@@ -25,7 +25,7 @@ const TEXT_BY_TYPE = {
   insurance: colors.blue500,
   food: colors.green300,
   transport: colors.yellow500,
-  leisure: colors.pruple300,
+  leisure: colors.purple300,
   etc: colors.pink300,
 };
 

@@ -9,10 +9,17 @@ import CategoryChip from "../../components/chip/CategoryChip";
 import DayCost from "./components/DayCost";
 import { useLocation } from "react-router-dom";
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function TripCost() {
   const { state } = useLocation();
+  console.log(state);
   const [dayTotals, setDayTotals] = useState({});
+  const navigate = useNavigate();
+
+  const nextPage = () => {
+    navigate("/gather");
+  };
 
   //자식이 total값을 알려줄 때 호출
   const handleTotalChange = (dayIndex) => (total) => {
@@ -105,11 +112,17 @@ export default function TripCost() {
                 </Tag>
               </Tags>
               <BasisCost>
-                <CostText>기본 예산: {stayPlusInsurance}원</CostText>
+                <CostText>
+                  기본 예산: {formatDigits(stayPlusInsurance)}원
+                </CostText>
               </BasisCost>
             </AllCost>
             {Array.from({ length: Math.max(0, days) }, (_, i) => (
-              <DayCost day={i + 1} onTotalChange={handleTotalChange(i + 1)} />
+              <DayCost
+                key={i}
+                day={i + 1}
+                onTotalChange={handleTotalChange(i + 1)}
+              />
             ))}
             <TotalCost>총 예산: {totalSum.toLocaleString()}원</TotalCost>
           </Contents>
@@ -118,6 +131,7 @@ export default function TripCost() {
       <BtnSpace>
         <LargeBtn
           label="다음"
+          onClick={nextPage}
           bgColor={colors.blue400}
           textColor={colors.white}
           width={180}

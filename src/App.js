@@ -14,6 +14,7 @@ import TripCost from "./pages/trip/TripCost";
 import Gather from "./pages/trip/Gather";
 import NewGather from "./pages/trip/NewGather";
 import NewCard from "./pages/trip/NewCard";
+import ScrollToTop from "./components/util/ScrollToTop";
 
 function AppLayout() {
   const location = useLocation();
@@ -45,6 +46,7 @@ function AppLayout() {
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <AppLayout />
     </BrowserRouter>
   );

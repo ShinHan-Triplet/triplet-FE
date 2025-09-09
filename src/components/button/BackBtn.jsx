@@ -4,13 +4,13 @@ import fontSet from "../../styles/fonts";
 import { useNavigate } from "react-router-dom";
 import leftIcon from "../../assets/icon/chevron-left-m.svg";
 
-export default function BackBtn({ url = "", text = "" }) {
+export default function BackBtn({ url = "", text = "", state = null }) {
   const navigate = useNavigate();
   const handleClick = () => {
     if (url) {
-      navigate(url);
+      navigate(url, { state });
     } else {
-      navigate(-1);
+      navigate(-1, { state });
     }
   };
 
@@ -29,6 +29,7 @@ const IconBtn = styled.button`
   background: transparent;
   border: none;
   cursor: pointer;
+  padding: 0;
 `;
 const IconText = styled.div`
   ${fontSet.body2_m}

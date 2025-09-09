@@ -13,7 +13,7 @@ import SmallBtn from "../button/SmallBtn";
  * @param {'active'|'paused'|'waiting'} props.status
  * @param {string} props.maskedNumber
  * @param {string} props.linkedAccount
- * @param {function} props.onManage
+ * @param {function} props.onDetail
  */
 export default function CardList({
   thumbnail,
@@ -22,7 +22,7 @@ export default function CardList({
   status = "active",
   maskedNumber,
   linkedAccount,
-  onManage,
+  onDetail,
 }) {
   const statusText =
     status === "paused"
@@ -79,7 +79,7 @@ export default function CardList({
         <Status style={{ color: statusColor }}>{statusText}</Status>
         <SmallBtn
           label="카드 관리"
-          onClick={onManage}
+          onClick={onDetail}
           bgColor={colors.blue400}
           textColor={colors.white}
           width={120}
@@ -145,7 +145,7 @@ const Bar = styled.span`
 
 const Nickname = styled.div`
   ${fontSet.detail};
-  color: ${colors.gray600};
+  color: ${colors.black};
 `;
 
 const Number = styled.div`

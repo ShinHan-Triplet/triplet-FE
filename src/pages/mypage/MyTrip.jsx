@@ -20,14 +20,14 @@ export default function MyTrip() {
       id: 2,
       thumbnail: "https://via.placeholder.com/600x400?text=Trip+1",
       title: "현실도피여행",
-      members: "신다운, 한주원, 루이지, 시로모, 아무개",
+      members: "신다운, 한주원, 오선정, 박지원, 정재웅",
       dateRange: "2025. 08. 28 ~ 2025. 09. 01",
     },
     {
       id: 3,
       thumbnail: "https://via.placeholder.com/600x400?text=Trip+1",
       title: "즉흥여행",
-      members: "신다운, 한주원, 오선정, 박지원, 정재웅",
+      members: "신다운",
       dateRange: "2025. 08. 13~ 2025. 08. 13",
     },
     {
@@ -38,14 +38,14 @@ export default function MyTrip() {
       dateRange: "2025. 07. 20 ~ 2025. 07. 21",
     },
     {
-      id: 4,
+      id: 5,
       thumbnail: "https://via.placeholder.com/600x400?text=Trip+1",
       title: "가족이랑 제주도",
       members: "신다운, 엄마, 아빠, 언니",
       dateRange: "2024. 04. 08 ~ 2024. 04. 11",
     },
     {
-      id: 4,
+      id: 6,
       thumbnail: "https://via.placeholder.com/600x400?text=Trip+1",
       title: "우정포에버 추억쌓기",
       members: "신다운, 짱친1, 짱친2, 짱친3, 짱친4, 짱친5",

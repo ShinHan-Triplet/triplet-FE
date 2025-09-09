@@ -73,13 +73,12 @@ export default function Mypage() {
 
 const MypageWrap = styled.div`
   width: 100%;
-  min-height: 100vh;
   background: ${colors.gray100};
-  padding: 24px 0 80px;
+  padding: 30px 0 80px;
 `;
 
 const Container = styled.div`
-  max-width: 1058px;
+  max-width: 1060px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: 250px 1fr;

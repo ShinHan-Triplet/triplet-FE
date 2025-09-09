@@ -1,17 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import shadows from "../../styles/shadows";
 import profile from "../../assets/img/test_profile.png"
 
-import Mygather from "./Mygather";
+import MyGather from "./MyGather";
 import MyCard from "./MyCard";
 import MyTrip from "./MyTrip";
 import MediumBtn from "../../components/button/MediumBtn";
 
+const TABS = ["gather", "card", "trip"];
+
 export default function Mypage() {
-  const [activeTab, setActiveTab] = useState("gather");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const initialTab = useMemo(() => {
+    const fromUrl = searchParams.get("tab");
+    return TABS.includes(fromUrl) ? fromUrl : "gather";
+  }, [searchParams]);
+
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    next.set("tab", activeTab);
+    setSearchParams(next, { replace: true });
+  }, [activeTab, searchParams, setSearchParams]);
+
+  const handleTab = (key) => () => setActiveTab(key);
 
   return (
     <MypageWrap>
@@ -24,28 +42,17 @@ export default function Mypage() {
             <Name>신다운</Name>
             <Birth>2002. 09. 17</Birth>
           </ProfileCard>
-
           <NavCard>
-            <NavItem
-              className={activeTab === "gather" ? "active" : ""}
-              onClick={() => setActiveTab("gather")}
-            >
+            <NavItem className={activeTab === "gather" ? "active" : ""} onClick={handleTab("gather")}>
               내 모임
             </NavItem>
-            <NavItem
-              className={activeTab === "card" ? "active" : ""}
-              onClick={() => setActiveTab("card")}
-            >
+            <NavItem className={activeTab === "card" ? "active" : ""} onClick={handleTab("card")}>
               내 카드
             </NavItem>
-            <NavItem
-              className={activeTab === "trip" ? "active" : ""}
-              onClick={() => setActiveTab("trip")}
-            >
+            <NavItem className={activeTab === "trip" ? "active" : ""} onClick={handleTab("trip")}>
               내 여행기록
             </NavItem>
           </NavCard>
-
           <MediumBtn
             label="계정 삭제"
             bgColor={colors.white}
@@ -55,7 +62,7 @@ export default function Mypage() {
         </Sidebar>
 
         <Content>
-          {activeTab === "gather" && <Mygather />}
+          {activeTab === "gather" && <MyGather />}
           {activeTab === "card" && <MyCard />}
           {activeTab === "trip" && <MyTrip />}
         </Content>
@@ -94,7 +101,7 @@ const Sidebar = styled.div`
 `;
 
 const ProfileCard = styled(CardBase)`
-align-self: stretch;
+ align-self: stretch;
   padding: 24px 20px;
   display: flex;
   align-items: center;
@@ -152,18 +159,6 @@ const NavItem = styled.button`
     background: ${colors.blue50};
     color: ${colors.blue500};
   }
-`;
-
-// 버튼컴포넌트로 수정
-const DeleteBtn = styled.button`
-  ${fontSet.body3_b};
-  height: 48px;
-  padding: 16px 0;
-  border: 0;
-  border-radius: 10px;
-  background: ${colors.white};
-  color: ${colors.error};
-  cursor: pointer;
 `;
 
 const Content = styled.div``;

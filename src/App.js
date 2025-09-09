@@ -4,6 +4,9 @@ import Header from "./components/common/Header";
 import Footer from "./components/common/Footer";
 import Main from "./pages/main/Main";
 import Mypage from "./pages/mypage/Mypage";
+import MyCardDetail from "./pages/mypage/MyCardDetail";
+import MyCardHistory from "./pages/mypage/MyCardHistory";
+import MyTripDetail from "./pages/mypage/MyTripDetail";
 import Trip from "./pages/trip/Trip";
 import Card from "./pages/card/Card";
 import Login from "./pages/login/Login";
@@ -27,6 +30,9 @@ function AppLayout() {
         <Route path="/trip" element={<Trip />} />
         <Route path="/tripcost" element={<TripCost />} />
         <Route path="/card" element={<Card />} />
+        <Route path="/mypage/card/:id" element={<MyCardDetail />} />
+        <Route path="/mypage/card/:id/history" element={<MyCardHistory />} />
+        <Route path="/mypage/trip/:id" element={<MyTripDetail />} />
         <Route path="/gather" element={<Gather />} />
         <Route path="/newgather" element={<NewGather />} />
         <Route path="/newcard" element={<NewCard />} />

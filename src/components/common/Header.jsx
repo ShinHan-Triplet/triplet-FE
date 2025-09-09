@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 
 import colors from "../../styles/colors";
@@ -11,39 +11,50 @@ import bellIcon from "../../assets/icon/bell.svg";
 
 export default function Header({ onTabChange }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith("/trip")) {
+      setActiveTab("trip");
+    } else if (path.startsWith("/card")) {
+      setActiveTab("card");
+    } else {
+      setActiveTab(null);
+    }
+  }, [location.pathname]);
 
   const handleTab = (key) => {
     setActiveTab(key);
     onTabChange && onTabChange(key);
-
-    if (key === 'trip') {
-      navigate('/trip');
-    } else if (key === 'card') {
-      navigate('/card');
+    if (key === "trip") {
+      navigate("/trip");
+    } else if (key === "card") {
+      navigate("/card");
     }
   };
 
   return (
     <HeaderWrap>
       <Inner>
-        <Logo onClick={() => navigate('/')}>
+        <Logo onClick={() => { setActiveTab(null); navigate("/"); }}>
           <img src={logo} alt="Triplet" />
         </Logo>
 
         <Nav>
           <TabBtn
             type="button"
-            className={activeTab === 'trip' ? 'active' : ''}
-            onClick={() => handleTab('trip')}
+            className={activeTab === "trip" ? "active" : ""}
+            onClick={() => handleTab("trip")}
           >
             여행 예산
           </TabBtn>
           <TabBtn
             type="button"
-            className={activeTab === 'card' ? 'active' : ''}
-            onClick={() => handleTab('card')}
+            className={activeTab === "card" ? "active" : ""}
+            onClick={() => handleTab("card")}
           >
             카드 발급
           </TabBtn>
@@ -56,10 +67,15 @@ export default function Header({ onTabChange }) {
             </LoginBtn>
           ) : (
             <IconGroup>
-              <IconBtn onClick={() => navigate('/mypage')}>
+              <IconBtn
+                onClick={() => {
+                  setActiveTab(null);
+                  navigate("/mypage");
+                }}
+              >
                 <img src={userIcon} alt="내 정보" />
               </IconBtn>
-              <IconBtn onClick={() => navigate('/notifications')}>
+              <IconBtn onClick={() => { setActiveTab(null); navigate("/notifications"); }}>
                 <img src={bellIcon} alt="알림" />
               </IconBtn>
             </IconGroup>
@@ -74,10 +90,10 @@ const HeaderWrap = styled.header`
   width: 100%;
   height: 100px;
   background: ${colors.white};
-  position: sticky; 
+  position: sticky;
   top: 0;
   box-shadow: 0px 6px 10px rgba(112, 112, 112, 0.1);
-  z-index: 1000; 
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;

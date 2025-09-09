@@ -6,7 +6,7 @@ import BackBtn from "../../components/button/BackBtn";
 import testThumbnail from "./../../assets/img/test_thumbnail.png";
 import shadows from "../../styles/shadows";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import InputBox from "../../components/input/InputBox";
 import checkIcon from "../../assets/icon/check.svg";
 import LargeBtn from "../../components/button/LargeBtn";
@@ -14,9 +14,11 @@ import LargeBtn from "../../components/button/LargeBtn";
 export default function NewGather() {
   const [selectedCard, setselectedCard] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const nextPage = () => {
-    navigate("/newcard");
+  const gotoNewCard = () => {
+    const prevUrl = location.pathname;
+    navigate("/newcard", { state: { prevUrl } });
   };
 
   const cardList = [
@@ -55,7 +57,7 @@ export default function NewGather() {
         <MiniTitle>멤버 관리는 방장이 언제든 할 수 있어요.</MiniTitle>
       </Title>
       <div>
-        <BackBtn url="" text="이전" />
+        <BackBtn url="/gather" text="이전" />
         <Fill>
           <Contents>
             <PageTitle>
@@ -112,7 +114,7 @@ export default function NewGather() {
           textColor={colors.white}
           width={240}
           disabled={!!selectedCard}
-          onClick={nextPage}
+          onClick={gotoNewCard}
         ></LargeBtn>
       </BtnSpace>
     </Container>

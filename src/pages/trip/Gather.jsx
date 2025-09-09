@@ -9,12 +9,23 @@ import { useState } from "react";
 import testThumbnail from "./../../assets/img/test_thumbnail.png";
 import memberIcon from "../../assets/icon/gather_black.svg";
 import shadows from "../../styles/shadows";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import Modal from "../../components/modal/Modal";
 
 export default function Gather() {
   const [soloTrip, setSoloTrip] = useState(false);
   const [selectedGathering, setSelectedGathering] = useState(null);
   const [selectedCard, setselectedCard] = useState(null);
+  const location = useLocation();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  React.useEffect(() => {
+    if (location.state?.soloTrip !== undefined) {
+      setSoloTrip(location.state.soloTrip);
+    } else {
+      setSoloTrip(false);
+    }
+  }, [location.state]);
 
   const gatherings = [
     {
@@ -74,110 +85,136 @@ export default function Gather() {
   };
 
   const navigate = useNavigate();
-  const nextPage = () => {
+  const gotoNewGather = () => {
     navigate("/newgather");
+  };
+  const gotoNewCard = () => {
+    const prevUrl = location.pathname;
+    navigate("/newcard", { state: { prevUrl, soloTrip } });
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const newGatherUsingMyCard = () => {
+    setIsModalOpen(true);
   };
 
   return (
-    <Container>
-      <Title>
-        <MainTitle>동행자 조사</MainTitle>
-        <SubTitle>이번 여행, 누구와 함께하시나요?</SubTitle>
-        <MiniTitle>지난 모임과 함께라면 기존 카드를 그대로,</MiniTitle>
-        <MiniTitle>새로운 모임이라면 새로운 카드를 만들어야 해요.</MiniTitle>
-      </Title>
+    <>
+      {isModalOpen && (
+        <Modal
+          title="Triplet 카드를 만들었어요"
+          def1="혜택은 확실하게, 관리는 단순하게."
+          def2="가볍게 사용하고 실속을 꽉 챙기세요!"
+          type={3}
+          text="시로모 케이블카"
+          onClose={closeModal}
+        />
+      )}
+      <Container>
+        <Title>
+          <MainTitle>동행자 조사</MainTitle>
+          <SubTitle>이번 여행, 누구와 함께하시나요?</SubTitle>
+          <MiniTitle>지난 모임과 함께라면 기존 카드를 그대로,</MiniTitle>
+          <MiniTitle>새로운 모임이라면 새로운 카드를 만들어야 해요.</MiniTitle>
+        </Title>
 
-      <div>
-        <BackBtn url="" text="이전" />
-        <Fill>
-          <Contents>
-            <PageTitle>
-              <BlueTitle>모임 체크</BlueTitle>
-              <Check>
-                <CheckBox checked={soloTrip} onChange={setSoloTrip} />
-                <CheckText>혼자만의 여행이에요</CheckText>
-              </Check>
-            </PageTitle>
-            <GatherList $soloTrip={soloTrip}>
-              {soloTrip
-                ? cardList.map((card) => (
-                    <MyCard
-                      key={card.id}
-                      selected={selectedCard === card.id}
-                      onClick={() => handleSelectCard(card.id)}
-                    >
-                      <GatherTitle>{card.title}</GatherTitle>
-                      <GatherCard>
-                        <BgImg src={testThumbnail} alt="" />
-                      </GatherCard>
-                    </MyCard>
-                  ))
-                : gatherings.map((gathering) => (
-                    <GatheringCard
-                      key={gathering.id}
-                      selected={selectedGathering === gathering.id}
-                      onClick={() => handleSelect(gathering.id)}
-                    >
-                      <GatherTitle>{gathering.title}</GatherTitle>
-                      <GatherMember>
-                        <img src={memberIcon} alt="member" />
-                        <Member>
-                          {gathering.members.map((member, index) => (
-                            <span key={index}>
-                              {member}
-                              {index < gathering.members.length - 1 && ", "}
-                            </span>
-                          ))}
-                        </Member>
-                      </GatherMember>
-                      <GatherCard>
-                        <BgImg src={testThumbnail} alt="" />
-                      </GatherCard>
-                    </GatheringCard>
-                  ))}
-            </GatherList>
-          </Contents>
-        </Fill>
-      </div>
-      <BtnSpace>
-        {soloTrip ? (
-          <>
-            <LargeBtn
-              label="지난 카드 그대로"
-              bgColor={colors.blue400}
-              textColor={colors.white}
-              width={240}
-              disabled={!selectedCard}
-            ></LargeBtn>
-            <LargeBtn
-              label="새 카드 만들기"
-              bgColor={colors.blue400}
-              textColor={colors.white}
-              width={240}
-              disabled={!!selectedCard}
-            ></LargeBtn>
-          </>
-        ) : (
-          <>
-            <LargeBtn
-              label="지난 모임 그대로"
-              bgColor={colors.blue400}
-              textColor={colors.white}
-              width={240}
-              disabled={!selectedGathering}
-            ></LargeBtn>
-            <LargeBtn
-              label="새 모임 만들기"
-              bgColor={colors.blue400}
-              textColor={colors.white}
-              width={240}
-              disabled={!!selectedGathering}
-              onClick={nextPage}
-            ></LargeBtn>
-          </>
-        )}
-      </BtnSpace>
-    </Container>
+        <div>
+          <BackBtn url="/tripcost" text="이전" />
+          <Fill>
+            <Contents>
+              <PageTitle>
+                <BlueTitle>모임 체크</BlueTitle>
+                <Check>
+                  <CheckBox checked={soloTrip} onChange={setSoloTrip} />
+                  <CheckText>혼자만의 여행이에요</CheckText>
+                </Check>
+              </PageTitle>
+              <GatherList $soloTrip={soloTrip}>
+                {soloTrip
+                  ? cardList.map((card) => (
+                      <MyCard
+                        key={card.id}
+                        selected={selectedCard === card.id}
+                        onClick={() => handleSelectCard(card.id)}
+                      >
+                        <GatherTitle>{card.title}</GatherTitle>
+                        <GatherCard>
+                          <BgImg src={testThumbnail} alt="" />
+                        </GatherCard>
+                      </MyCard>
+                    ))
+                  : gatherings.map((gathering) => (
+                      <GatheringCard
+                        key={gathering.id}
+                        selected={selectedGathering === gathering.id}
+                        onClick={() => handleSelect(gathering.id)}
+                      >
+                        <GatherTitle>{gathering.title}</GatherTitle>
+                        <GatherMember>
+                          <img src={memberIcon} alt="member" />
+                          <Member>
+                            {gathering.members.map((member, index) => (
+                              <span key={index}>
+                                {member}
+                                {index < gathering.members.length - 1 && ", "}
+                              </span>
+                            ))}
+                          </Member>
+                        </GatherMember>
+                        <GatherCard>
+                          <BgImg src={testThumbnail} alt="" />
+                        </GatherCard>
+                      </GatheringCard>
+                    ))}
+              </GatherList>
+            </Contents>
+          </Fill>
+        </div>
+        <BtnSpace>
+          {soloTrip ? (
+            <>
+              <LargeBtn
+                label="지난 카드 그대로"
+                bgColor={colors.blue400}
+                textColor={colors.white}
+                width={240}
+                disabled={!selectedCard}
+              ></LargeBtn>
+              <LargeBtn
+                label="새 카드 만들기"
+                bgColor={colors.blue400}
+                textColor={colors.white}
+                width={240}
+                disabled={!!selectedCard}
+                onClick={gotoNewCard}
+              ></LargeBtn>
+            </>
+          ) : (
+            <>
+              <LargeBtn
+                label="지난 모임 그대로"
+                bgColor={colors.blue400}
+                textColor={colors.white}
+                width={240}
+                disabled={!selectedGathering}
+                onClick={newGatherUsingMyCard}
+              ></LargeBtn>
+              <LargeBtn
+                label="새 모임 만들기"
+                bgColor={colors.blue400}
+                textColor={colors.white}
+                width={240}
+                disabled={!!selectedGathering}
+                onClick={gotoNewGather}
+              ></LargeBtn>
+            </>
+          )}
+        </BtnSpace>
+      </Container>
+    </>
   );
 }
 

@@ -9,6 +9,7 @@ export default function SmallBtn({
   textColor = colors.white,
   width,
   hoverBgColor = colors.blue500,
+  disabled = false,
 }) {
   return (
     <Btn
@@ -17,6 +18,7 @@ export default function SmallBtn({
       $textColor={textColor}
       $width={width}
       $hoverBgColor={hoverBgColor}
+      disabled={disabled}
     >
       {label}
     </Btn>
@@ -52,5 +54,11 @@ const Btn = styled.button`
   &:active:not(:disabled) {
     background: ${({ $hoverBgColor }) => $hoverBgColor};
     color: ${({ $textColor }) => $textColor};
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    background: ${colors.gray300};
+    color: ${colors.white};
   }
 `;

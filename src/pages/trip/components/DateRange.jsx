@@ -142,15 +142,6 @@ const ClearButton = styled.button`
   cursor: pointer;
 `;
 
-const Nothing = styled.div`
-  border: 0;
-  background: transparent;
-  display: inline-flex;
-  width: 22px;
-  height: 22px;
-  margin-right: 12px;
-`;
-
 const Popover = styled.div`
   position: absolute;
   top: calc(100% + 8px);
@@ -299,32 +290,6 @@ const QuietButton = styled.button`
   }
 `;
 
-// const PageWrap = styled.div`
-//   min-height: 70vh;
-//   width: 100%;
-//   background: linear-gradient(#fff, rgb(255, 7, 7));
-//   padding: 32px;
-// `;
-
-// const PageInner = styled.div`
-//   max-width: 640px;
-//   margin: 0 auto;
-// `;
-
-// const Label = styled.label`
-//   display: block;
-//   margin-bottom: 8px;
-//   font-size: 14px;
-//   font-weight: 500;
-//   color: #334155;
-// `;
-
-// const Info = styled.div`
-//   margin-top: 24px;
-//   font-size: 14px;
-//   color: ${colors.black};
-// `;
-
 // ===== Core Component =====
 function DateRangePicker({
   value, // { start: Date|null, end: Date|null }
@@ -364,7 +329,6 @@ function DateRangePicker({
     () => monthMatrix(viewDate, weekStartsOn),
     [viewDate, weekStartsOn]
   );
-  const weekdayLabels = locale === "ko-KR" ? KO_WEEKDAYS : EN_WEEKDAYS;
 
   function commit(next) {
     if (isControlled) onChange(next);
@@ -440,8 +404,8 @@ function DateRangePicker({
         )}
         <img src={calendar} alt="Triplet" />
       </FieldButton>
-      <Icon aria-hidden>
-        {start || end ? (
+      {start || end ? (
+        <Icon aria-hidden>
           <ClearButton
             type="button"
             onClick={clearSelection}
@@ -449,10 +413,10 @@ function DateRangePicker({
           >
             <img src={close} alt="" />
           </ClearButton>
-        ) : (
-          <Nothing />
-        )}
-      </Icon>
+        </Icon>
+      ) : (
+        <></>
+      )}
 
       {open && (
         <Popover role="dialog" aria-label="기간 선택 달력">

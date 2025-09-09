@@ -13,7 +13,6 @@ import { useNavigate } from "react-router-dom";
 
 export default function TripCost() {
   const { state } = useLocation();
-  console.log(state);
   const [dayTotals, setDayTotals] = useState({});
   const navigate = useNavigate();
 
@@ -78,7 +77,7 @@ export default function TripCost() {
       </Title>
 
       <div>
-        <BackBtn url="" text="이전" />
+        <BackBtn url="/trip" text="이전" />
         <Fill>
           <Contents>
             <AllCost>

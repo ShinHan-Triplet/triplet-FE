@@ -3,6 +3,8 @@ import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import shadows from "../../styles/shadows";
 import SmallBtn from "../button/SmallBtn";
+import gatherIcon from "../../assets/icon/gather.svg";
+import cardIcon from "../../assets/icon/card.svg";
 
 /**
  * 단일 카드 아이템
@@ -19,46 +21,59 @@ export default function CardList({
   thumbnail,
   name,
   nickname,
-  status = "active",
+  status,
   maskedNumber,
   linkedAccount,
   onDetail,
+  width,
+  checkGather,
 }) {
-  const statusText =
-    status === "paused"
-      ? "일시 정지"
-      : status === "waiting"
-      ? "사용 대기 중"
-      : "사용 중";
+  let statusText, statusColor;
+  if (status) {
+    statusText =
+      status === "paused"
+        ? "일시 정지"
+        : status === "waiting"
+        ? "사용 대기 중"
+        : "사용 중";
+    statusColor =
+      status === "paused"
+        ? colors.error
+        : status === "waiting"
+        ? colors.yellow500
+        : colors.blue500;
+  }
 
-  const statusColor =
-    status === "paused"
-      ? colors.error
-      : status === "waiting"
-      ? colors.yellow500
-      : colors.blue500;
+  const columns = [
+    thumbnail ? "110px" : null,
+    "1fr",
+    (status || onDetail) ? "120px" : null,
+  ].filter(Boolean).join(" ");
 
   return (
-    <CardWrap>
-      {/* 1열: 썸네일 */}
-      <CardImg>
-        <img
-          src={thumbnail}
-          alt={`${name} 썸네일`}
-          onError={(e) => {
-            e.currentTarget.src =
-              "data:image/svg+xml;utf8," +
-              encodeURIComponent(
-                `<svg xmlns='http://www.w3.org/2000/svg' width='110' height='110'><rect width='100%' height='100%' fill='#EEEEEE'/></svg>`
-              );
-          }}
-        />
-      </CardImg>
-
-      {/* 2열: 좌측 정보 */}
+    <CardWrap columns={columns} width={width}>
+      {thumbnail && (
+        <CardImg>
+          <img
+            src={thumbnail}
+            alt={`${name} 썸네일`}
+            onError={(e) => {
+              e.currentTarget.src =
+                "data:image/svg+xml;utf8," +
+                encodeURIComponent(
+                  `<svg xmlns='http://www.w3.org/2000/svg' width='110' height='110'><rect width='100%' height='100%' fill='#EEEEEE'/></svg>`
+                );
+            }}
+          />
+        </CardImg>
+      )}
       <Left>
         <TitleRow>
-          <Title>{name}</Title>
+          <Title>
+            {checkGather === true && <IconImg src={gatherIcon} alt="모임카드" />}
+            {checkGather === false && <IconImg src={cardIcon} alt="개인카드" />}
+            {name}
+          </Title>
           {nickname && (
             <>
               <Bar />
@@ -66,40 +81,41 @@ export default function CardList({
             </>
           )}
         </TitleRow>
-
         <Number>{maskedNumber}</Number>
-
         {linkedAccount && (
           <AccountChip>연결된 계좌 : {linkedAccount}</AccountChip>
         )}
       </Left>
-
-      {/* 3열: 우측 상태/버튼 */}
-      <Right>
-        <Status style={{ color: statusColor }}>{statusText}</Status>
-        <SmallBtn
-          label="카드 관리"
-          onClick={onDetail}
-          bgColor={colors.blue400}
-          textColor={colors.white}
-          width={120}
-        />
-      </Right>
+      {(status || onDetail) && (
+        <Right>
+          {status && <Status style={{ color: statusColor }}>{statusText}</Status>}
+          {onDetail && (
+            <SmallBtn
+              label="카드 관리"
+              onClick={onDetail}
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={120}
+            />
+          )}
+        </Right>
+      )}
     </CardWrap>
   );
 }
 
 const CardWrap = styled.div`
   display: grid;
-  grid-template-columns: 110px 340px 120px;
+  grid-template-columns: ${({ columns }) => columns};
   align-items: stretch;
   gap: 20px;
-
   padding: 20px;
   background: ${colors.white};
   border: 1px solid ${colors.gray300};
   border-radius: 12px;
   box-shadow: ${shadows.card};
+  width: ${({ width }) => width || "100%"};
+  box-sizing: border-box;
 `;
 
 const CardImg = styled.div`
@@ -134,6 +150,15 @@ const TitleRow = styled.div`
 const Title = styled.div`
   ${fontSet.body2_m};
   color: ${colors.black};
+  display: flex;
+  align-items: center;
+  gap: 12px;
+`;
+
+const IconImg = styled.img`
+  width: 20px;
+  height: 20px;
+  margin-left: 4px;
 `;
 
 const Bar = styled.span`

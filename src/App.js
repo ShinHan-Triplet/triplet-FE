@@ -8,6 +8,9 @@ import Trip from "./pages/trip/Trip";
 import Card from "./pages/card/Card";
 import Login from "./pages/login/Login";
 import TripCost from "./pages/trip/TripCost";
+import Gather from "./pages/trip/Gather";
+import NewGather from "./pages/trip/NewGather";
+import NewCard from "./pages/trip/NewCard";
 
 function AppLayout() {
   const location = useLocation();
@@ -24,6 +27,9 @@ function AppLayout() {
         <Route path="/trip" element={<Trip />} />
         <Route path="/tripcost" element={<TripCost />} />
         <Route path="/card" element={<Card />} />
+        <Route path="/gather" element={<Gather />} />
+        <Route path="/newgather" element={<NewGather />} />
+        <Route path="/newcard" element={<NewCard />} />
       </Routes>
       {!hideFooter && <Footer />}
     </div>

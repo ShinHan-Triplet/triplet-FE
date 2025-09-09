@@ -123,8 +123,13 @@ const Placeholder = styled.span`
 
 const Icon = styled.span`
   display: inline-flex;
-  width: 55px;
+  width: 22px;
   height: 20px;
+  position: absolute;
+  right: 68px;
+  top: 48%;
+  transform: translateY(-50%);
+  z-index: 2;
 `;
 
 const ClearButton = styled.button`
@@ -147,7 +152,10 @@ const Nothing = styled.div`
 `;
 
 const Popover = styled.div`
-  margin-top: 8px;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
   width: 360px;
   background: ${colors.white};
   border: 1px solid ${colors.gray200};
@@ -430,22 +438,21 @@ function DateRangePicker({
         ) : (
           <Placeholder>{placeholder}</Placeholder>
         )}
-
-        <Icon aria-hidden>
-          {start || end ? (
-            <ClearButton
-              type="button"
-              onClick={clearSelection}
-              aria-label="날짜 범위 지우기"
-            >
-              <img src={close} alt="" />
-            </ClearButton>
-          ) : (
-            <Nothing />
-          )}
-          <img src={calendar} alt="Triplet" />
-        </Icon>
+        <img src={calendar} alt="Triplet" />
       </FieldButton>
+      <Icon aria-hidden>
+        {start || end ? (
+          <ClearButton
+            type="button"
+            onClick={clearSelection}
+            aria-label="날짜 범위 지우기"
+          >
+            <img src={close} alt="" />
+          </ClearButton>
+        ) : (
+          <Nothing />
+        )}
+      </Icon>
 
       {open && (
         <Popover role="dialog" aria-label="기간 선택 달력">
@@ -463,7 +470,7 @@ function DateRangePicker({
               onClick={() => setViewDate((d) => addMonths(d, 1))}
               aria-label="다음 달"
             >
-              <img src={right} alt="Triplet" />
+              <img src={right} alt="right" />
             </NavBtn>
           </Header>
 

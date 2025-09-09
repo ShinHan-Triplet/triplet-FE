@@ -52,7 +52,7 @@ export default function ProgressBar({
 
 const Card = styled.div`
   border-radius: 12px;
-  padding: 16px 18px 14px;
+  padding: 20px 40px;
   background: ${({ $bg }) => $bg};
 `;
 

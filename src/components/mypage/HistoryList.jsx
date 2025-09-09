@@ -106,7 +106,6 @@ const DateCol = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-left: 8px;
 `;
 
 const DateText = styled.div`

@@ -6,7 +6,7 @@ import shadows from "../../styles/shadows";
 import Empty from "./MyEmpty";
 import MediumBtn from "../../components/button/MediumBtn";
 
-export default function Mygather() {
+export default function MyGather() {
   const navigate = useNavigate();
 
   const handleCreatePlan = () => {

@@ -20,6 +20,7 @@ export default function MyCard() {
       status: "active",
       maskedNumber: "1234-56**-****-5678",
       linkedAccount: "111-234-5678",
+      checkGather: true,
     },
     {
       id: 2,
@@ -29,6 +30,7 @@ export default function MyCard() {
       status: "waiting",
       maskedNumber: "6666-58**-****-7070",
       linkedAccount: "777-654-9999",
+      checkGather: true,
     },
     {
       id: 3,
@@ -38,6 +40,7 @@ export default function MyCard() {
       status: "paused",
       maskedNumber: "0202-12**-****-9876",
       linkedAccount: "987-654-3210",
+      checkGather: false,
     },
   ];
 
@@ -69,6 +72,7 @@ export default function MyCard() {
           maskedNumber={card.maskedNumber}
           linkedAccount={card.linkedAccount}
           onDetail={() => navigate(`/mypage/card/${card.id}`)}
+          checkGather={card.checkGather}
         />
       ))}
     </Wrapper>

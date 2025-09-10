@@ -12,6 +12,7 @@ export default function Modal({
   def1 = "",
   def2 = "",
   type = 1,
+  btnLabel = "홈으로",
   onClose,
   categoryId = null,
   text = "",
@@ -45,7 +46,7 @@ export default function Modal({
           {type === 1 && (
             <ModalBtnList>
               <MediumBtn
-                label="홈으로"
+                label={btnLabel}
                 width={120}
                 bgColor={colors.gray200}
                 textColor={colors.black}

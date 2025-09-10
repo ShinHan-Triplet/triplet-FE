@@ -86,11 +86,11 @@ export default function Gather() {
 
   const navigate = useNavigate();
   const gotoNewGather = () => {
-    navigate("/newgather");
+    navigate("/trip/new/gather");
   };
   const gotoNewCard = () => {
     const prevUrl = location.pathname;
-    navigate("/newcard", { state: { prevUrl, soloTrip } });
+    navigate("/trip/new/card", { state: { prevUrl, soloTrip } });
   };
 
   const closeModal = () => {
@@ -122,7 +122,7 @@ export default function Gather() {
         </Title>
 
         <div>
-          <BackBtn url="/tripcost" text="이전" />
+          <BackBtn url="/trip/new/cost" text="이전" />
           <Fill>
             <Contents>
               <PageTitle>
@@ -133,20 +133,22 @@ export default function Gather() {
                 </Check>
               </PageTitle>
               <GatherList $soloTrip={soloTrip}>
-                {soloTrip
-                  ? cardList.map((card) => (
-                      <MyCard
-                        key={card.id}
-                        selected={selectedCard === card.id}
-                        onClick={() => handleSelectCard(card.id)}
-                      >
-                        <GatherTitle>{card.title}</GatherTitle>
-                        <GatherCard>
-                          <BgImg src={testThumbnail} alt="" />
-                        </GatherCard>
-                      </MyCard>
-                    ))
-                  : gatherings.map((gathering) => (
+                {soloTrip ? (
+                  cardList.map((card) => (
+                    <MyCard
+                      key={card.id}
+                      selected={selectedCard === card.id}
+                      onClick={() => handleSelectCard(card.id)}
+                    >
+                      <GatherTitle>{card.title}</GatherTitle>
+                      <GatherCard>
+                        <BgImg src={testThumbnail} alt="" />
+                      </GatherCard>
+                    </MyCard>
+                  ))
+                ) : (
+                  <>
+                    {gatherings.map((gathering) => (
                       <GatheringCard
                         key={gathering.id}
                         selected={selectedGathering === gathering.id}
@@ -169,54 +171,66 @@ export default function Gather() {
                         </GatherCard>
                       </GatheringCard>
                     ))}
+                  </>
+                )}
               </GatherList>
             </Contents>
           </Fill>
         </div>
-        <BtnSpace>
-          {soloTrip ? (
-            <>
-              <LargeBtn
-                label="지난 카드 그대로"
-                bgColor={colors.blue400}
-                textColor={colors.white}
-                width={240}
-                disabled={!selectedCard}
-              ></LargeBtn>
-              <LargeBtn
-                label="새 카드 만들기"
-                bgColor={colors.blue400}
-                textColor={colors.white}
-                width={240}
-                disabled={!!selectedCard}
-                onClick={gotoNewCard}
-              ></LargeBtn>
-            </>
-          ) : (
-            <>
-              <LargeBtn
-                label="지난 모임 그대로"
-                bgColor={colors.blue400}
-                textColor={colors.white}
-                width={240}
-                disabled={!selectedGathering}
-                onClick={newGatherUsingMyCard}
-              ></LargeBtn>
-              <LargeBtn
-                label="새 모임 만들기"
-                bgColor={colors.blue400}
-                textColor={colors.white}
-                width={240}
-                disabled={!!selectedGathering}
-                onClick={gotoNewGather}
-              ></LargeBtn>
-            </>
-          )}
-        </BtnSpace>
       </Container>
+      {soloTrip ? (
+        <>
+          <BtnSpaceSolo>
+            <LargeBtn
+              label="지난 카드 그대로"
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={240}
+              disabled={!selectedCard}
+            ></LargeBtn>
+            <LargeBtn
+              label="새 카드 만들기"
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={240}
+              disabled={!!selectedCard}
+              onClick={gotoNewCard}
+            ></LargeBtn>
+          </BtnSpaceSolo>
+        </>
+      ) : (
+        <>
+          <Describe>기존 모임을 선택할 경우 인원 추가가 불가해요</Describe>
+          <BtnSpace>
+            <LargeBtn
+              label="지난 모임 그대로"
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={240}
+              disabled={!selectedGathering}
+              onClick={newGatherUsingMyCard}
+            ></LargeBtn>
+            <LargeBtn
+              label="새 모임 만들기"
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={240}
+              disabled={!!selectedGathering}
+              onClick={gotoNewGather}
+            ></LargeBtn>
+          </BtnSpace>
+        </>
+      )}
     </>
   );
 }
+
+const Describe = styled.div`
+  ${fontSet.body3_m}
+  text-align: center;
+  margin-top: 60px;
+  color: ${colors.error};
+`;
 
 const GatheringCard = styled.div`
   width: 880px;
@@ -366,7 +380,16 @@ const BtnSpace = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 60px;
+  margin-top: 40px;
+  gap: 40px;
+`;
+
+const BtnSpaceSolo = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 100px;
   gap: 40px;
 `;
 

@@ -17,7 +17,7 @@ export default function TripCost() {
   const navigate = useNavigate();
 
   const nextPage = () => {
-    navigate("/gather");
+    navigate("/trip/new/companions");
   };
 
   //자식이 total값을 알려줄 때 호출
@@ -77,7 +77,7 @@ export default function TripCost() {
       </Title>
 
       <div>
-        <BackBtn url="/trip" text="이전" />
+        <BackBtn url="/trip/new/details" text="이전" />
         <Fill>
           <Contents>
             <AllCost>

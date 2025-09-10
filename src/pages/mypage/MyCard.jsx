@@ -4,6 +4,8 @@ import shadows from "../../styles/shadows";
 import { useNavigate } from "react-router-dom";
 
 import CardList from "../../components/mypage/CardList";
+import Empty from "./MyEmpty";
+import MediumBtn from "../../components/button/MediumBtn";
 
 export default function MyCard() {
     const navigate = useNavigate();
@@ -44,37 +46,39 @@ export default function MyCard() {
     },
   ];
 
+  const isEmpty = cards.length === 0;
+
   return (
-    <Wrapper>
-
-        {/* 추후 비었을 때 처리 추가 */}
-        {/* <Empty
-        title="아직 카드가 없어요."
-        desc="Triplet과 함께 할 첫 카드를 만들어 보세요."
-        action={
+    <Wrapper isEmpty={isEmpty}>
+      {isEmpty ? (
+        <Empty
+          title="아직 카드가 없어요."
+          desc="Triplet과 함께 할 첫 카드를 만들어 보세요."
+          action={
             <MediumBtn
-                label="카드 발급하기"
-                onClick={handleCreatePlan}
-                bgColor={colors.blue400}
-                textColor={colors.white}
-                width={180}
+              label="카드 발급하기"
+              onClick={() => navigate('/card/create')}
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={180}
             />
-            }
-        /> */}
-
-      {cards.map((card) => (
-        <CardList
-          key={card.id}
-          thumbnail={card.thumbnail}
-          name={card.name}
-          nickname={card.nickname}
-          status={card.status}
-          maskedNumber={card.maskedNumber}
-          linkedAccount={card.linkedAccount}
-          onDetail={() => navigate(`/mypage/card/${card.id}`)}
-          checkGather={card.checkGather}
+          }
         />
-      ))}
+      ) : (
+        cards.map((card) => (
+          <CardList
+            key={card.id}
+            thumbnail={card.thumbnail}
+            name={card.name}
+            nickname={card.nickname}
+            status={card.status}
+            maskedNumber={card.maskedNumber}
+            linkedAccount={card.linkedAccount}
+            onDetail={() => navigate(`/mypage/card/${card.id}`)}
+            checkGather={card.checkGather}
+          />
+        ))
+      )}
     </Wrapper>
   );
 }
@@ -89,5 +93,12 @@ const Wrapper = styled.div`
 
   display: grid;
   grid-auto-rows: min-content;
-  row-gap: 20px;  
+  row-gap: 20px; 
+  
+  ${({ isEmpty }) =>
+    isEmpty &&
+    `
+    place-content: center;
+    place-items: center;
+  `}
 `;

@@ -7,11 +7,12 @@ import MediumBtn from "../button/MediumBtn";
 import InputBox from "../input/InputBox";
 import FilterDropdown from "../mypage/FilterDropdown";
 
-export default function ModalForCard({
+export default function Modal({
   title = "",
   def1 = "",
   def2 = "",
   type = 1,
+  btnLabel = "홈으로",
   onClose,
   categoryId = null,
   text = "",
@@ -45,7 +46,7 @@ export default function ModalForCard({
           {type === 1 && (
             <ModalBtnList>
               <MediumBtn
-                label="홈으로"
+                label={btnLabel}
                 width={120}
                 bgColor={colors.gray200}
                 textColor={colors.black}

@@ -6,13 +6,13 @@ import BackBtn from "../../components/button/BackBtn";
 import MediumBtn from "../../components/button/MediumBtn";
 import CardList from "../../components/mypage/CardList";
 import { useParams } from "react-router-dom";
-import plusIcon from '../../assets/icon/plus.svg';
 
 // 여행 mock 데이터
 const tripsMock = [
   {
     id: 1,
     title: "신혼여행",
+    groupName: "신혼부부",
     members: ["신다운", "남편"],
     dateRange: "2035. 03. 13 ~ 2035. 03. 18",
     status: "여행 전",
@@ -36,6 +36,7 @@ const tripsMock = [
   {
     id: 2,
     title: "현실도피여행",
+    groupName: "도피단",
     members: ["신다운", "한주원", "오선정", "박지원", "정재웅"],
     dateRange: "2025. 08. 28 ~ 2025. 09. 01",
     status: "여행완료",
@@ -82,6 +83,7 @@ const tripsMock = [
   {
     id: 4,
     title: "입짧은주원과 식도락",
+    groupName: "식도락단",
     members: ["신다운", "한주원"],
     dateRange: "2025. 07. 20 ~ 2025. 07. 21",
     status: "여행완료",
@@ -105,6 +107,7 @@ const tripsMock = [
   {
     id: 5,
     title: "가족이랑 제주도",
+    groupName: "가족단",
     members: ["신다운", "엄마", "아빠", "언니"],
     dateRange: "2024. 04. 08 ~ 2024. 04. 11",
     status: "여행완료",
@@ -128,6 +131,7 @@ const tripsMock = [
   {
     id: 6,
     title: "우정포에버 추억쌓기",
+    groupName: "우정단",
     members: ["신다운", "짱친1", "짱친2", "짱친3", "짱친4", "짱친5"],
     dateRange: "2024. 01. 25 ~ 2024. 01. 29",
     status: "여행완료",
@@ -205,15 +209,18 @@ export default function MyTripDetail() {
                   <InfoLabel>테마</InfoLabel>
                   <InfoValue><ThemeChip>{trip.theme}</ThemeChip></InfoValue>
                 </InfoRow>
+                {trip.groupName && (
+                  <InfoRow>
+                    <InfoLabel>모임명</InfoLabel>
+                    <InfoValue>{trip.groupName}</InfoValue>
+                  </InfoRow>
+                )}
                 <InfoRow>
                   <InfoLabel style={{alignSelf: 'flex-start'}}>멤버</InfoLabel>
                   <Members>
                     {trip.members.map((m, idx) => (
                       <MemberImg key={idx}>{m[0]}</MemberImg>
                     ))}
-                    <AddBtn>
-                      <img src={plusIcon} alt="추가" style={{width:32, height:32}} />
-                    </AddBtn>
                   </Members>
                 </InfoRow>
               </InfoGrid>
@@ -389,23 +396,6 @@ const MemberImg = styled.div`
   font-size: 16px;
   font-weight: bold;
   color: ${colors.gray800};
-`;
-
-const AddBtn = styled.button`
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: ${colors.gray100};
-  border: 2px dashed ${colors.gray200};
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-
-    &:hover {
-    background: ${colors.gray200};
-  }
 `;
 
 const BudgetRow = styled.div`

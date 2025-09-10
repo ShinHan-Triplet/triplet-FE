@@ -5,11 +5,16 @@ import shadows from "../../styles/shadows";
 
 export default function HeaderDropdown({ open, onSelect, onClose, anchorRef }) {
   if (!open) return null;
+  
+  const handleMypage = () => {
+    onSelect("mypage");
+    setTimeout(onClose, 0);
+  };
 
   return (
     <DropdownWrap ref={anchorRef}>
       <DropdownList>
-        <DropdownItem onClick={() => { onSelect("mypage"); onClose(); }}>
+        <DropdownItem onClick={handleMypage}>
           <DropdownText>마이페이지</DropdownText>
         </DropdownItem>
         <DropdownItem onClick={() => { onSelect("logout"); onClose(); }}>

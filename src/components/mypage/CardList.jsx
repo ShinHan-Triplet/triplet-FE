@@ -108,13 +108,14 @@ const CardWrap = styled.div`
   display: grid;
   grid-template-columns: ${({ columns }) => columns};
   align-items: stretch;
+  height: 150px;
   gap: 20px;
-  padding: 20px;
+  padding: 20px 28px;
   background: ${colors.white};
   border: 1px solid ${colors.gray300};
   border-radius: 12px;
   box-shadow: ${shadows.card};
-  width: ${({ width }) => width || "100%"};
+  width: ${({ width }) => width || "650px"};
   box-sizing: border-box;
 `;
 
@@ -137,8 +138,9 @@ const CardImg = styled.div`
 const Left = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  align-self: center;
+  justify-content: space-between;
+  align-self: stretch;       
+  min-width: 0;
 `;
 
 const TitleRow = styled.div`
@@ -182,10 +184,9 @@ const AccountChip = styled.div`
   ${fontSet.detail};
   color: ${colors.gray700};
   background: ${colors.gray100};
-  border-radius: 8px;
-  padding: 10px 14px;
+  border-radius: 5px;
+  padding: 8px 16px;
   display: inline-block;
-  box-shadow: ${shadows.card};
   width: fit-content;
 `;
 
@@ -195,10 +196,9 @@ const Right = styled.div`
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-end;
-  padding: 6px 0;
 `;
 
 const Status = styled.div`
-  ${fontSet.body3_m};
+  ${fontSet.body3_b};
   text-align: right;
 `;

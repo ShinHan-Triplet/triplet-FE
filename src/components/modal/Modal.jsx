@@ -7,7 +7,7 @@ import MediumBtn from "../button/MediumBtn";
 import InputBox from "../input/InputBox";
 import FilterDropdown from "../mypage/FilterDropdown";
 
-export default function ModalForCard({
+export default function Modal({
   title = "",
   def1 = "",
   def2 = "",

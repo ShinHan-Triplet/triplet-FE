@@ -2,6 +2,8 @@ import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import editIcon from "../../assets/icon/modify.svg";
+import Modal from "../modal/Modal";
+import { useState } from "react";
 
 // const CATEGORY_LABEL = {
 //   1: "숙박비",
@@ -26,18 +28,40 @@ export default function HistoryList({
   showBalance = true,
   showEdit = false,
 }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalText, setModalText] = useState("");
+
+  const handleItemClick = (it) => {
+    setModalText(it.title);
+    setIsModalOpen(true);
+    onClickItem?.(it);
+  };
+  const closeModal = () => setIsModalOpen(false);
+
   return (
-    <List role="list">
-      {items.map((it) => (
-        <HistoryItem
-          key={it.id}
-          item={it}
-          onClick={() => onClickItem?.(it)}
-          showBalance={showBalance}
-          showEdit={showEdit}
+    <>
+      <List role="list">
+        {items.map((it) => (
+          <HistoryItem
+            key={it.id}
+            item={it}
+            onClick={() => handleItemClick(it)}
+            showBalance={showBalance}
+            showEdit={showEdit}
+          />
+        ))}
+      </List>
+      {isModalOpen && (
+        <Modal
+          title="내역 수정하기"
+          def1="알아보기 쉽게 내역을 수정하고"
+          def2="원하는 기준으로 카테고리를 분류하세요."
+          type={3}
+          text={modalText}
+          onClose={closeModal}
         />
-      ))}
-    </List>
+      )}
+    </>
   );
 }
 

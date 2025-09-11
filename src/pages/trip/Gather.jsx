@@ -4,7 +4,7 @@ import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import LargeBtn from "../../components/button/LargeBtn";
 import BackBtn from "../../components/button/BackBtn";
-import CheckBox from "./components/CheckBox";
+import CheckBox from "../../components/trip/CheckBox";
 import { useState } from "react";
 import testThumbnail from "./../../assets/img/test_thumbnail.png";
 import memberIcon from "../../assets/icon/gather_black.svg";

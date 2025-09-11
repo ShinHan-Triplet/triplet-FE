@@ -5,97 +5,82 @@ import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
 import DetailBtn from "../../components/button/DetailBtn";
 import testThumbnail from "./../../assets/img/test_thumbnail.png";
+import card1 from "./../../assets/img/card1.png";
+import card2 from "./../../assets/img/card2.png";
+
 import MediumBtn from "../../components/button/MediumBtn";
 import ModalForCard from "../../components/modal/ModalForCard";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const cardList = [
   {
     id: 1,
-    title: "Triplet 식도락 카드",
+    name: "Triplet 식도락 카드",
     state: true,
-    subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
-    describes: [
-      { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
-      {
-        exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      },
-      {
-        exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-      },
+    tagline: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
+    desc: [
+      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
+      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
+      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
     ],
-    benefits: [
+    subBenefits: [
       { exp: "외식·배달·편의점", num: "10% 할인" },
       { exp: "쇼핑·주유·생활", num: "5~10% 할인" },
       { exp: "공과금·디지털구독", num: "10~20% 할인" },
     ],
-    mainBenefits: [
-      { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
-      {
-        exp: "카페·베이커리 5% 적립",
-        num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
-      },
-      { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
-      { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
+    benefits: [
+      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
+      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
+      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
+      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
     ],
+    image: testThumbnail,
   },
   {
     id: 2,
-    title: "신한카드 Shopping Saver",
+    name: "신한카드 Shopping Saver",
     state: false,
-    subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
-    describes: [
-      { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
-      {
-        exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      },
-      {
-        exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-      },
+    tagline: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
+    desc: [
+      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
+      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
+      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
     ],
-    benefits: [
+    subBenefits: [
       { exp: "쇼핑·패션", num: "15% 할인" },
       { exp: "온라인 쇼핑", num: "10% 할인" },
       { exp: "생활·주유", num: "5% 할인" },
     ],
-    mainBenefits: [
-      { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
-      {
-        exp: "카페·베이커리 5% 적립",
-        num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
-      },
-      { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
-      { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
+    benefits: [
+      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
+      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
+      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
+      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
     ],
+    image: card1,
   },
   {
     id: 3,
-    title: "신한카드 Travel Plus",
+    name: "신한카드 Travel Plus",
     state: false,
-    subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
-    describes: [
-      { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
-      {
-        exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      },
-      {
-        exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-      },
+    tagline: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
+    desc: [
+      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
+      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
+      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
     ],
-    benefits: [
+    subBenefits: [
       { exp: "항공·호텔", num: "20% 할인" },
       { exp: "렌터카·여행", num: "15% 할인" },
       { exp: "해외 결제", num: "10% 할인" },
     ],
-    mainBenefits: [
-      { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
-      {
-        exp: "카페·베이커리 5% 적립",
-        num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
-      },
-      { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
-      { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
+    benefits: [
+      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
+      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
+      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
+      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
     ],
+    image: card2,
   },
 ];
 
@@ -165,10 +150,16 @@ export default function TripCard() {
   const { state } = useLocation();
   const prevUrl = state?.prevUrl || "/trip";
   const soloTrip = state?.soloTrip || false; // 전달받은 soloTrip 상태
+  const navigate = useNavigate();
 
   const handleDetailClick = (card) => {
     setSelectedCard(card);
     setIsModalOpen(true);
+  };
+
+  const gotoApply = (card) => {
+    navigate(`/card/${card.id}/apply`, { state: { card: card } });
+    sessionStorage.setItem("triplet:selectedCardId", card.id);
   };
 
   const closeModal = () => {
@@ -187,8 +178,7 @@ export default function TripCard() {
           </SubTitle>
         </Title>
         <div>
-          <BackBtn url={prevUrl} text="이전" state={{ soloTrip }} />{" "}
-          {/* soloTrip 전달 */}
+          <BackBtn url={prevUrl} text="이전" state={{ soloTrip }} />
           <Fill>
             <Contents>
               <PageTitle>
@@ -214,10 +204,10 @@ export default function TripCard() {
                   {cardList.map((card) => (
                     <React.Fragment key={card.id}>
                       <CardInfo>
-                        <CardPreview src={testThumbnail} />
+                        <CardPreview src={card.image} />
                         <CardExplain>
                           <CardMain>
-                            <CardTitle>{card.title}</CardTitle>
+                            <CardTitle>{card.name}</CardTitle>
                             {card.state && (
                               <CardState>
                                 이미 모임에서 사용중인 카드입니다.
@@ -225,7 +215,7 @@ export default function TripCard() {
                             )}
                           </CardMain>
                           <CardBenefits>
-                            {card.benefits.map((benefit, index) => (
+                            {card.subBenefits.map((benefit, index) => (
                               <CardBenefit key={index}>
                                 <CardBenefitExp>{benefit.exp}</CardBenefitExp>
                                 <CardBenefitNum>{benefit.num}</CardBenefitNum>
@@ -238,7 +228,10 @@ export default function TripCard() {
                             text="상세보기"
                             getFunction={() => handleDetailClick(card)} // 수정된 부분
                           />
-                          <MediumBtn label="발급하기" />
+                          <MediumBtn
+                            label="발급하기"
+                            onClick={() => gotoApply(card)}
+                          />
                         </CardDetail>
                       </CardInfo>
                       <Line />

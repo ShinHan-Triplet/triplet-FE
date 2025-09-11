@@ -5,18 +5,25 @@ import colors from "../../styles/colors";
 export default function ThemeBtn({
   label,
   onClick,
+  selected = false,
   bgColor = colors.gray200,
   textColor = colors.black,
   width,
   hoverBgColor = colors.gray300,
+  selectedBgColor = colors.blue100,
+  selectedHoverBgColor = colors.blue200,
 }) {
   return (
     <Btn
       onClick={onClick}
+      aria-pressed={selected}
+      $selected={selected}
       $bgColor={bgColor}
       $textColor={textColor}
       $width={width}
       $hoverBgColor={hoverBgColor}
+      $selectedBgColor={selectedBgColor}
+      $selectedHoverBgColor={selectedHoverBgColor}
     >
       {label}
     </Btn>
@@ -33,7 +40,8 @@ const Btn = styled.button`
   border: none;
   cursor: pointer;
 
-  background: ${({ $bgColor }) => $bgColor};
+  background: ${({ $selected, $bgColor, $selectedBgColor }) =>
+    $selected ? $selectedBgColor : $bgColor};
   color: ${({ $textColor }) => $textColor};
 
   /*width 처리 : 숫자면 px, 문자열이면 그대로 적용*/
@@ -45,12 +53,12 @@ const Btn = styled.button`
       : $width};
 
   &:hover:not(:disabled) {
-    background: ${({ $hoverBgColor }) => $hoverBgColor};
-    color: ${({ $textColor }) => $textColor};
+    background: ${({ $selected, $hoverBgColor, $selectedHoverBgColor }) =>
+      $selected ? $selectedHoverBgColor : $hoverBgColor};
   }
 
   &:active:not(:disabled) {
-    background: ${({ $hoverBgColor }) => $hoverBgColor};
-    color: ${({ $textColor }) => $textColor};
+    background: ${({ $selected, $hoverBgColor, $selectedHoverBgColor }) =>
+      $selected ? $selectedHoverBgColor : $hoverBgColor};
   }
 `;

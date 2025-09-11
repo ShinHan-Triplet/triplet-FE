@@ -6,15 +6,81 @@ import BackBtn from "../../components/button/BackBtn";
 import InputBox from "../../components/input/InputBox";
 import LargeBtn from "../../components/button/LargeBtn";
 import CategoryChip from "../../components/chip/CategoryChip";
-import DayCost from "./components/DayCost";
+import DayCost from "../../components/trip/DayCost";
 import { useLocation } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import {
+  clearTripDraft,
+  loadTripDraft,
+  patchTripDraft,
+  saveTripDraft,
+} from "./TripDraftSession";
+
+const DETAIL_ROUTE = "/trip/new/details";
+const toStartOfDay = (d) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const diffDaysInclusive = (s, e) => {
+  if (!s || !e) return 0;
+  const start = toStartOfDay(s);
+  const end = toStartOfDay(e);
+  return Math.round((end - start) / 86400000) + 1;
+};
 
 export default function TripCost() {
   const { state } = useLocation();
   const [dayTotals, setDayTotals] = useState({});
   const navigate = useNavigate();
+  const [daySnapshots, setDaySnapshots] = useState({});
+  const [daysCount, setDaysCount] = useState(() => {
+    if (state?.days) return state.days;
+    const s = state?.startMs ? new Date(state.startMs) : null;
+    const e = state?.endMs ? new Date(state.endMs) : null;
+    return s && e ? diffDaysInclusive(s, e) : 0;
+  });
+  const [hydrated, setHydrated] = useState(false);
+
+  const equalAmounts = (a = {}, b = {}) =>
+    String(a.food ?? "") === String(b.food ?? "") &&
+    String(a.transport ?? "") === String(b.transport ?? "") &&
+    String(a.leisure ?? "") === String(b.leisure ?? "") &&
+    String(a.etc ?? "") === String(b.etc ?? "");
+  const equalSnapshot = (a, b) => {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    return (
+      !!a.noSchedule === !!b.noSchedule && equalAmounts(a.amounts, b.amounts)
+    );
+  };
+
+  // 처음 진입 - 세션에 이전 기록이 있으면 이어쓰기 묻기
+  useEffect(() => {
+    const snap = loadTripDraft();
+    if (!snap) return;
+
+    // const ok = window.confirm(
+    //   "이전에 작성한 내용이 있어요. 이어서 작성할까요?"
+    // );
+    // if (!ok) {
+    //   clearTripDraft();
+    //   navigate(DETAIL_ROUTE, { replace: true });
+    //   return;
+    // }
+    if (snap.budgets) {
+      setAmounts({
+        stay: String(snap.budgets.stay || ""),
+        insurance: String(snap.budgets.insurance || ""),
+      });
+      setDaySnapshots(snap.budgets.days || {});
+    }
+
+    if (!state?.days && snap.startMs && snap.endMs) {
+      setDaysCount(
+        diffDaysInclusive(new Date(snap.startMs), new Date(snap.endMs))
+      );
+    }
+    setHydrated(true);
+  }, [navigate, state?.days]);
 
   const nextPage = () => {
     navigate("/trip/new/companions");
@@ -25,8 +91,6 @@ export default function TripCost() {
     setDayTotals((prev) => ({ ...prev, [dayIndex]: Number(total) || 0 }));
   };
 
-  const toStartOfDay = (d) =>
-    new Date(d.getFullYear(), d.getMonth(), d.getDate());
   // 새로고침 등으로 직접 진입했을 때 state가 없을 수도 있으니 방어
   const start = state?.startMs ? new Date(state.startMs) : null;
   const end = state?.endMs ? new Date(state.endMs) : null;
@@ -35,6 +99,18 @@ export default function TripCost() {
     (start && end
       ? Math.round((toStartOfDay(end) - toStartOfDay(start)) / 86400000) + 1
       : 0);
+
+  // days 변경 시 범위 정리
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!daysCount) return;
+    setDaySnapshots((prev) => {
+      const entries = Object.entries(prev).filter(
+        ([k]) => Number(k) >= 1 && Number(k) <= daysCount
+      );
+      return Object.fromEntries(entries);
+    });
+  }, [daysCount, hydrated]);
 
   // 유틸: 문자열에서 숫자만 추출
   const toDigits = (s) => String(s ?? "").replace(/\D/g, "");
@@ -53,6 +129,15 @@ export default function TripCost() {
     setAmounts((prev) => ({ ...prev, [key]: digits }));
   };
 
+  // 자식이 보내주는 일자별 스냅샷 저장
+  const handleDaySnapshotChange = useCallback((day, snapshot) => {
+    setDaySnapshots((prev) => {
+      const prevSnap = prev[day];
+      if (equalSnapshot(prevSnap, snapshot)) return prev; // 동등하면 갱신 안 함
+      return { ...prev, [day]: snapshot };
+    });
+  }, []);
+
   const stayPlusInsurance = useMemo(() => {
     const n = (v) => (v === "" ? 0 : Number(v));
     return n(amounts.stay) + n(amounts.insurance);
@@ -66,6 +151,41 @@ export default function TripCost() {
     return daySum + stayPlusInsurance;
   }, [dayTotals, stayPlusInsurance]);
 
+  // 자동 저장
+  useEffect(() => {
+    if (!hydrated) return;
+    const timer = setTimeout(() => {
+      const hasTop = !!amounts.stay || !!amounts.insurance;
+      const hasDays = Object.values(daySnapshots).some((d) => {
+        if (!d) return false;
+        const hasNo = !!d.noSchedule;
+        const a = d.amounts || {};
+        const hasAmt = !!(a.food || a.transport || a.leisure || a.etc);
+        return hasNo || hasAmt;
+      });
+
+      if (!hasTop && !hasDays) {
+        const prev = loadTripDraft() || {};
+        if (prev.budgets) {
+          const next = { ...prev };
+          delete next.budgets;
+          saveTripDraft(next);
+        }
+        return;
+      }
+
+      patchTripDraft({
+        budgets: {
+          stay: amounts.stay,
+          insurance: amounts.insurance,
+          days: daySnapshots,
+        },
+      });
+    }, 600);
+
+    return () => clearTimeout(timer);
+  }, [amounts, daySnapshots, hydrated]);
+
   return (
     <Container>
       <Title>
@@ -77,7 +197,10 @@ export default function TripCost() {
       </Title>
 
       <div>
-        <BackBtn url="/trip/new/details" text="이전" />
+        <BackBtn
+          url="/trip/new/details"
+          text="이전 (작성한 예산은 저장되지 않아요)"
+        />
         <Fill>
           <Contents>
             <AllCost>
@@ -116,13 +239,20 @@ export default function TripCost() {
                 </CostText>
               </BasisCost>
             </AllCost>
-            {Array.from({ length: Math.max(0, days) }, (_, i) => (
-              <DayCost
-                key={i}
-                day={i + 1}
-                onTotalChange={handleTotalChange(i + 1)}
-              />
-            ))}
+            {Array.from({ length: Math.max(0, daysCount) }, (_, i) => {
+              const day = i + 1;
+              return (
+                <DayCost
+                  key={day}
+                  day={day}
+                  snapshot={daySnapshots[day]}
+                  onSnapshotChange={(snap) =>
+                    handleDaySnapshotChange(day, snap)
+                  }
+                  onTotalChange={handleTotalChange(day)}
+                />
+              );
+            })}
             <TotalCost>총 예산: {totalSum.toLocaleString()}원</TotalCost>
           </Contents>
         </Fill>

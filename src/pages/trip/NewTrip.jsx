@@ -11,7 +11,7 @@ import { useState } from "react";
 import LargeBtn from "../../components/button/LargeBtn";
 import { useNavigate } from "react-router-dom";
 
-export default function Trip() {
+export default function NewTrip() {
   const [range, setRange] = useState({ start: null, end: null });
 
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ export default function Trip() {
     const days = diffDaysInclusive(range.start, range.end);
 
     // state에 안전하게 밀리초 타임스탬프를 넣어 전달 (타임존 이슈 방지)
-    navigate("/tripcost", {
+    navigate("/trip/new/cost", {
       state: {
         startMs: range.start.getTime(),
         endMs: range.end.getTime(),
@@ -50,7 +50,7 @@ export default function Trip() {
       </Title>
 
       <div>
-        <BackBtn url="" text="이전" />
+        <BackBtn url="/trip" text="이전" />
         <Fill>
           <BlueTitle>여행 정보 수집</BlueTitle>
           <Contents>

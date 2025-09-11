@@ -7,14 +7,15 @@ import Mypage from "./pages/mypage/Mypage";
 import MyCardDetail from "./pages/mypage/MyCardDetail";
 import MyCardHistory from "./pages/mypage/MyCardHistory";
 import MyTripDetail from "./pages/mypage/MyTripDetail";
-import Trip from "./pages/trip/Trip";
-import Card from "./pages/card/Card";
+import NewTrip from "./pages/trip/NewTrip";
 import Login from "./pages/login/Login";
 import TripCost from "./pages/trip/TripCost";
 import Gather from "./pages/trip/Gather";
 import NewGather from "./pages/trip/NewGather";
-import NewCard from "./pages/trip/NewCard";
+import TripCard from "./pages/trip/TripCard";
 import ScrollToTop from "./components/util/ScrollToTop";
+import Card from "./pages/card/Card";
+import NewCard from "./pages/card/NewCard";
 
 function AppLayout() {
   const location = useLocation();
@@ -28,15 +29,16 @@ function AppLayout() {
         <Route path="/" element={<Main />} />
         <Route path="/login" element={<Login />} />
         <Route path="/mypage" element={<Mypage />} />
-        <Route path="/trip" element={<Trip />} />
-        <Route path="/tripcost" element={<TripCost />} />
-        <Route path="/card" element={<Card />} />
         <Route path="/mypage/card/:id" element={<MyCardDetail />} />
         <Route path="/mypage/card/:id/history" element={<MyCardHistory />} />
         <Route path="/mypage/trip/:id" element={<MyTripDetail />} />
-        <Route path="/gather" element={<Gather />} />
-        <Route path="/newgather" element={<NewGather />} />
-        <Route path="/newcard" element={<NewCard />} />
+        <Route path="/trip/new/details" element={<NewTrip />} />
+        <Route path="/trip/new/cost" element={<TripCost />} />
+        <Route path="/trip/new/companions" element={<Gather />} />
+        <Route path="/trip/new/gather" element={<NewGather />} />
+        <Route path="/trip/new/card" element={<TripCard />} />
+        <Route path="/card" element={<Card />} />
+        <Route path="/card/:id/apply" element={<NewCard />} />
       </Routes>
       {!hideFooter && <Footer />}
     </div>

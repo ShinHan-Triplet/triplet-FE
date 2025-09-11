@@ -9,9 +9,162 @@ import MediumBtn from "../../components/button/MediumBtn";
 import ModalForCard from "../../components/modal/ModalForCard";
 import { useLocation } from "react-router-dom";
 
+const cardList = [
+  {
+    id: 1,
+    title: "Triplet 식도락 카드",
+    state: true,
+    subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
+    describes: [
+      { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
+      {
+        exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
+      },
+      {
+        exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
+      },
+    ],
+    benefits: [
+      { exp: "외식·배달·편의점", num: "10% 할인" },
+      { exp: "쇼핑·주유·생활", num: "5~10% 할인" },
+      { exp: "공과금·디지털구독", num: "10~20% 할인" },
+    ],
+    mainBenefits: [
+      { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
+      {
+        exp: "카페·베이커리 5% 적립",
+        num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
+      },
+      { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
+      { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
+    ],
+  },
+  {
+    id: 2,
+    title: "신한카드 Shopping Saver",
+    state: false,
+    subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
+    describes: [
+      { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
+      {
+        exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
+      },
+      {
+        exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
+      },
+    ],
+    benefits: [
+      { exp: "쇼핑·패션", num: "15% 할인" },
+      { exp: "온라인 쇼핑", num: "10% 할인" },
+      { exp: "생활·주유", num: "5% 할인" },
+    ],
+    mainBenefits: [
+      { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
+      {
+        exp: "카페·베이커리 5% 적립",
+        num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
+      },
+      { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
+      { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
+    ],
+  },
+  {
+    id: 3,
+    title: "신한카드 Travel Plus",
+    state: false,
+    subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
+    describes: [
+      { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
+      {
+        exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
+      },
+      {
+        exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
+      },
+    ],
+    benefits: [
+      { exp: "항공·호텔", num: "20% 할인" },
+      { exp: "렌터카·여행", num: "15% 할인" },
+      { exp: "해외 결제", num: "10% 할인" },
+    ],
+    mainBenefits: [
+      { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
+      {
+        exp: "카페·베이커리 5% 적립",
+        num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
+      },
+      { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
+      { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
+    ],
+  },
+];
+
+const CardImgWrap = styled.div`
+  position: relative;
+  width: 113px;
+  height: 180px;
+  perspective: 900px;
+  transform-style: preserve-3d;
+`;
+
+const CardImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+  transition: transform 120ms ease, filter 200ms ease, box-shadow 200ms ease;
+
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  ${CardImgWrap}[data-hovered="true"] & {
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0)
+      translateY(-2px);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.08);
+    filter: brightness(1.02);
+  }
+`;
+function CardPreview({ src }) {
+  const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
+  const [hovered, setHovered] = useState(false);
+
+  const onMove = (e) => {
+    const el = e.currentTarget;
+    const rect = el.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width; // 0~1
+    const py = (e.clientY - rect.top) / rect.height; // 0~1
+
+    const max = 10; // 최대 기울기 각도
+    const ry = (px - 0.5) * (max * 2); // 좌우 회전
+    const rx = -(py - 0.5) * (max * 2); // 상하 회전
+    setTilt({ rx, ry });
+  };
+
+  const onLeave = () => {
+    setTilt({ rx: 0, ry: 0 });
+    setHovered(false);
+  };
+
+  return (
+    <CardImgWrap
+      onMouseMove={onMove}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={onLeave}
+      data-hovered={hovered}
+      style={{ "--rx": `${tilt.rx}deg`, "--ry": `${tilt.ry}deg` }}
+    >
+      <CardImg src={src} alt="" />
+    </CardImgWrap>
+  );
+}
+
 export default function TripCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
+  const { state } = useLocation();
+  const prevUrl = state?.prevUrl || "/trip";
+  const soloTrip = state?.soloTrip || false; // 전달받은 soloTrip 상태
 
   const handleDetailClick = (card) => {
     setSelectedCard(card);
@@ -22,100 +175,6 @@ export default function TripCard() {
     setIsModalOpen(false);
     setSelectedCard(null);
   };
-
-  const cardList = [
-    {
-      id: 1,
-      title: "Triplet 식도락 카드",
-      state: true,
-      subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
-      describes: [
-        { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
-        {
-          exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-        },
-        {
-          exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-        },
-      ],
-      benefits: [
-        { exp: "외식·배달·편의점", num: "10% 할인" },
-        { exp: "쇼핑·주유·생활", num: "5~10% 할인" },
-        { exp: "공과금·디지털구독", num: "10~20% 할인" },
-      ],
-      mainBenefits: [
-        { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
-        {
-          exp: "카페·베이커리 5% 적립",
-          num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
-        },
-        { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
-        { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
-      ],
-    },
-    {
-      id: 2,
-      title: "신한카드 Shopping Saver",
-      state: false,
-      subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
-      describes: [
-        { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
-        {
-          exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-        },
-        {
-          exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-        },
-      ],
-      benefits: [
-        { exp: "쇼핑·패션", num: "15% 할인" },
-        { exp: "온라인 쇼핑", num: "10% 할인" },
-        { exp: "생활·주유", num: "5% 할인" },
-      ],
-      mainBenefits: [
-        { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
-        {
-          exp: "카페·베이커리 5% 적립",
-          num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
-        },
-        { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
-        { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
-      ],
-    },
-    {
-      id: 3,
-      title: "신한카드 Travel Plus",
-      state: false,
-      subTitle: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
-      describes: [
-        { exp: "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’." },
-        {
-          exp: "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-        },
-        {
-          exp: "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-        },
-      ],
-      benefits: [
-        { exp: "항공·호텔", num: "20% 할인" },
-        { exp: "렌터카·여행", num: "15% 할인" },
-        { exp: "해외 결제", num: "10% 할인" },
-      ],
-      mainBenefits: [
-        { exp: "일반 음식점 결제 10% 캐시백 ", num: "(월 최대 30,000원)" },
-        {
-          exp: "카페·베이커리 5% 적립",
-          num: "(스타벅스, 이디야, 파리바게뜨 등 제휴)",
-        },
-        { exp: "편의점 결제 5% 캐시백", num: "(CU, GS25, 세븐일레븐)" },
-        { exp: "해외 음식점 결제 수수료 0% + 3% 추가 적립", num: "" },
-      ],
-    },
-  ];
-
-  const { state } = useLocation();
-  const prevUrl = state?.prevUrl || "/trip";
-  const soloTrip = state?.soloTrip || false; // 전달받은 soloTrip 상태
 
   return (
     <>
@@ -155,7 +214,7 @@ export default function TripCard() {
                   {cardList.map((card) => (
                     <React.Fragment key={card.id}>
                       <CardInfo>
-                        <CardImg src={testThumbnail} alt="" />
+                        <CardPreview src={testThumbnail} />
                         <CardExplain>
                           <CardMain>
                             <CardTitle>{card.title}</CardTitle>
@@ -269,12 +328,6 @@ const CardInfo = styled.div`
   padding: 0 20px;
   justify-content: space-between;
   align-items: flex-end;
-`;
-
-const CardImg = styled.img`
-  width: 180px;
-  height: 180px;
-  object-fit: cover;
 `;
 
 const Detail = styled.div`

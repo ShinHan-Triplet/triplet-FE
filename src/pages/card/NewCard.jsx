@@ -7,9 +7,83 @@ import BackBtn from "../../components/button/BackBtn";
 import LargeBtn from "../../components/button/LargeBtn";
 
 import { useLocation, useParams, useNavigate } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 // (권장) 공용 카드 데이터가 있으면 import 해서 fallback에 활용
 // import { CARD_DATA } from "../../data/cards"; // 공용 모듈로 빼뒀다면
+
+// 입장 애니메이션
+const popIn = keyframes`
+  0% { opacity: 0; transform: translateY(12px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+`;
+
+// 대기 플로팅
+const bob = keyframes`
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-3px); }
+  100% { transform: translateY(0); }
+`;
+
+// 샤인 스윕
+const shine = keyframes`
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to   { transform: translateX(220%)  skewX(-20deg); }
+`;
+
+// 래퍼: 입장, 대기 플로팅, 샤인 오버레이까지 담당
+const CardImgWrap = styled.div`
+  position: relative;
+  width: 215px;
+  height: 340px;
+  perspective: 900px;
+  transform-style: preserve-3d;
+
+  animation: ${popIn} 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (prefers-reduced-motion: no-preference) {
+    animation: ${popIn} 420ms cubic-bezier(0.22, 1, 0.36, 1) both,
+      ${bob} 4.8s ease-in-out infinite 600ms;
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      120deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.35) 50%,
+      transparent 100%
+    );
+    transform: translateX(-120%) skewX(-20deg);
+    opacity: 0;
+  }
+
+  &[data-hovered="true"]::after {
+    opacity: 1;
+    animation: ${shine} 900ms ease 0ms 1;
+  }
+`;
+
+const CardImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 4px;
+
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
+  transition: transform 120ms ease, filter 200ms ease, box-shadow 200ms ease;
+
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  ${CardImgWrap}[data-hovered="true"] & {
+    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0)
+      translateY(-2px);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16), 0 4px 12px rgba(0, 0, 0, 0.08);
+    filter: brightness(1.02);
+  }
+`;
 
 export default function NewCard() {
   const location = useLocation();
@@ -64,114 +138,85 @@ export default function NewCard() {
     return <div style={{ padding: 24 }}>카드 정보를 불러오는 중...</div>;
   }
 
-  // 입장 애니메이션
-  const popIn = keyframes`
-  0% { opacity: 0; transform: translateY(12px) scale(0.98); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
-`;
-
-  // 대기 플로팅
-  const bob = keyframes`
-  0%   { transform: translateY(0); }
-  50%  { transform: translateY(-3px); }
-  100% { transform: translateY(0); }
-`;
-
-  // 샤인 스윕
-  const shine = keyframes`
-  from { transform: translateX(-120%) skewX(-20deg); }
-  to   { transform: translateX(220%)  skewX(-20deg); }
-`;
-
   function CardPreview({ src, alt = "" }) {
-    const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
+    // const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
+    const wrapRef = useRef(null);
+    const rectRef = useRef(null);
+    const rafRef = useRef(null);
     const [hovered, setHovered] = useState(false);
 
+    const setVars = (rx, ry) => {
+      const el = wrapRef.current;
+      if (!el) return;
+      el.style.setProperty("--rx", rx + "deg");
+      el.style.setProperty("--ry", ry + "deg");
+    };
+
+    const measure = () => {
+      if (wrapRef.current)
+        rectRef.current = wrapRef.current.getBoundingClientRect();
+    };
+
+    const reset = () => {
+      setVars(0, 0);
+      rectRef.current = null;
+      setHovered(false);
+    };
+
+    const onEnter = () => {
+      measure();
+      setHovered(true);
+    };
+
     const onMove = (e) => {
-      const el = e.currentTarget;
-      const rect = el.getBoundingClientRect();
-      const px = (e.clientX - rect.left) / rect.width; // 0~1
-      const py = (e.clientY - rect.top) / rect.height; // 0~1
+      if (!rectRef.current) measure();
+      const r = rectRef.current;
+      const px = (e.clientX - r.left) / r.width; // 0~1
+      const py = (e.clientY - r.top) / r.height; // 0~1
 
       const max = 10; // 최대 기울기 각도
       const ry = (px - 0.5) * (max * 2); // 좌우 회전
       const rx = -(py - 0.5) * (max * 2); // 상하 회전
-      setTilt({ rx, ry });
+
+      if (!rafRef.current) {
+        rafRef.current = requestAnimationFrame(() => {
+          setVars(rx, ry);
+          rafRef.current = 0;
+        });
+      }
     };
 
-    const onLeave = () => {
-      setTilt({ rx: 0, ry: 0 });
-      setHovered(false);
-    };
+    useEffect(() => {
+      const onResize = reset;
+      const onScroll = reset;
+      const onVisibility = () => document.hidden && reset();
+
+      window.addEventListener("resize", onResize);
+      window.addEventListener("scroll", onScroll, true);
+      document.addEventListener("visibilitychange", onVisibility);
+      return () => {
+        window.removeEventListener("resize", onResize);
+        window.removeEventListener("scroll", onScroll, true);
+        document.removeEventListener("visibilitychange", onVisibility);
+        if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      };
+    }, []);
 
     return (
       <CardImgWrap
+        ref={wrapRef}
         onMouseMove={onMove}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={onLeave}
-        data-hovered={hovered}
-        style={{ "--rx": `${tilt.rx}deg`, "--ry": `${tilt.ry}deg` }}
+        onMouseEnter={onEnter}
+        onMouseLeave={reset}
+        data-hovered={hovered || undefined}
+        onMouseOut={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) reset();
+        }}
       >
         <CardImg src={src} alt={alt} />
       </CardImgWrap>
     );
   }
-
-  // 래퍼: 입장, 대기 플로팅, 샤인 오버레이까지 담당
-  const CardImgWrap = styled.div`
-    position: relative;
-    width: 215px;
-    height: 340px;
-    perspective: 900px;
-    transform-style: preserve-3d;
-
-    animation: ${popIn} 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
-
-    @media (prefers-reduced-motion: no-preference) {
-      animation: ${popIn} 420ms cubic-bezier(0.22, 1, 0.36, 1) both,
-        ${bob} 4.8s ease-in-out infinite 600ms;
-    }
-
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background: linear-gradient(
-        120deg,
-        transparent 0%,
-        rgba(255, 255, 255, 0.35) 50%,
-        transparent 100%
-      );
-      transform: translateX(-120%) skewX(-20deg);
-      opacity: 0;
-    }
-
-    &[data-hovered="true"]::after {
-      opacity: 1;
-      animation: ${shine} 900ms ease 0ms 1;
-    }
-  `;
-
-  const CardImg = styled.img`
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 12px;
-
-    transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
-    transition: transform 120ms ease, filter 200ms ease, box-shadow 200ms ease;
-
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
-
-    ${CardImgWrap}[data-hovered="true"] & {
-      transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0)
-        translateY(-2px);
-      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16),
-        0 4px 12px rgba(0, 0, 0, 0.08);
-      filter: brightness(1.02);
-    }
-  `;
 
   return (
     <>

@@ -1,8 +1,8 @@
-import styled from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import LargeBtn from "../../components/button/LargeBtn";
 import sampleCard from "./../../assets/img/test_thumbnail.png";
 import card1 from "./../../assets/img/card1.png";
@@ -81,17 +81,20 @@ const CARD_DATA = [
   },
 ];
 
+const shine = keyframes`
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to   { transform: translateX(220%)  skewX(-20deg); }
+`;
+
 export default function Card() {
   // state들 추가
   const [busy, setBusy] = useState(false); // 연타 방지
-  const [dir, setDir] = useState(0); // -1: left, 1: right, 0: idle
   const [phase, setPhase] = useState({ left: "to", right: "to" }); // 들어오는 슬롯 애니메이션 단계
   const [idx, setIdx] = useState(0);
 
   const animate = (direction) => {
     if (busy) return;
     setBusy(true);
-    setDir(direction);
 
     // 들어오는 쪽 슬롯을 'from'(오프캔버스)로 세팅
     if (direction === -1) setPhase((p) => ({ ...p, left: "from" }));
@@ -106,7 +109,6 @@ export default function Card() {
 
     // transition 끝나면 idle
     setTimeout(() => {
-      setDir(0);
       setBusy(false);
     }, 450); // transition 420ms + 여유
   };
@@ -135,17 +137,85 @@ export default function Card() {
     sessionStorage.setItem("triplet:selectedCardId", current.id);
   };
 
+  const centerRef = useRef(null);
+  const rectRef = useRef(null);
+  const rafRef = useRef(0);
+  const [centerHovered, setCenterHovered] = useState(false);
+
+  const setVars = (rx, ry, liftPx) => {
+    const el = centerRef.current;
+    if (!el) return;
+    el.style.setProperty("--rx", `${rx}deg`);
+    el.style.setProperty("--ry", `${ry}deg`);
+    el.style.setProperty("--lift", liftPx);
+  };
+
+  const measure = () => {
+    if (centerRef.current) {
+      rectRef.current = centerRef.current.getBoundingClientRect();
+    }
+  };
+
+  const resetTilt = () => {
+    setVars(0, 0, "0px");
+    rectRef.current = null;
+    setCenterHovered(false);
+    if (rafRef.current) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = 0;
+    }
+  };
+
+  const onCenterEnter = () => {
+    setCenterHovered(true);
+    measure(); // 좌표 1회 측정
+    setVars(0, 0, "-2px"); // 살짝 들어올림
+  };
+
+  const onCenterMove = (e) => {
+    const r = rectRef.current || (measure(), rectRef.current);
+    if (!r) return;
+    const px = (e.clientX - r.left) / r.width;
+    const py = (e.clientY - r.top) / r.height;
+    const MAX = 10;
+    const ry = (px - 0.5) * (MAX * 2);
+    const rx = -(py - 0.5) * (MAX * 2);
+
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        setVars(rx, ry, "-2px"); // 렌더 없이 CSS 변수만 갱신
+        rafRef.current = 0;
+      });
+    }
+  };
+
+  const onCenterLeave = resetTilt;
+
+  useEffect(() => {
+    // 뷰포트 변경/스크롤로 좌표가 틀어지면 리셋
+    const onResize = resetTilt;
+    const onScroll = resetTilt;
+    const onVis = () => document.hidden && resetTilt();
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+      document.removeEventListener("visibilitychange", onVis);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
   return (
     <>
       <Container>
         <CardText>
-          <MainText>
-            함께 쓰는 여행 경비에 꼭 맞는 카드, Triplet에서 준비했어요.
-          </MainText>
+          <MainText>원하는 혜택만 담은 카드</MainText>
           <SubTextList>
-            <SubText>모임통장과 연결해 쓸 수 있는 다양한 카드 중에서,</SubText>
+            <SubText>자주 쓰는 지출에 혜택을 집중했어요.</SubText>
             <SubText>
-              당신의 여행 스타일에 가장 잘 어울리는 카드를 선택해보세요.
+              필요한 순간, 필요한 곳에서 자연스럽게 아낄 수 있습니다.
             </SubText>
           </SubTextList>
         </CardText>
@@ -167,11 +237,16 @@ export default function Card() {
             onClick={goLeft}
           />
           <CarouselCard
+            ref={centerRef}
             key={current.id}
             $img={current.image}
             $pos="center"
             aria-label={current.name}
             role="img"
+            data-hovered={centerHovered ? "true" : undefined}
+            onMouseEnter={onCenterEnter}
+            onMouseMove={onCenterMove}
+            onMouseLeave={onCenterLeave}
           />
           <CarouselCard
             key={CARD_DATA[nextIdx].id}
@@ -248,6 +323,8 @@ const CarouselCard = styled.div`
   height: 319px;
   background: ${(p) => `url(${p.$img}) center / cover no-repeat`};
   transform-origin: center center;
+  border-radius: 4px;
+  overflow: hidden;
 
   transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), filter 420ms ease,
     box-shadow 420ms ease;
@@ -275,25 +352,38 @@ const CarouselCard = styled.div`
 
     const filt = $pos === "center" ? "none" : "saturate(0.85) brightness(0.6)";
     const z = $pos === "center" ? 2 : 1;
-    const pe = $pos === "center" ? "none" : "auto";
+    const pe = "auto";
 
-    return `
-      transform: translate3d(${x}px, 0, 0) scale(${baseScale});
+    return css`
+      transform: translate3d(${x}px, 0, 0) scale(${baseScale})
+        rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
+        translateY(var(--lift, 0px));
       filter: ${filt};
       z-index: ${z};
       pointer-events: ${pe};
 
-      ${
-        $pos !== "center"
-          ? `
+      ${$pos !== "center"
+        ? `
           cursor: pointer;
       &:hover{
       filter: brightness(0.9);
       transform: translate3d(${x}px, 0, 0) scale(1);
       }
       `
-          : ""
-      }
+        : css`
+          &::after{
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+            transform: translateX(-120%) skewX(-20deg);
+            opacity: 0;
+            }
+          &[data-hovered="true"]::after{
+            opacity: 1;
+            animation: ${shine} 900ms ease 0ms 1 both;
+          `}
     `;
   }}
 `;
@@ -424,6 +514,6 @@ const MainText = styled.div`
   text-align: center;
 `;
 const SubText = styled.div`
-  ${fontSet.heading3}
-  color: ${colors.gray700}
+  ${fontSet.body1_b}
+  color: ${colors.gray600}
 `;

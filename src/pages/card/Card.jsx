@@ -1,7 +1,7 @@
 import styled, { keyframes, css } from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import LargeBtn from "../../components/button/LargeBtn";
 import sampleCard from "./../../assets/img/test_thumbnail.png";
@@ -132,8 +132,12 @@ export default function Card() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const location = useLocation();
   const gotoApply = () => {
-    navigate(`/card/${current.id}/apply`, { state: { card: current } });
+    const prevUrl = location.pathname;
+    navigate(`/card/${current.id}/apply`, {
+      state: { card: current, prevUrl },
+    });
     sessionStorage.setItem("triplet:selectedCardId", current.id);
   };
 

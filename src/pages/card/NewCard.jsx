@@ -89,6 +89,8 @@ export default function NewCard() {
   const location = useLocation();
   const { id: idFromParam } = useParams(); // /card/:id/apply 의 :id
   const navigate = useNavigate();
+  const { state } = useLocation();
+  const prevUrl = state?.prevUrl || "/card";
 
   // 1) 라우터 state로 온 카드(가장 우선)
   const cardFromState = location.state?.card;
@@ -222,7 +224,7 @@ export default function NewCard() {
     <>
       <Container>
         <Title>
-          <BackBtn url="/card" text="이전" />
+          <BackBtn url={prevUrl} text="이전" />
           <SubTitle>카드신청</SubTitle>
           <MainTitle>{card.name}</MainTitle>
         </Title>

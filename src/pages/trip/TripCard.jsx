@@ -157,8 +157,10 @@ export default function TripCard() {
     setIsModalOpen(true);
   };
 
+  const location = useLocation();
   const gotoApply = (card) => {
-    navigate(`/card/${card.id}/apply`, { state: { card: card } });
+    const prevUrl = location.pathname;
+    navigate(`/card/${card.id}/apply`, { state: { card: card, prevUrl } });
     sessionStorage.setItem("triplet:selectedCardId", card.id);
   };
 

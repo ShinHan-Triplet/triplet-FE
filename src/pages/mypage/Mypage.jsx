@@ -57,6 +57,7 @@ export default function Mypage() {
             label="계정 삭제"
             bgColor={colors.white}
             textColor={colors.error}
+            hoverBgColor={colors.gray200}
             width={210}
           />
         </Sidebar>
@@ -157,6 +158,15 @@ const NavItem = styled.button`
     ${fontSet.body2_b};
     background: ${colors.blue50};
     color: ${colors.blue500};
+    pointer-events: none;
+  }
+
+  &:hover {
+    background: ${colors.gray100};
+  }
+
+  &.active:hover {
+    background: ${colors.blue50};
   }
 `;
 

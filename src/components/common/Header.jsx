@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
+import HeaderDropdown from "./HeaderDropdown";
 
 import logo from "../../assets/logo/logo.svg";
 import userIcon from "../../assets/icon/user.svg";
@@ -14,6 +15,8 @@ export default function Header({ onTabChange }) {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const iconBtnRef = useRef();
 
   useEffect(() => {
     const path = location.pathname;
@@ -35,6 +38,28 @@ export default function Header({ onTabChange }) {
       navigate("/card");
     }
   };
+
+  const handleDropdownSelect = (key) => {
+    if (key === "mypage") {
+      navigate("/mypage");
+    } else if (key === "logout") {
+      setIsLoggedIn(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleClickOutside = (e) => {
+      if (
+        iconBtnRef.current &&
+        !iconBtnRef.current.contains(e.target)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [dropdownOpen]);
 
   return (
     <HeaderWrap>
@@ -68,12 +93,17 @@ export default function Header({ onTabChange }) {
           ) : (
             <IconGroup>
               <IconBtn
-                onClick={() => {
-                  setActiveTab(null);
-                  navigate("/mypage");
-                }}
+                ref={iconBtnRef}
+                onClick={() => setDropdownOpen((v) => !v)}
+                style={{ position: "relative" }}
               >
                 <img src={userIcon} alt="내 정보" />
+                <HeaderDropdown
+                  open={dropdownOpen}
+                  onSelect={handleDropdownSelect}
+                  onClose={() => setDropdownOpen(false)}
+                  anchorRef={iconBtnRef}
+                />
               </IconBtn>
               <IconBtn onClick={() => { setActiveTab(null); navigate("/notifications"); }}>
                 <img src={bellIcon} alt="알림" />

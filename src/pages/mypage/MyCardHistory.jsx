@@ -118,28 +118,31 @@ export default function MyCardHistory() {
 }
 
 const Wrapper = styled.div`
-  width: 1060px;
-  min-height: 420px;
-  margin: 0 auto;
-  padding: 30px 70px;
+  background: ${colors.gray100};
+  width: 100%;
+  min-height: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 0;
 `;
 
 const CardBase = styled.div`
   background: ${colors.white};
+  box-sizing: border-box;
+  width: 1060px;
   border: 1px solid ${colors.gray200};
   border-radius: 12px;
   box-shadow: ${shadows.card};
+  display: flex;
+  flex-direction: column;
 `;
 
 const HistoryDetail = styled(CardBase)`
   padding: 30px 70px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  align-items: stretch;
+  gap: 30px;
 `;
 
 const BackRow = styled.div`

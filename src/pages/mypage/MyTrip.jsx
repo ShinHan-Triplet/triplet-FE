@@ -4,6 +4,8 @@ import shadows from "../../styles/shadows";
 import { useNavigate } from "react-router-dom";
 
 import TripList from "../../components/mypage/TripList";
+import Empty from "./MyEmpty";
+import MediumBtn from "../../components/button/MediumBtn";
 
 export default function MyTrip() {
   const navigate = useNavigate();
@@ -51,23 +53,40 @@ export default function MyTrip() {
       members: "신다운, 짱친1, 짱친2, 짱친3, 짱친4, 짱친5",
       dateRange: "2024. 01. 25 ~ 2024. 01. 29",
     },
-
   ];
 
+  const isEmpty = trips.length === 0;
+
   return (
-    <Wrapper>
+    <Wrapper isEmpty={isEmpty}>
+      {isEmpty ? (
+        <Empty
+          title="아직 여행이 없어요."
+          desc="Triplet에서 새로운 여행을 계획해보세요."
+          action={
+            <MediumBtn
+              label="계획 세우기"
+              onClick={() => navigate('/trip/create')}
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={180}
+            />
+          }
+        />
+      ) : (
         <Grid>
-            {trips.map((trip) => (
-                <TripList
-                key={trip.id}
-                thumbnail={trip.thumbnail}
-                title={trip.title}
-                members={trip.members}
-                dateRange={trip.dateRange}
-                onDetail={() => navigate(`/mypage/trip/${trip.id}`)}
-                />
-            ))}
+          {trips.map((trip) => (
+            <TripList
+              key={trip.id}
+              thumbnail={trip.thumbnail}
+              title={trip.title}
+              members={trip.members}
+              dateRange={trip.dateRange}
+              onDetail={() => navigate(`/mypage/trip/${trip.id}`)}
+            />
+          ))}
         </Grid>
+      )}
     </Wrapper>
   );
 }
@@ -83,6 +102,13 @@ const Wrapper = styled.div`
   display: grid;
   grid-auto-rows: min-content;
   row-gap: 20px;  
+
+  ${({ isEmpty }) =>
+    isEmpty &&
+    `
+    place-content: center;
+    place-items: center;
+  `}
 `;
 
 const Grid = styled.div`

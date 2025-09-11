@@ -16,9 +16,9 @@ export default function NewGather() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const gotoNewCard = () => {
+  const gotoTripCard = () => {
     const prevUrl = location.pathname;
-    navigate("/newcard", { state: { prevUrl } });
+    navigate("/trip/new/card", { state: { prevUrl } });
   };
 
   const cardList = [
@@ -57,7 +57,7 @@ export default function NewGather() {
         <MiniTitle>멤버 관리는 방장이 언제든 할 수 있어요.</MiniTitle>
       </Title>
       <div>
-        <BackBtn url="/gather" text="이전" />
+        <BackBtn url="/trip/new/companions" text="이전" />
         <Fill>
           <Contents>
             <PageTitle>
@@ -74,7 +74,7 @@ export default function NewGather() {
               <MiniText>
                 <TextContainer>
                   <img src={checkIcon} alt="member" />
-                  모임 멤버 초대는 마이페이지 &gt; 내 여행기록에서 할 수 있어요
+                  모임 멤버 초대는 마이페이지 &gt; 내 모임 에서 할 수 있어요
                 </TextContainer>
               </MiniText>
             </div>
@@ -114,7 +114,7 @@ export default function NewGather() {
           textColor={colors.white}
           width={240}
           disabled={!!selectedCard}
-          onClick={gotoNewCard}
+          onClick={gotoTripCard}
         ></LargeBtn>
       </BtnSpace>
     </Container>

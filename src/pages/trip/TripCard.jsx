@@ -9,7 +9,7 @@ import MediumBtn from "../../components/button/MediumBtn";
 import ModalForCard from "../../components/modal/ModalForCard";
 import { useLocation } from "react-router-dom";
 
-export default function NewCard() {
+export default function TripCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
 

@@ -5,6 +5,7 @@ import InputBox from "../../components/input/InputBox";
 import MediumBtn from "../../components/button/MediumBtn";
 import BackBtn from "../../components/button/BackBtn";
 import LargeBtn from "../../components/button/LargeBtn";
+import DaumPostcode from "react-daum-postcode";
 
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useMemo, useState, useRef, useEffect } from "react";
@@ -90,7 +91,51 @@ export default function NewCard() {
   const { id: idFromParam } = useParams(); // /card/:id/apply 의 :id
   const navigate = useNavigate();
   const { state } = useLocation();
-  const prevUrl = state?.prevUrl || "/card";
+  const prev2Url = state?.prev2Url || "/card";
+  const prevUrl = state?.prevUrl || "/trip";
+  const soloTrip = state?.soloTrip || false;
+  const [postcodeOpen, setPostcodeOpen] = useState(false);
+  const [addr, setAddr] = useState({
+    postcode: "",
+    address: "",
+    detail: "",
+    extra: "",
+  });
+  const detailRef = useRef(null);
+  const bindAddr = (key) => (e) => {
+    const v = typeof e === "object" && e?.target ? e.target.value : e ?? "";
+    setAddr((a) => ({ ...a, [key]: v }));
+  };
+
+  const handlePostcodeComplete = (data) => {
+    // 도로명/지번 분기
+    const address =
+      data.userSelectedType === "R" ? data.roadAddress : data.jibunAddress;
+
+    // 참고항목 조합
+    let extraAddr = "";
+    if (data.userSelectedType === "R") {
+      if (data.bname !== "" && /[동|로|가]$/g.test(data.bname)) {
+        extraAddr += data.bname;
+      }
+      if (data.buildingName !== "" && data.apartment === "Y") {
+        extraAddr +=
+          extraAddr !== "" ? `, ${data.buildingName}` : data.buildingName;
+      }
+      if (extraAddr !== "") extraAddr = ` (${extraAddr})`;
+    }
+
+    setAddr((prev) => ({
+      ...prev,
+      postcode: data.zonecode,
+      address,
+      extra: extraAddr,
+    }));
+
+    setPostcodeOpen(false);
+    // InputBox가 forwardRef면 바로 포커스; 아니면 살짝 지연
+    requestAnimationFrame(() => detailRef.current?.focus());
+  };
 
   // 1) 라우터 state로 온 카드(가장 우선)
   const cardFromState = location.state?.card;
@@ -220,27 +265,55 @@ export default function NewCard() {
     );
   }
 
+  function PostcodeModal({ onClose, onComplete }) {
+    const [closing, setClosing] = useState(false);
+    const handleClose = () => setClosing(true);
+
+    return (
+      <Overlay data-state={closing ? "closing" : "open"} onClick={handleClose}>
+        <Sheet
+          data-state={closing ? "closing" : "open"}
+          onClick={(e) => e.stopPropagation()}
+          onAnimationEnd={(e) => {
+            // content 애니메이션이 끝났을 때만 진짜 닫기
+            if (closing && e.currentTarget === e.target) onClose();
+          }}
+        >
+          <DaumPostcode
+            onComplete={(data) => {
+              onComplete(data); // 부모에서 상태 채우고 포커스 이동
+              handleClose(); // 닫힘 애니메이션 시작
+            }}
+            style={{ width: "100%", height: "100%" }}
+          />
+        </Sheet>
+      </Overlay>
+    );
+  }
+
   return (
     <>
       <Container>
         <Title>
-          <BackBtn url={prevUrl} text="이전" />
+          <BackBtn url={prev2Url} text="이전" state={{ soloTrip, prevUrl }} />
           <SubTitle>카드신청</SubTitle>
-          <MainTitle>{card.name}</MainTitle>
         </Title>
 
         <CardContainer>
           <CardPreview src={card.image} alt={card.name} />
           <CardInfo>
-            <CardTitle>주요 혜택</CardTitle>
-            <BenefitList>
-              {card.benefits.map((b, i) => (
-                <Benefit key={i}>
-                  <BenefitTitle>{b.title}</BenefitTitle>
-                  <BenefitContent>{b.content}</BenefitContent>
-                </Benefit>
-              ))}
-            </BenefitList>
+            <MainTitle>{card.name}</MainTitle>
+            <div>
+              <CardTitle>주요 혜택</CardTitle>
+              <BenefitList>
+                {card.benefits.map((b, i) => (
+                  <Benefit key={i}>
+                    <BenefitTitle>{b.title}</BenefitTitle>
+                    <BenefitContent>{b.content}</BenefitContent>
+                  </Benefit>
+                ))}
+              </BenefitList>
+            </div>
           </CardInfo>
         </CardContainer>
 
@@ -279,20 +352,44 @@ export default function NewCard() {
                 <DetailAddress>
                   <Photo>
                     <InputBox
-                      placeholder="파일을 선택해주세요"
+                      id="sample6_postcode"
+                      placeholder="우편번호"
                       width={340}
+                      value={addr.postcode}
+                      onChange={bindAddr("postcode")}
                     ></InputBox>
                     <MediumBtn
-                      label="파일선택"
+                      label="우편번호 찾기"
                       bgColor={colors.blue400}
                       textColor={colors.white}
                       width={160}
+                      onClick={() => setPostcodeOpen(true)}
                     ></MediumBtn>
                   </Photo>
                   <InputBox
-                    placeholder="‘-’를 제외하고 입력해주세요"
+                    id="sample6_address"
+                    placeholder="주소"
                     width={520}
+                    value={addr.address}
+                    onChange={bindAddr("address")}
                   ></InputBox>
+                  <Photo>
+                    <InputBox
+                      id="sample6_detailAddress"
+                      placeholder="상세주소"
+                      width={200}
+                      value={addr.detail}
+                      onChange={bindAddr("detail")}
+                      ref={detailRef}
+                    ></InputBox>
+                    <InputBox
+                      id="sample6_extraAddress"
+                      placeholder="참고항목"
+                      width={300}
+                      value={addr.extra}
+                      onChange={bindAddr("extra")}
+                    ></InputBox>
+                  </Photo>
                 </DetailAddress>
               </Detail>
             </Contents>
@@ -337,7 +434,7 @@ export default function NewCard() {
               <Detail>
                 <DetailTitle>카드 별명</DetailTitle>
                 <InputBox
-                  placeholder="카드 별명을 입력해주주세요"
+                  placeholder="카드 별명을 입력해주세요"
                   width={520}
                 ></InputBox>
               </Detail>
@@ -355,9 +452,72 @@ export default function NewCard() {
           ></LargeBtn>
         </BtnSpace>
       </Container>
+      {postcodeOpen && (
+        <PostcodeModal
+          onClose={() => setPostcodeOpen(false)}
+          onComplete={handlePostcodeComplete}
+        />
+      )}
     </>
   );
 }
+
+const overlayShow = keyframes`
+  from { opacity: 0; }
+  to   { opacity: 1; }
+`;
+const contentShowUpVH = keyframes`
+  from { opacity: 0; transform: translateY(8vh); }
+  to   { opacity: 1; transform: translateY(0); }
+`;
+const overlayHide = keyframes`
+  from { opacity: 1; }
+  to   { opacity: 0; }
+`;
+const contentHideDown = keyframes`
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8vh); }
+`;
+
+const Overlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+  &[data-state="open"] {
+    animation: ${overlayShow} 180ms ease-out forwards;
+  }
+  &[data-state="closing"] {
+    animation: ${overlayHide} 180ms ease-out forwards;
+  }
+`;
+
+const Sheet = styled.div`
+  width: 520px;
+  height: 520px;
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  position: relative;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+  &[data-state="open"] {
+    animation: ${contentShowUpVH} 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  &[data-state="closing"] {
+    animation: ${contentHideDown} 400ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+`;
 
 const CardDetail = styled.div`
   display: flex;
@@ -416,10 +576,11 @@ const Photo = styled.div`
 
 const CardInfo = styled.div`
   display: flex;
+  height: 340px;
   flex-direction: column;
+  justify-content: space-between;
   align-items: flex-end;
-  margin-left: 70px;
-  margin-top: 170px;
+  margin-left: 90px;
 `;
 const CardTitle = styled.div`
   ${fontSet.body2_b}
@@ -476,6 +637,10 @@ const Title = styled.div`
 
 const MainTitle = styled.div`
   ${fontSet.heading1}
+  display: flex;
+  width: 367px;
+  flex-direction: row;
+  align-items: center;
 `;
 
 const SubTitle = styled.div`

@@ -134,9 +134,9 @@ export default function Card() {
 
   const location = useLocation();
   const gotoApply = () => {
-    const prevUrl = location.pathname;
+    const prev2Url = location.pathname;
     navigate(`/card/${current.id}/apply`, {
-      state: { card: current, prevUrl },
+      state: { card: current, prev2Url },
     });
     sessionStorage.setItem("triplet:selectedCardId", current.id);
   };

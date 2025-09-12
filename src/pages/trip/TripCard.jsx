@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
@@ -148,8 +148,8 @@ export default function TripCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const { state } = useLocation();
-  const prevUrl = state?.prevUrl || "/trip";
-  const soloTrip = state?.soloTrip || false; // 전달받은 soloTrip 상태
+  var prevUrl = state?.prevUrl || "/trip";
+  var soloTrip = state?.soloTrip || false; // 전달받은 soloTrip 상태
   const navigate = useNavigate();
 
   const handleDetailClick = (card) => {
@@ -158,9 +158,25 @@ export default function TripCard() {
   };
 
   const location = useLocation();
+  useEffect(() => {
+    if (location.state?.soloTrip !== undefined) {
+      soloTrip = location.state.soloTrip;
+    } else {
+      soloTrip = false;
+    }
+
+    if (location.state?.prevUrl !== undefined) {
+      prevUrl = location.state.prevUrl;
+    } else {
+      prevUrl = "/trip";
+    }
+  }, [location.state]);
+
   const gotoApply = (card) => {
-    const prevUrl = location.pathname;
-    navigate(`/card/${card.id}/apply`, { state: { card: card, prevUrl } });
+    const prev2Url = location.pathname;
+    navigate(`/card/${card.id}/apply`, {
+      state: { card: card, prev2Url, soloTrip, prevUrl },
+    });
     sessionStorage.setItem("triplet:selectedCardId", card.id);
   };
 

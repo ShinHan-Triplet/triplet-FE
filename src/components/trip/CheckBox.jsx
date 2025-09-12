@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { useState } from "react";
-import NotChecked from "../../../assets/icon/checkbox_no.svg";
-import Checked from "../../../assets/icon/checkbox_yes.svg";
+import NotChecked from "../../assets/icon/checkbox_no.svg";
+import Checked from "../../assets/icon/checkbox_yes.svg";
 
 export default function CheckBox({
   checked,

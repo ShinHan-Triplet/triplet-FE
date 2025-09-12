@@ -10,6 +10,7 @@ import MyTripDetail from "./pages/mypage/MyTripDetail";
 import NewTrip from "./pages/trip/NewTrip";
 import Login from "./pages/login/Login";
 import TripCost from "./pages/trip/TripCost";
+import Trip from "./pages/trip/Trip";
 import Gather from "./pages/trip/Gather";
 import NewGather from "./pages/trip/NewGather";
 import TripCard from "./pages/trip/TripCard";
@@ -32,6 +33,7 @@ function AppLayout() {
         <Route path="/mypage/card/:id" element={<MyCardDetail />} />
         <Route path="/mypage/card/:id/history" element={<MyCardHistory />} />
         <Route path="/mypage/trip/:id" element={<MyTripDetail />} />
+        <Route path="/trip" element={<Trip />} />
         <Route path="/trip/new/details" element={<NewTrip />} />
         <Route path="/trip/new/cost" element={<TripCost />} />
         <Route path="/trip/new/companions" element={<Gather />} />

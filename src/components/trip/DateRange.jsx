@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import styled, { css } from "styled-components";
-import colors from "../../../styles/colors";
-import fontSet from "../../../styles/fonts";
-import calendar from "../../../assets/icon/calendar-gray.svg";
-import close from "../../../assets/icon/close.svg";
-import left from "../../../assets/icon/chevron-left-s.svg";
-import right from "../../../assets/icon/chevron-right-s.svg";
+import colors from "../../styles/colors";
+import fontSet from "../../styles/fonts";
+import calendar from "../../assets/icon/calendar-gray.svg";
+import close from "../../assets/icon/close.svg";
+import left from "../../assets/icon/chevron-left-s.svg";
+import right from "../../assets/icon/chevron-right-s.svg";
 // import shadows from "../../../styles/shadows";
 
 /**

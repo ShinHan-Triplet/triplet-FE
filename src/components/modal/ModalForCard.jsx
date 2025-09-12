@@ -27,20 +27,20 @@ export default function ModalForCard({ card, onClose }) {
         <Line />
         <ModalContent>
           <ModalMain>
-            <ModalTitle>{card?.title}</ModalTitle>
-            <ModalSub>{card.subTitle}</ModalSub>
+            <ModalTitle>{card?.name}</ModalTitle>
+            <ModalSub>{card.tagline}</ModalSub>
             <>
-              {card?.describes.map((desc, index) => (
-                <ModalDesc key={index}>{desc.exp}</ModalDesc>
+              {card?.desc.map((desc, index) => (
+                <ModalDesc key={index}>{desc}</ModalDesc>
               ))}
             </>
           </ModalMain>
           <ModalText>주요 혜택</ModalText>
           <ModalBenefit>
-            {card?.mainBenefits.map((benefit, index) => (
+            {card?.benefits.map((benefit, index) => (
               <BenefitItem key={index}>
-                <BenefitExp>{benefit.exp}</BenefitExp>
-                <BenefitNum>{benefit.num}</BenefitNum>
+                <BenefitExp>{benefit.title}</BenefitExp>
+                <BenefitNum>{benefit.content}</BenefitNum>
               </BenefitItem>
             ))}
           </ModalBenefit>

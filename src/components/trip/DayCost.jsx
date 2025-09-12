@@ -1,12 +1,17 @@
 import styled from "styled-components";
-import { useState, useEffect, useMemo } from "react";
-import colors from "../../../styles/colors";
-import fontSet from "../../../styles/fonts";
+import { useState, useEffect, useMemo, useRef } from "react";
+import colors from "../../styles/colors";
+import fontSet from "../../styles/fonts";
 import CheckBox from "./CheckBox";
-import InputBox from "../../../components/input/InputBox";
-import CategoryChip from "../../../components/chip/CategoryChip";
+import InputBox from "../input/InputBox";
+import CategoryChip from "../chip/CategoryChip";
 
-export default function DayCost({ day, onTotalChange }) {
+export default function DayCost({
+  day,
+  onTotalChange,
+  snapshot,
+  onSnapshotChange,
+}) {
   const [noSchedule, setNoSchedule] = useState(false);
 
   const [amounts, setAmounts] = useState({
@@ -16,18 +21,52 @@ export default function DayCost({ day, onTotalChange }) {
     etc: "",
   });
 
-  // 유틸: 문자열에서 숫자만 추출
+  const onSnapshotChangeRef = useRef(onSnapshotChange);
+  useEffect(() => {
+    onSnapshotChangeRef.current = onSnapshotChange;
+  }, [onSnapshotChange]);
+
+  const hydratingFromSnapshotRef = useRef(false);
+
+  useEffect(() => {
+    if (!snapshot) return;
+    const nextNo = !!snapshot.noSchedule;
+    const nextAmts = {
+      food: String(snapshot.amounts?.food ?? ""),
+      transport: String(snapshot.amounts?.transport ?? ""),
+      leisure: String(snapshot.amounts?.leisure ?? ""),
+      etc: String(snapshot.amounts?.etc ?? ""),
+    };
+    const sameNo = noSchedule === nextNo;
+    const sameAmts =
+      amounts.food === nextAmts.food &&
+      amounts.transport === nextAmts.transport &&
+      amounts.leisure === nextAmts.leisure &&
+      amounts.etc === nextAmts.etc;
+    if (!sameNo || !sameAmts) {
+      hydratingFromSnapshotRef.current = true; // 바로 위로 올리지 않게 가드
+      setNoSchedule(nextNo);
+      setAmounts(nextAmts);
+    }
+  }, [snapshot]);
+
   const toDigits = (s) => String(s ?? "").replace(/\D/g, "");
-  // 유틸: 입력창 표시용 포맷 (빈 문자열이면 그대로 빈칸 유지)
   const formatDigits = (digits) =>
     digits === "" ? "" : new Intl.NumberFormat("ko-KR").format(Number(digits));
   const formatWon = (n) => new Intl.NumberFormat("ko-KR").format(n);
 
   // 체크되면 입력값 리셋
   useEffect(() => {
-    if (noSchedule) {
-      setAmounts({ food: "", transport: "", leisure: "", etc: "" });
-    }
+    if (!noSchedule) return;
+    setAmounts((prev) => {
+      const allZero =
+        prev.food === "0" &&
+        prev.transport === "0" &&
+        prev.leisure === "0" &&
+        prev.etc === "0";
+      if (allZero) return prev;
+      return { food: "0", transport: "0", leisure: "0", etc: "0" };
+    });
   }, [noSchedule]);
 
   const handleAmount = (key) => (e) => {
@@ -50,6 +89,25 @@ export default function DayCost({ day, onTotalChange }) {
   useEffect(() => {
     if (typeof onTotalChange === "function") onTotalChange(total);
   }, [total]);
+
+  useEffect(() => {
+    if (hydratingFromSnapshotRef.current) {
+      hydratingFromSnapshotRef.current = false;
+      return;
+    }
+    if (
+      noSchedule &&
+      !(
+        amounts.food === "0" &&
+        amounts.transport === "0" &&
+        amounts.leisure === "0" &&
+        amounts.etc === "0"
+      )
+    ) {
+      return;
+    }
+    onSnapshotChangeRef.current?.({ noSchedule, amounts });
+  }, [noSchedule, amounts]);
 
   return (
     <Cost>

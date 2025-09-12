@@ -3,6 +3,7 @@ const colors = {
   black: '#000000',
   white: '#FFFFFF',
   error: '#FC5555',
+  error50: '#FDEBEC',
 
   // Gray scale
   gray900: '#222222',

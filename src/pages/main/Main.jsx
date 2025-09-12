@@ -1,7 +1,312 @@
-//import styled from 'styled-components';
-// import colors from "../../styles/colors";
-//import fontSet from '../../styles/fonts';
+import { useEffect, useRef } from 'react';
+import styled from 'styled-components';
+import colors from "../../styles/colors";
+import fontSet from '../../styles/fonts';
+import background from "../../assets/img/background/main_bg.png";
+import first1 from "../../assets/img/main/first_1.png";
+import first2 from "../../assets/img/main/first_2.png";
+import scrollUpIcon from '../../assets/icon/scroll-up.svg';
+import Reveal from '../../components/util/Reveal';
+import BackgroundOrbs from '../../components/util/BackgroundOrbs';
 
 export default function Main() {
-  return <></>;
+  const btnWrapRef = useRef(null);
+
+  const handleScrollTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // 플로팅 버튼 위치 스크롤 따라 움직이도록 설정
+  useEffect(() => {
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReduced) return;
+    let rafId = null;
+    let target = window.scrollY;
+    let current = target;
+
+    const lerp = (a, b, t) => a + (b - a) * t;
+
+    const loop = () => {
+      current = lerp(current, target, 0.15);
+      const diff = current - target;
+
+      if (btnWrapRef.current) {
+        btnWrapRef.current.style.transform = `translateY(${diff.toFixed(2)}px)`;
+      }
+
+      if (Math.abs(target - current) > 0.5) {
+        rafId = requestAnimationFrame(loop);
+      } else {
+        if (btnWrapRef.current) btnWrapRef.current.style.transform = 'translateY(0)';
+        rafId = null;
+      }
+    };
+
+    const onScroll = () => {
+      target = window.scrollY;
+      if (rafId == null) {
+        rafId = requestAnimationFrame(loop);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  return (
+    <BgWrap>
+      <img src={background} alt="메인 배경" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+      <MainTextContent>
+        <MainTextWrap>
+          <Heading1>여행도 일상도, 하나의 흐름으로</Heading1>
+          <MainHeading>Triplet에서 한눈에</MainHeading>
+        </MainTextWrap>
+        <SubTextWrap>
+          <Reveal dir="up" delay={0.00}>
+            <SubText>여행에서 가장 번거로운 돈 관리를</SubText>
+          </Reveal>
+          <Reveal dir="up" delay={0.06}>
+            <SubText>계획 · 기록 · 정리까지 한 흐름으로 단순하게 만듭니다.</SubText>
+          </Reveal>
+        </SubTextWrap>
+        <Reveal dir="up" delay={0.12}>
+          <LastText>누구와 어디서든, Triplet으로 한눈에 정리하세요.</LastText>
+        </Reveal>
+      </MainTextContent>
+
+      <MainInfo>
+        <BackgroundOrbs
+          orbs={[
+            { x: '0%', y: '5%', size: 540, color: 'rgba(226, 241, 255, 1)', dir: 'left',  delay: 0.1, blur: 72 },
+            { x: '55%', y: '25%', size: 700, color: 'rgba(226, 241, 255, 1)', dir: 'right', delay: 0.2, blur: 80 },
+            { x: '25%', y: '65%', size: 380, color: 'rgba(226, 241, 255, 1)', dir: 'up',    delay: 0.3, blur: 64 },
+          ]}
+        />
+        <div className="content">
+          <Reveal dir="up" delay={0.02}>
+            <MainInfoTitle>Planning : 계획은 가볍게, 기준은 확실하게</MainInfoTitle>
+          </Reveal>
+          <MainInfoDescWrap>
+            <Reveal dir="right" delay={0.08}>
+              <MainInfoDesc>여행 일정과 멤버를 선택하고</MainInfoDesc>
+            </Reveal>
+            <Reveal dir="right" delay={0.16}>
+              <MainInfoDesc>카테고리별 한도를 정해요.</MainInfoDesc>
+            </Reveal>
+          </MainInfoDescWrap>
+
+          <Reveal dir="up" delay={0.20}>
+            <MainFigure className="shift-left">
+              <img
+                src={first1}
+                alt="예산/카테고리 설정"
+                onLoad={(e) => {
+                  e.currentTarget.style.width = Math.round(e.currentTarget.naturalWidth / 2) + 'px';
+                }}
+              />
+              <img
+                className="float"
+                src={first2}
+                alt="모임/멤버 선택"
+                onLoad={(e) => {
+                  e.currentTarget.style.width = Math.round(e.currentTarget.naturalWidth / 2) + 'px';
+                }}
+              />
+            </MainFigure>
+          </Reveal>
+        </div>
+      </MainInfo>
+
+      <MainInfo>
+        <Reveal dir="up" delay={0.02}>
+          <MainInfoTitle>On Trip : 예산 현황, 실시간으로 한눈에</MainInfoTitle>
+        </Reveal>
+        <MainInfoDescWrap>
+          <Reveal dir="right" delay={0.08}>
+            <MainInfoDesc>카테고리별 지출과 잔여 예산을</MainInfoDesc>
+          </Reveal>
+          <Reveal dir="right" delay={0.16}>
+            <MainInfoDesc>실시간으로 확인하세요.</MainInfoDesc>
+          </Reveal>
+        </MainInfoDescWrap>
+      </MainInfo>
+
+      <MainInfo>
+        <Reveal dir="up" delay={0.02}>
+          <MainInfoTitle>Memories : 여행의 모든 순간을 기록하다</MainInfoTitle>
+        </Reveal>
+        <MainInfoDescWrap>
+          <Reveal dir="right" delay={0.08}>
+            <MainInfoDesc>여행 일정부터 테마, 동행자, 예산까지</MainInfoDesc>
+          </Reveal>
+          <Reveal dir="right" delay={0.16}>
+            <MainInfoDesc>한 페이지에 모두 담아 기록해요.</MainInfoDesc>
+          </Reveal>
+        </MainInfoDescWrap>
+      </MainInfo>
+
+      <FloatingBtnWrap ref={btnWrapRef}>
+        <FloatingBtn onClick={handleScrollTop} aria-label="상단으로">
+          <img src={scrollUpIcon} alt="" />
+        </FloatingBtn>
+      </FloatingBtnWrap>
+    </BgWrap>
+  );
 }
+
+const BgWrap = styled.div`
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+`;
+
+const FloatingBtnWrap = styled.div`
+  position: fixed;
+  right: 50px;
+  bottom: 60px;
+  z-index: 2000;
+  will-change: transform;
+`;
+
+const FloatingBtn = styled.button`
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: ${colors.white};
+  border: 2px solid ${colors.blue200};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    background: ${colors.gray100};
+  }
+`;
+
+const MainTextContent = styled.div`
+  position: absolute;
+  top: 320px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+  z-index: 20;
+`;
+
+const MainTextWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+`;
+
+const Heading1 = styled.div`
+  ${fontSet.heading1};
+  color: ${colors.black};
+`;
+
+const MainHeading = styled.div`
+  ${fontSet.mainHeading};
+  color: ${colors.black};
+`;
+
+const SubTextWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 400px;
+`;
+
+const SubText = styled.div`
+  ${fontSet.heading2};
+  color: ${colors.black};
+`;
+
+const LastText = styled.div`
+  margin-top: 36px;
+  display: flex;
+  justify-content: center;
+  ${fontSet.heading2};
+  color: ${colors.black};
+  z-index: 10;
+`;
+
+const MainInfo = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 200px 0;
+  position: relative;
+
+  & > .content {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  & > .content > div:last-child {
+    align-self: flex-start;
+  }
+`;
+
+const MainInfoTitle = styled.div`
+  ${fontSet.heading3};
+  color: ${colors.blue500};
+  text-align: center;
+`;
+
+const MainInfoDescWrap = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-top: 36px;
+`;
+
+const MainInfoDesc = styled.div`
+  ${fontSet.heading2};
+  color: ${colors.black};
+  text-align: center;
+`;
+
+const MainFigure = styled.figure`
+  position: relative;
+  margin: 120px 0 240px;
+  max-width: 92vw;
+
+  &.shift-left {
+    margin-left: -240px;
+  }
+
+  & > img {
+    display: block;
+    height: auto;
+    max-width: 100%;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.10);
+  }
+
+  & > img.float {
+    position: absolute;
+    right: -350px;
+    bottom: -160px;
+    border-radius: 10px;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.10);
+  }
+`;

@@ -5,10 +5,21 @@ import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import HeaderDropdown from "./HeaderDropdown";
+import NotificationDropdown from "./NotificationDropdown";
 
 import logo from "../../assets/logo/logo.svg";
 import userIcon from "../../assets/icon/user.svg";
 import bellIcon from "../../assets/icon/bell.svg";
+import bellNewIcon from "../../assets/icon/bell-new.svg";
+
+const MOCK_GATHERS = [
+  { gather_id: 5001, gather_name: "제주여행" },
+  { gather_id: 5002, gather_name: "입짧은주원과 식도락" }];
+
+const MOCK_GATHER_INVITES = [
+  { invite_id: 90001, invited_id: 101, gather_id: 5001, status: 1, created_at: "2025-09-10T09:12:00Z" },
+  { invite_id: 90002, invited_id: 101, gather_id: 5002, status: 1, created_at: "2025-09-10T09:13:00Z" },
+];
 
 export default function Header({ onTabChange }) {
   const navigate = useNavigate();
@@ -16,6 +27,9 @@ export default function Header({ onTabChange }) {
   const [activeTab, setActiveTab] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
+  const bellRef = useRef();
+  const [notifications, setNotifications] = useState([]);
   const iconBtnRef = useRef();
 
   useEffect(() => {
@@ -44,6 +58,7 @@ export default function Header({ onTabChange }) {
       navigate("/mypage");
     } else if (key === "logout") {
       setIsLoggedIn(false);
+      setNotifications([]);
     }
   };
 
@@ -60,6 +75,31 @@ export default function Header({ onTabChange }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen]);
+
+  // MOCK: 로그인 시 더미 알림 데이터 로드
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const myId = 101; // 초대받은 사용자 id
+    const invitesForMe = MOCK_GATHER_INVITES
+      .filter(it => it.invited_id === myId)
+      .map(it => ({
+        ...it,
+        gather_name: MOCK_GATHERS.find(g => g.gather_id === it.gather_id).gather_name,
+      }));
+    setNotifications(invitesForMe);
+  }, [isLoggedIn]);
+
+  const isWaiting = notifications.some(n => n.status === 1);
+
+  const approve = (n) => {
+    setNotifications(prev => prev.map(it => it.invite_id === n.invite_id ? { ...it, status: 2 } : it));
+    // 서버 연결:  PATCH /api/gather-invites/{id} { status:2 } + gathers_mapping insert
+  };
+  const reject = (n) => {
+    setNotifications(prev => prev.map(it => it.invite_id === n.invite_id ? { ...it, status: 3 } : it));
+    // 서버 연결:  PATCH /api/gather-invites/{id} { status:3 }
+  };
+
 
   return (
     <HeaderWrap>
@@ -105,8 +145,21 @@ export default function Header({ onTabChange }) {
                   anchorRef={iconBtnRef}
                 />
               </IconBtn>
-              <IconBtn onClick={() => { setActiveTab(null); navigate("/notifications"); }}>
-                <img src={bellIcon} alt="알림" />
+              <IconBtn
+                ref={bellRef}
+                onClick={() => setBellOpen(v => !v)}
+                style={{ position: "relative" }}
+                aria-label={isWaiting ? "새 알림 있음" : "알림"}
+              >
+                <img src={isWaiting ? bellNewIcon : bellIcon} alt="알림" />
+                <NotificationDropdown
+                  open={bellOpen}
+                  items={notifications}
+                  onApprove={approve}
+                  onReject={reject}
+                  onClose={() => setBellOpen(false)}
+                  anchorRef={bellRef}
+                />
               </IconBtn>
             </IconGroup>
           )}

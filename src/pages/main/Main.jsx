@@ -1,16 +1,50 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import colors from "../../styles/colors";
 import fontSet from '../../styles/fonts';
 import background from "../../assets/img/background/main_bg.png";
 import first1 from "../../assets/img/main/first_1.png";
 import first2 from "../../assets/img/main/first_2.png";
+import secondCard from "../../assets/img/main/second_card.png";
+import ellipse from "../../assets/img/main/ellipse_yellow.png";
 import scrollUpIcon from '../../assets/icon/scroll-up.svg';
 import Reveal from '../../components/util/Reveal';
 import BackgroundOrbs from '../../components/util/BackgroundOrbs';
+import ProgressBar from "../../components/mypage/ProgressBar";
+
+const carouselCats = ['전체', '식비', '교통비', '여가비', '기타'];
+const costs = {
+  total: {
+    전체: 200000,
+    식비: 60000,
+    교통비: 50000,
+    여가비: 40000,
+    기타: 100000,
+  },
+  used: {
+    전체: 160000,
+    식비: 36000,
+    교통비: 70000,
+    여가비: 30000,
+    기타: 80000,
+  },
+};
 
 export default function Main() {
   const btnWrapRef = useRef(null);
+  const [carIdx, setCarIdx] = useState(0);
+
+  const len = carouselCats.length;
+  const centerCat = carouselCats[carIdx];
+  const leftCat   = carouselCats[(carIdx + len - 1) % len];
+  const rightCat  = carouselCats[(carIdx + 1) % len]; 
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCarIdx((i) => (i + 1) % carouselCats.length);
+    }, 2000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleScrollTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -125,6 +159,7 @@ export default function Main() {
       </MainInfo>
 
       <MainInfo>
+        <img className="section-ellipse" src={ellipse} alt="" aria-hidden="true" />
         <Reveal dir="up" delay={0.02}>
           <MainInfoTitle>On Trip : 예산 현황, 실시간으로 한눈에</MainInfoTitle>
         </Reveal>
@@ -136,6 +171,46 @@ export default function Main() {
             <MainInfoDesc>실시간으로 확인하세요.</MainInfoDesc>
           </Reveal>
         </MainInfoDescWrap>
+
+        <Reveal dir="up" delay={0.20}>
+          <MainFigure>
+            <img
+              src={secondCard}
+              alt="카드내역"
+              onLoad={(e) => {
+                e.currentTarget.style.width = Math.round(e.currentTarget.naturalWidth / 3) + 'px';
+              }}
+             />
+
+            <SideBanner className="side left">
+              <div className="shrink">
+                <ProgressBar
+                  category={leftCat}
+                  used={costs.used[leftCat]}
+                  total={costs.total[leftCat]}
+                />
+              </div>
+            </SideBanner>
+
+            <SideBanner className="side right">
+              <div className="shrink">
+                <ProgressBar
+                  category={rightCat}
+                  used={costs.used[rightCat]}
+                  total={costs.total[rightCat]}
+                />
+              </div>
+            </SideBanner>
+
+            <div className="overlay">
+              <ProgressBar
+                category={centerCat}
+                used={costs.used[centerCat]}
+                total={costs.total[centerCat]}
+              />
+            </div>
+          </MainFigure>
+        </Reveal>
       </MainInfo>
 
       <MainInfo>
@@ -251,6 +326,20 @@ const MainInfo = styled.div`
   margin: 200px 0;
   position: relative;
 
+  & > img.section-ellipse {
+    position: absolute;
+    z-index: 0;
+    left: 50%;
+    top: -150px; 
+    transform: translateX(-50%);
+    width: 120vw;
+    max-width: none;
+    height: auto;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.5;
+  }
+
   & > .content {
     position: relative;
     z-index: 2;
@@ -289,17 +378,35 @@ const MainFigure = styled.figure`
   margin: 120px 0 240px;
   max-width: 92vw;
 
-  &.shift-left {
-    margin-left: -240px;
-  }
+  isolation: isolate;
+
+  --barTop: 280px;
+  --barSidePadding: 70px;
+  --barWidth: calc(100% - (var(--barSidePadding) * 2));
+  --sideWidth: 260px;
+  --sideGap: 20px; 
+
+  &.shift-left { margin-left: -240px; }
 
   & > img {
+    position: relative;
+    z-index: 1;
     display: block;
     height: auto;
     max-width: 100%;
     border-radius: 10px;
     background: #fff;
     box-shadow: 0 16px 36px rgba(0,0,0,0.10);
+  }
+
+  & > .overlay {
+    position: absolute;
+    z-index: 5;
+    left: 50%;
+    transform: translateX(-50%);
+    top: var(--barTop);
+    width: var(--barWidth);
+    pointer-events: auto;
   }
 
   & > img.float {
@@ -309,4 +416,17 @@ const MainFigure = styled.figure`
     border-radius: 10px;
     box-shadow: 0 16px 36px rgba(0,0,0,0.10);
   }
+`;
+
+const SideBanner = styled.div`
+  position: absolute;
+  z-index: 3;
+  top: var(--barTop);
+  width: var(--barWidth);
+  pointer-events: auto;
+
+  &.left  { right: calc(100% - 40px); }
+  &.right { left:  calc(100% - 40px); }
+
+  .shrink { transform: none; }
 `;

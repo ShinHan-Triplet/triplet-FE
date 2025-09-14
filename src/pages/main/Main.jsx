@@ -6,7 +6,12 @@ import background from "../../assets/img/background/main_bg.png";
 import first1 from "../../assets/img/main/first_1.png";
 import first2 from "../../assets/img/main/first_2.png";
 import secondCard from "../../assets/img/main/second_card.png";
-import ellipse from "../../assets/img/main/ellipse_yellow.png";
+import thirdTrip from "../../assets/img/main/third_trip.png";
+import trip1 from "../../assets/img/main/trip1.png";
+import trip2 from "../../assets/img/main/trip2.png";
+import trip3 from "../../assets/img/main/trip3.png";
+import ellipseYellow from "../../assets/img/main/ellipse_yellow.png";
+import ellipseThird from "../../assets/img/main/ellipse_third.png";
 import scrollUpIcon from '../../assets/icon/scroll-up.svg';
 import Reveal from '../../components/util/Reveal';
 import BackgroundOrbs from '../../components/util/BackgroundOrbs';
@@ -19,14 +24,14 @@ const costs = {
     식비: 60000,
     교통비: 50000,
     여가비: 40000,
-    기타: 100000,
+    기타: 80000,
   },
   used: {
-    전체: 160000,
+    전체: 185000,
     식비: 36000,
     교통비: 70000,
     여가비: 30000,
-    기타: 80000,
+    기타: 65000,
   },
 };
 
@@ -42,7 +47,7 @@ export default function Main() {
   useEffect(() => {
     const id = setInterval(() => {
       setCarIdx((i) => (i + 1) % carouselCats.length);
-    }, 2000);
+    }, 1500);
     return () => clearInterval(id);
   }, []);
 
@@ -159,7 +164,7 @@ export default function Main() {
       </MainInfo>
 
       <MainInfo>
-        <img className="section-ellipse" src={ellipse} alt="" aria-hidden="true" />
+        <img className="section-ellipse" src={ellipseYellow} alt="" aria-hidden="true" />
         <Reveal dir="up" delay={0.02}>
           <MainInfoTitle>On Trip : 예산 현황, 실시간으로 한눈에</MainInfoTitle>
         </Reveal>
@@ -214,6 +219,7 @@ export default function Main() {
       </MainInfo>
 
       <MainInfo>
+        <img className="section-ellipse" src={ellipseThird} alt="" aria-hidden="true" />
         <Reveal dir="up" delay={0.02}>
           <MainInfoTitle>Memories : 여행의 모든 순간을 기록하다</MainInfoTitle>
         </Reveal>
@@ -225,6 +231,36 @@ export default function Main() {
             <MainInfoDesc>한 페이지에 모두 담아 기록해요.</MainInfoDesc>
           </Reveal>
         </MainInfoDescWrap>
+
+        <Reveal dir="up" delay={0.20}>
+          <TripRow>
+            <Tripwrap>
+              <img src={trip1} alt="여행1"
+                onLoad={(e) => { e.currentTarget.style.width = Math.round(e.currentTarget.naturalWidth / 4) + 'px'; }} />
+            </Tripwrap>
+            <Tripwrap>
+              <img src={trip2} alt="여행2"
+                onLoad={(e) => { e.currentTarget.style.width = Math.round(e.currentTarget.naturalWidth / 4) + 'px'; }} />
+            </Tripwrap>
+            <Tripwrap>
+              <img src={trip3} alt="여행3"
+                onLoad={(e) => { e.currentTarget.style.width = Math.round(e.currentTarget.naturalWidth / 4) + 'px'; }} />
+            </Tripwrap>
+          </TripRow>
+          <ArrowDown aria-hidden="true" />
+        </Reveal>
+            
+        <Reveal dir="up" delay={0.20}>
+          <TripFigure>
+            <img
+              src={thirdTrip}
+              alt="여행기록"
+              onLoad={(e) => {
+                e.currentTarget.style.width = Math.round(e.currentTarget.naturalWidth / 3) + 'px';
+              }}
+             />
+          </TripFigure>
+        </Reveal>
       </MainInfo>
 
       <FloatingBtnWrap ref={btnWrapRef}>
@@ -332,12 +368,12 @@ const MainInfo = styled.div`
     left: 50%;
     top: -150px; 
     transform: translateX(-50%);
-    width: 120vw;
+    width: 110vw;
     max-width: none;
     height: auto;
     pointer-events: none;
     user-select: none;
-    opacity: 0.5;
+    opacity: 0.6;
   }
 
   & > .content {
@@ -395,7 +431,7 @@ const MainFigure = styled.figure`
     height: auto;
     max-width: 100%;
     border-radius: 10px;
-    background: #fff;
+    background: ${colors.white};
     box-shadow: 0 16px 36px rgba(0,0,0,0.10);
   }
 
@@ -429,4 +465,91 @@ const SideBanner = styled.div`
   &.right { left:  calc(100% - 40px); }
 
   .shrink { transform: none; }
+`;
+
+const TripRow = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 120px;
+`;
+
+const Tripwrap = styled.div`
+  display: flex;
+  align-items: flex-start;
+  margin: 0;
+
+  & > img {
+    display: block;
+    max-width: none;
+    height: auto;
+    border-radius: 10px;
+    background: ${colors.white};
+    box-shadow: 0 16px 36px rgba(0,0,0,0.10);
+    flex: 0 0 auto;
+  }
+`;
+
+const ArrowDown = styled.div`
+  align-self: center;
+  position: relative;
+  margin: -20px auto 36px auto;
+  height: 120px;
+  width: 5px;
+
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      ${colors.blue200} 0 6px,
+      transparent 6px 12px
+    );
+
+  transform-origin: top;
+  animation: arrowGrow 520ms ease-out forwards;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -12px;
+    transform: translateX(-50%) translateY(-6px);
+    opacity: 0;
+
+    width: 0; height: 0;
+    border-left: 12px solid transparent;
+    border-right: 12px solid transparent;
+    border-top: 24px solid ${colors.blue200};
+
+    animation: arrowHeadDrop 420ms ease-out 280ms forwards;
+  }
+
+  animation:
+    arrowGrow 260ms ease-out forwards,
+    dashFlow 600ms linear infinite 260ms;
+
+  @keyframes arrowGrow {
+    from { transform: scaleY(0); }
+    to   { transform: scaleY(1); }
+  }
+  @keyframes arrowHeadDrop {
+    from { transform: translateX(-50%) translateY(-6px); opacity: 0; }
+    to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+  }
+  @keyframes dashFlow {
+    from { background-position: 0 0; }
+    to   { background-position: 0 12px; }
+  }
+`;
+
+const TripFigure = styled.figure`
+  max-width: 92vw;
+  position: relative;
+    z-index: 1;
+    display: block;
+    height: auto;
+    max-width: 100%;
+    border-radius: 10px;
+    background: ${colors.white};
+    box-shadow: 0 16px 36px rgba(0,0,0,0.10);
 `;

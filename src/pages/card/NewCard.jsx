@@ -6,6 +6,7 @@ import MediumBtn from "../../components/button/MediumBtn";
 import BackBtn from "../../components/button/BackBtn";
 import LargeBtn from "../../components/button/LargeBtn";
 import DaumPostcode from "react-daum-postcode";
+import Modal from "../../components/modal/Modal";
 
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useMemo, useState, useRef, useEffect } from "react";
@@ -101,6 +102,7 @@ export default function NewCard() {
     detail: "",
     extra: "",
   });
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const detailRef = useRef(null);
   const bindAddr = (key) => (e) => {
     const v = typeof e === "object" && e?.target ? e.target.value : e ?? "";
@@ -135,6 +137,63 @@ export default function NewCard() {
     setPostcodeOpen(false);
     // InputBox가 forwardRef면 바로 포커스; 아니면 살짝 지연
     requestAnimationFrame(() => detailRef.current?.focus());
+  };
+
+  // 숫자만 남기기
+  const onlyDigits = (s) => (s || "").replace(/\D/g, "");
+
+  // 한국형 전화번호 포맷팅 (모바일/일반 대응)
+  const formatPhoneKR = (digits) => {
+    const d = onlyDigits(digits);
+
+    // 02 시작(서울) 처리
+    if (d.startsWith("02")) {
+      if (d.length <= 2) return d;
+      if (d.length <= 5) return `${d.slice(0, 2)}-${d.slice(2)}`;
+      if (d.length <= 9)
+        return `${d.slice(0, 2)}-${d.slice(2, 5)}-${d.slice(5)}`;
+      return `${d.slice(0, 2)}-${d.slice(2, 6)}-${d.slice(6, 10)}`;
+    }
+
+    // 그 외(010 등)
+    if (d.length <= 3) return d;
+    if (d.length <= 7) return `${d.slice(0, 3)}-${d.slice(3)}`;
+    if (d.length <= 10)
+      return `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6, 10)}`;
+    return `${d.slice(0, 3)}-${d.slice(3, 7)}-${d.slice(7, 11)}`;
+  };
+
+  // 상태들
+  const [phone, setPhone] = useState("");
+  const handlePhoneChange = (e) => {
+    const d = onlyDigits(e.target.value).slice(0, 11); // 휴대폰 최대 11자리
+    setPhone(formatPhoneKR(d));
+  };
+
+  const [rrn1, setRrn1] = useState(""); // 주민등록번호 앞 6
+  const [rrn2, setRrn2] = useState(""); // 주민등록번호 뒤 7 (마스킹)
+  const handleRrn1 = (e) => setRrn1(onlyDigits(e.target.value).slice(0, 6));
+  const handleRrn2 = (e) => setRrn2(onlyDigits(e.target.value).slice(0, 7));
+
+  const [pw1, setPw1] = useState(""); // 카드 비밀번호 4자리
+  const [pw2, setPw2] = useState("");
+  const handlePw1 = (e) => setPw1(onlyDigits(e.target.value).slice(0, 4));
+  const handlePw2 = (e) => setPw2(onlyDigits(e.target.value).slice(0, 4));
+  const pwMismatch = pw1.length > 0 && pw2.length > 0 && pw1 !== pw2;
+
+  const gotoHome = () => {
+    navigate("/");
+  };
+  const gotoMypage = () => {
+    navigate("/mypage?tab=card");
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const newGather = () => {
+    setIsModalOpen(true);
   };
 
   // 1) 라우터 state로 온 카드(가장 우선)
@@ -293,6 +352,17 @@ export default function NewCard() {
 
   return (
     <>
+      {isModalOpen && (
+        <Modal
+          title="새로운 카드를 만들었어요"
+          def1="새 카드로 준비 끝, 출발만 남았어요"
+          def2="마이페이지에서 사용 내역을 확인할 수 있어요"
+          type={1}
+          onClose={closeModal}
+          func1={gotoHome}
+          func2={gotoMypage}
+        />
+      )}
       <Container>
         <Title>
           <BackBtn url={prev2Url} text="이전" state={{ soloTrip, prevUrl }} />
@@ -334,6 +404,11 @@ export default function NewCard() {
                 <DetailTitle>휴대폰번호</DetailTitle>
                 <InputBox
                   placeholder="‘-’를 제외하고 입력해주세요"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={13}
                   width={520}
                 ></InputBox>
               </Detail>
@@ -341,9 +416,26 @@ export default function NewCard() {
               <Detail>
                 <DetailTitle>주민등록번호</DetailTitle>
                 <Input>
-                  <InputBox placeholder="000000" width={250}></InputBox>
+                  <InputBox
+                    placeholder="000000"
+                    width={250}
+                    value={rrn1}
+                    onChange={handleRrn1}
+                    inputMode="numeric"
+                    maxLength={6}
+                    autoComplete="off"
+                  ></InputBox>
                   <Hyphen>-</Hyphen>
-                  <InputBox placeholder="000000" width={250}></InputBox>
+                  <InputBox
+                    placeholder="000000"
+                    width={250}
+                    value={rrn2}
+                    onChange={handleRrn2}
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={7}
+                    autoComplete="off"
+                  ></InputBox>
                 </Input>
               </Detail>
 
@@ -416,15 +508,35 @@ export default function NewCard() {
                 <InputBox
                   placeholder="4자리 숫자를 입력해주세요"
                   width={520}
+                  value={pw1}
+                  onChange={handlePw1}
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={4}
+                  autoComplete="new-password"
                 ></InputBox>
               </Detail>
-              <Detail>
-                <DetailTitle>비밀번호 확인</DetailTitle>
-                <InputBox
-                  placeholder="비밀번호를 다시 입력해주세요"
-                  width={520}
-                ></InputBox>
-              </Detail>
+              <CheckPwd>
+                <Detail>
+                  <DetailTitle>비밀번호 확인</DetailTitle>
+                  <InputBox
+                    placeholder="비밀번호를 다시 입력해주세요"
+                    width={520}
+                    value={pw2}
+                    onChange={handlePw2}
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={4}
+                    autoComplete="new-password"
+                    aria-invalid={pwMismatch ? "true" : "false"}
+                  ></InputBox>
+                </Detail>
+                {pwMismatch && (
+                  <ErrorText role="alert">
+                    비밀번호가 일치하지 않습니다
+                  </ErrorText>
+                )}
+              </CheckPwd>
             </Contents>
           </Fill>
 
@@ -444,11 +556,11 @@ export default function NewCard() {
 
         <BtnSpace>
           <LargeBtn
-            label="다음"
-            // onClick={nextPage}
+            label="카드 발급완료"
+            onClick={newGather}
             bgColor={colors.blue400}
             textColor={colors.white}
-            width={180}
+            width={220}
           ></LargeBtn>
         </BtnSpace>
       </Container>
@@ -461,6 +573,19 @@ export default function NewCard() {
     </>
   );
 }
+
+const CheckPwd = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+`;
+const ErrorText = styled.div`
+  ${fontSet.detail}
+  color: ${colors.error};
+  margin-left: 184px;
+  margin-top: -8px;
+`;
 
 const overlayShow = keyframes`
   from { opacity: 0; }

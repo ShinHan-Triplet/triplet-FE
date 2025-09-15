@@ -42,9 +42,6 @@ export default function TripImgRotator({
       setActive(0);
     }
     shownIndexRef.current = safeIdx;
-    // active, srcA, srcB를 의존성에 넣지 않는 이유:
-    // index 변화 이벤트 하나에 대해 페이드 트리거 한 번만 내고 싶어서.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, images, fade]);
 
   // Uncontrolled: index가 없을 때만 내부 타이머로 순환

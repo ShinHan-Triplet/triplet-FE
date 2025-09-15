@@ -98,8 +98,8 @@ const PickerContainer = styled.div`
 `;
 
 const FieldButton = styled.button`
-  ${fontSet.detail}
-  width: 320px;
+  ${fontSet.body3_m}
+  width: 340px;
   height: 54px;
   display: flex;
   align-items: center;

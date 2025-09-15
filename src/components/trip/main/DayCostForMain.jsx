@@ -118,7 +118,7 @@ const Blank = styled.div`
   border: 2px dashed ${colors.gray300};
   border-radius: 10px;
   padding: 16px;
-  height: 120px;
+  height: 134px;
   display: flex;
   justify-content: center;
   align-items: center;

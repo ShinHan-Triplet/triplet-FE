@@ -66,7 +66,7 @@ export default function DayRange({
           />
         </RowStatic>
 
-        {renderDay2 && (
+        {renderDay2 ? (
           <RowTransition $leaving={leaving} $exitMs={exitMs}>
             <DayCost
               day={2}
@@ -78,11 +78,17 @@ export default function DayRange({
               noSchedule={leaving ? lastNoSchedule : day2NoSchedule}
             />
           </RowTransition>
+        ) : (
+          <Blank />
         )}
       </DayMoney>
     </>
   );
 }
+
+const Blank = styled.div`
+  height: 222px;
+`;
 
 const fadeInUpSoft = keyframes`
   from {
@@ -108,12 +114,6 @@ const fadeOutDownSoft = keyframes`
     transform: translateY(8px);
     filter: saturate(0.92);
   }
-`;
-
-const pulseSoft = keyframes`
-  0%   { transform: scale(0.995); box-shadow: 0 0 0 rgba(0,0,0,0); }
-  40%  { transform: scale(1.005); box-shadow: 0 6px 16px rgba(0,0,0,0.06); }
-  100% { transform: scale(1);     box-shadow: 0 0 0 rgba(0,0,0,0); }
 `;
 
 const DatePick = styled.div`

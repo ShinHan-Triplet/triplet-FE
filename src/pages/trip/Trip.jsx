@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import LargeBtn from "../../components/button/LargeBtn";
@@ -18,6 +18,15 @@ import mudo2 from "../../assets/img/trip/mudo2.png";
 import mudo3 from "../../assets/img/trip/mudo3.png";
 import mudo4 from "../../assets/img/trip/mudo4.png";
 import DayRange from "../../components/trip/main/DayRange";
+import blueEllipse from "../../assets/img/background/ellipseBlue.png";
+
+import gather from "../../assets/img/gather.png";
+import alone from "../../assets/img/alone.png";
+import CardRotator from "../../components/trip/CardRotator";
+import food from "../../assets/img/card/food.png";
+import activity from "../../assets/img/card/activity.png";
+import healing from "../../assets/img/card/healing.png";
+import etc from "../../assets/img/card/etc.png";
 
 const THEMES = [
   { name: "식도락", num: 0 },
@@ -30,10 +39,18 @@ export default function Trip() {
   const btnWrapRef = useRef(null);
   const [imgIndex, setImgIndex] = useState(0);
   const [theme, setTheme] = useState(0);
+  const [front, setFront] = useState("gather");
 
   const handleScrollTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFront((prev) => (prev === "gather" ? "alone" : "gather"));
+    }, 3000); // 3초마다 교체
+    return () => clearInterval(interval);
+  }, []);
 
   // 플로팅 버튼 위치 스크롤 따라 움직이도록 설정
   useEffect(() => {
@@ -198,6 +215,7 @@ export default function Trip() {
                   images={[mudo1, mudo2, mudo3, mudo4]}
                   index={imgIndex}
                 />
+
                 <Content>
                   <TripTitle>여행 이름</TripTitle>
                   <TripWritor
@@ -254,14 +272,14 @@ export default function Trip() {
 
         <MainInfo>
           <div className="content">
+            <BlueEllipse />
             <Reveal dir="up" delay={0.02}>
               <MainInfoTitle>이멤버 리멤버:remember</MainInfoTitle>
             </Reveal>
             <MainInfoDescWrap>
               <Reveal dir="right" delay={0.08}>
                 <MainInfoDesc>
-                  지난 모임 이어가기, 새 모임 만들기, 혼자 떠나기 - 선택만
-                  하세요
+                  지난 모임 이어가기 / 새 모임 만들기 / 혼자 떠나기
                 </MainInfoDesc>
               </Reveal>
               <Reveal dir="right" delay={0.16}>
@@ -270,7 +288,60 @@ export default function Trip() {
                 </MainInfoDesc>
               </Reveal>
               <Reveal dir="right" delay={0.24}>
-                <Check />
+                <Wrapper>
+                  <Card
+                    type="gather"
+                    $active={front === "gather"}
+                    style={{ zIndex: front === "gather" ? 2 : 1 }}
+                  />
+                  <Card
+                    type="alone"
+                    $active={front === "alone"}
+                    style={{ zIndex: front === "alone" ? 2 : 1 }}
+                  />
+                </Wrapper>
+              </Reveal>
+            </MainInfoDescWrap>
+
+            <Reveal dir="up" delay={0.2}>
+              <Step1Content></Step1Content>
+            </Reveal>
+          </div>
+        </MainInfo>
+
+        <MainInfo>
+          <div className="content">
+            <Reveal dir="up" delay={0.02}>
+              <MainInfoTitle>여행 테마에 맞춘 카드 추천</MainInfoTitle>
+            </Reveal>
+            <MainInfoDescWrap>
+              <Reveal dir="right" delay={0.08}>
+                <MainInfoDesc>
+                  여행 테마에 딱 맞는 카드만 보여줘요.
+                </MainInfoDesc>
+              </Reveal>
+              <Reveal dir="right" delay={0.16}>
+                <MainInfoDesc>
+                  추천에서 바로 발급, 모임에 연결까지 한 번에 연결해요.
+                </MainInfoDesc>
+              </Reveal>
+              <Reveal dir="right" delay={0.24}>
+                <Grid4X1>
+                  {THEMES.map((t) => (
+                    <ThemeBtn
+                      key={t.num}
+                      label={t.name}
+                      selected={theme === t.num}
+                      width={160}
+                      textColor={colors.black}
+                      pointerEvents={"none"}
+                    />
+                  ))}
+                </Grid4X1>
+                <CardRotator
+                  images={[food, activity, healing, etc]}
+                  index={imgIndex}
+                />
               </Reveal>
             </MainInfoDescWrap>
 
@@ -289,6 +360,51 @@ export default function Trip() {
     </>
   );
 }
+
+const Wrapper = styled.div`
+  position: relative;
+  width: 600px;
+  height: 280px;
+  margin-top: 80px;
+`;
+const Card = styled.div`
+  position: absolute;
+  width: 600px;
+  height: 280px;
+  background: ${({ type }) =>
+    type === "gather"
+      ? `url(${gather}) no-repeat center/contain`
+      : `url(${alone}) no-repeat center/contain`};
+
+  /* 겹치도록 위치 조정 */
+  ${({ type }) =>
+    type === "gather"
+      ? css`
+          top: 20px;
+          left: -80px;
+        `
+      : css`
+          top: -80px;
+          left: 80px;
+        `}
+
+  transition: transform 0.4s ease, opacity 0.4s ease;
+  opacity: ${({ $active }) => ($active ? 1 : 0.2)};
+  transform: ${({ $active }) =>
+    $active ? "scale(1) translate(0,0)" : "scale(0.9)"};
+`;
+
+const BlueEllipse = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1536px;
+  height: 800px;
+  background: url(${blueEllipse}) no-repeat center/contain;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+`;
 
 const Step1Content = styled.div`
   display: flex;
@@ -316,6 +432,15 @@ const Grid2X2 = styled.div`
   grid-column-gap: 20px;
   grid-row-gap: 20px;
   margin-top: 40px;
+`;
+
+const Grid4X1 = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-column-gap: 20px;
+  grid-row-gap: 20px;
+  margin-top: 40px;
+  margin-bottom: 60px;
 `;
 
 const MainTextContent = styled.div`
@@ -361,7 +486,7 @@ const MainInfo = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 200px 0 400px;
+  margin: 200px 0 300px;
   position: relative;
 
   & > .content {
@@ -381,6 +506,7 @@ const MainInfoTitle = styled.div`
   ${fontSet.heading3};
   color: ${colors.blue500};
   text-align: center;
+  z-index: 20;
 `;
 
 const MainInfoDescWrap = styled.div`
@@ -396,12 +522,6 @@ const MainInfoDesc = styled.div`
   ${fontSet.heading2};
   color: ${colors.black};
   text-align: center;
-`;
-
-const Check = styled.div`
-  width: 100%;
-  height: 50px;
-  background: ${colors.black};
 `;
 
 const FloatingBtn = styled.button`
@@ -425,4 +545,8 @@ const BgWrap = styled.div`
   width: 100%;
   height: 100%;
   overflow: hidden;
+
+  & > div:last-child {
+    margin: 200px 0 0;
+  }
 `;

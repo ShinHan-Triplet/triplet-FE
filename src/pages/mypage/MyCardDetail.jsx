@@ -16,8 +16,8 @@ const cards = [
   {
     id: 1,
     thumbnail: thumbnailUrl,
-    name: "HJW BABO 체크",
-    nickname: "카드 별칭띠예",
+    name: "WITH HJW 체크",
+    nickname: "한쭈카드",
     status: "active",
     maskedNumber: "1234-56**-****-5678",
     linkedAccount: "111-234-5678",

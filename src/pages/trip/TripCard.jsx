@@ -15,13 +15,13 @@ import { useNavigate, useLocation } from "react-router-dom";
 const cardList = [
   {
     id: 1,
-    name: "Triplet 식도락 카드",
-    state: true,
-    tagline: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
+    name: "Triplet 힐링 카드",
+    state: false,
+    tagline: "행복한 여행을 돕는 힐링 카드",
     desc: [
-      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
-      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
+      "여행에서 가장 큰 즐거움은 역시 ‘힐링’.",
+      "Triplet 힐링 카드는 각종 힐링을 위한 활동에서 특별한 혜택을 제공합니다.",
+      "여행 중 쌓인 피로를 행복하게 관리해보세요.",
     ],
     subBenefits: [
       { exp: "외식·배달·편의점", num: "10% 할인" },

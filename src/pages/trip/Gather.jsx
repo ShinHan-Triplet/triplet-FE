@@ -18,6 +18,7 @@ export default function Gather() {
   const [selectedCard, setselectedCard] = useState(null);
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen2, setIsModal2Open] = useState(false);
 
   useEffect(() => {
     if (location.state?.soloTrip !== undefined) {
@@ -92,25 +93,47 @@ export default function Gather() {
     const prevUrl = location.pathname;
     navigate("/trip/new/card", { state: { prevUrl, soloTrip } });
   };
+  const gotoHome = () => {
+    navigate("/");
+  };
+  const gotoMypage = () => {
+    navigate("/mypage?tab=trip");
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
   };
 
-  const newGatherUsingMyCard = () => {
+  const gatherUsingMyCard = () => {
     setIsModalOpen(true);
+  };
+
+  const tripGoingAlone = () => {
+    setIsModal2Open(true);
   };
 
   return (
     <>
       {isModalOpen && (
         <Modal
-          title="Triplet 카드를 만들었어요"
-          def1="혜택은 확실하게, 관리는 단순하게."
-          def2="가볍게 사용하고 실속을 꽉 챙기세요!"
-          type={3}
-          text="시로모 케이블카"
+          title="여행 갈 준비가 완료되었어요"
+          def1="여행은 계획대로, 지출은 예산대로"
+          def2="끝나면 레포트로 기록을 깔끔하게 정리해요"
+          type={1}
           onClose={closeModal}
+          func1={gotoHome}
+          func2={gotoMypage}
+        />
+      )}
+      {isModalOpen2 && (
+        <Modal
+          title="혼자만의 여행 준비가 완료되었어요"
+          def1="여행은 계획대로, 지출은 예산대로"
+          def2="끝나면 레포트로 기록을 깔끔하게 정리해요"
+          type={1}
+          onClose={closeModal}
+          func1={gotoHome}
+          func2={gotoMypage}
         />
       )}
       <Container>
@@ -187,6 +210,7 @@ export default function Gather() {
               textColor={colors.white}
               width={240}
               disabled={!selectedCard}
+              onClick={tripGoingAlone}
             ></LargeBtn>
             <LargeBtn
               label="새 카드 만들기"
@@ -208,7 +232,7 @@ export default function Gather() {
               textColor={colors.white}
               width={240}
               disabled={!selectedGathering}
-              onClick={newGatherUsingMyCard}
+              onClick={gatherUsingMyCard}
             ></LargeBtn>
             <LargeBtn
               label="새 모임 만들기"

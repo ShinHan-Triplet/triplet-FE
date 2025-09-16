@@ -290,11 +290,11 @@ export default function Card() {
       </Details>
       <BtnSpace>
         <LargeBtn
-          label="다음"
+          label="카드 발급하기"
           onClick={gotoApply}
           bgColor={colors.blue400}
           textColor={colors.white}
-          width={180}
+          width={220}
         ></LargeBtn>
       </BtnSpace>
     </>

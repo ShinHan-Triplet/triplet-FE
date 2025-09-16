@@ -197,10 +197,7 @@ export default function TripCost() {
       </Title>
 
       <div>
-        <BackBtn
-          url="/trip/new/details"
-          text="이전 (작성한 예산은 저장되지 않아요)"
-        />
+        <BackBtn url="/trip/new/details" text="이전" />
         <Fill>
           <Contents>
             <AllCost>

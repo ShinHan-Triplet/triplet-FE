@@ -33,6 +33,16 @@ export default function NewTrip() {
   const [range, setRange] = useState({ start: null, end: null });
   const [title, setTitle] = useState("");
   const [theme, setTheme] = useState("");
+  const [fileName, setFileName] = useState("");
+
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setFileName(file.name); // 파일명만 표시
+    }
+  };
 
   // 처음 진입 - 세션에 이전 기록이 있으면 이어쓰기 묻기
   useEffect(() => {
@@ -175,13 +185,22 @@ export default function NewTrip() {
                 <InputBox
                   placeholder="파일을 선택해주세요"
                   width={520}
+                  value={fileName}
+                  readOnly
                 ></InputBox>
                 <MediumBtn
                   label="파일선택"
                   bgColor={colors.blue400}
                   textColor={colors.white}
                   width={160}
+                  onClick={() => fileInputRef.current.click()}
                 ></MediumBtn>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleFileChange}
+                />
               </Photo>
             </Detail>
           </Contents>

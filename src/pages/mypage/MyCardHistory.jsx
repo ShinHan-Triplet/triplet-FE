@@ -13,8 +13,8 @@ import { useState } from "react";
 const cards = [
   {
     id: 1,
-    name: "HJW BABO 체크",
-    nickname: "카드 별칭띠예",
+    name: "WITH HJW 체크",
+    nickname: "한쭈카드",
     linkedAccount: "111-234-5678",
   },
   {

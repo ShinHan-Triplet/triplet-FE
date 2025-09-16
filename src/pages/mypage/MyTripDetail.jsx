@@ -5,32 +5,31 @@ import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
 import MediumBtn from "../../components/button/MediumBtn";
 import CardList from "../../components/mypage/CardList";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
-// 여행 mock 데이터
 const tripsMock = [
   {
     id: 1,
-    title: "신혼여행",
-    groupName: "신혼부부",
-    members: ["신다운", "남편"],
-    dateRange: "2035. 03. 13 ~ 2035. 03. 18",
-    status: "여행 전",
+    title: "힐링을 주세요",
+    groupName: "힐링이 필요한 사람",
+    members: ["신다운"],
+    dateRange: "2025. 09. 16 ~ 2025. 09. 17",
+    status: "여행 중",
     card: {
-      name: "HJW BABO 체크",
+      name: "Triplet 힐링 카드",
       number: "1234-56**-****-5678",
       account: "111-234-5678",
       checkGather: true,
     },
-    theme: "기타",
+    theme: "힐링",
     budget: [
-      { category: "식비", amount: 200000 },
-      { category: "교통비", amount: 200000 },
-      { category: "여가비", amount: 200000 },
-      { category: "기타", amount: 200000 },
-      { category: "숙박비", amount: 200000 },
-      { category: "보험비", amount: 200000 },
-      { category: "합계", amount: 1200000 },
+      { category: "식비", amount: 100000, used: 80000 },
+      { category: "교통비", amount: 100000, used: 50000 },
+      { category: "여가비", amount: 100000, used: 60000 },
+      { category: "기타", amount: 100000, used: 20000 },
+      { category: "숙박비", amount: 100000, used: 0 },
+      { category: "보험비", amount: 100000, used: 0 },
+      { category: "합계", amount: 600000, used: 210000 },
     ],
   },
   {
@@ -48,13 +47,13 @@ const tripsMock = [
     },
     theme: "힐링",
     budget: [
-      { category: "식비", amount: 300000 },
-      { category: "교통비", amount: 150000 },
-      { category: "여가비", amount: 100000 },
-      { category: "기타", amount: 50000 },
-      { category: "숙박비", amount: 250000 },
-      { category: "보험비", amount: 50000 },
-      { category: "합계", amount: 900000 },
+      { category: "식비", amount: 300000, used: 290000 },
+      { category: "교통비", amount: 150000, used: 140000 },
+      { category: "여가비", amount: 100000, used: 90000 },
+      { category: "기타", amount: 50000, used: 30000 },
+      { category: "숙박비", amount: 250000, used: 250000 },
+      { category: "보험비", amount: 50000, used: 50000 },
+      { category: "합계", amount: 900000, used: 850000 },
     ],
   },
   {
@@ -71,13 +70,13 @@ const tripsMock = [
     },
     theme: "힐링",
     budget: [
-      { category: "식비", amount: 100000 },
-      { category: "교통비", amount: 50000 },
-      { category: "여가비", amount: 50000 },
-      { category: "기타", amount: 20000 },
-      { category: "숙박비", amount: 0 },
-      { category: "보험비", amount: 0 },
-      { category: "합계", amount: 220000 },
+      { category: "식비", amount: 100000, used: 70000 },
+      { category: "교통비", amount: 50000, used: 30000 },
+      { category: "여가비", amount: 50000, used: 20000 },
+      { category: "기타", amount: 20000, used: 5000 },
+      { category: "숙박비", amount: 0, used: 0 },
+      { category: "보험비", amount: 0, used: 0 },
+      { category: "합계", amount: 220000, used: 125000 },
     ],
   },
   {
@@ -95,13 +94,13 @@ const tripsMock = [
     },
     theme: "식도락",
     budget: [
-      { category: "식비", amount: 200000 },
-      { category: "교통비", amount: 200000 },
-      { category: "여가비", amount: 200000 },
-      { category: "기타", amount: 200000 },
-      { category: "숙박비", amount: 200000 },
-      { category: "보험비", amount: 200000 },
-      { category: "합계", amount: 1200000 },
+      { category: "식비", amount: 200000, used: 180000 },
+      { category: "교통비", amount: 200000, used: 120000 },
+      { category: "여가비", amount: 200000, used: 100000 },
+      { category: "기타", amount: 200000, used: 40000 },
+      { category: "숙박비", amount: 200000, used: 200000 },
+      { category: "보험비", amount: 200000, used: 20000 },
+      { category: "합계", amount: 1200000, used: 660000 },
     ],
   },
   {
@@ -119,13 +118,13 @@ const tripsMock = [
     },
     theme: "힐링",
     budget: [
-      { category: "식비", amount: 180000 },
-      { category: "교통비", amount: 120000 },
-      { category: "여가비", amount: 80000 },
-      { category: "기타", amount: 40000 },
-      { category: "숙박비", amount: 300000 },
-      { category: "보험비", amount: 20000 },
-      { category: "합계", amount: 742000 },
+      { category: "식비", amount: 180000, used: 170000 },
+      { category: "교통비", amount: 960000, used: 960000 },
+      { category: "여가비", amount: 80000, used: 60000 },
+      { category: "기타", amount: 40000, used: 15000 },
+      { category: "숙박비", amount: 300000, used: 300000 },
+      { category: "보험비", amount: 20000, used: 20000 },
+      { category: "합계", amount: 1580000, used: 1525000 },
     ],
   },
   {
@@ -143,20 +142,40 @@ const tripsMock = [
     },
     theme: "액티비티",
     budget: [
-      { category: "식비", amount: 250000 },
-      { category: "교통비", amount: 100000 },
-      { category: "여가비", amount: 120000 },
-      { category: "기타", amount: 60000 },
-      { category: "숙박비", amount: 200000 },
-      { category: "보험비", amount: 30000 },
-      { category: "합계", amount: 760000 },
+      { category: "식비", amount: 250000, used: 230000 },
+      { category: "교통비", amount: 100000, used: 90000 },
+      { category: "여가비", amount: 120000, used: 110000 },
+      { category: "기타", amount: 60000, used: 30000 },
+      { category: "숙박비", amount: 200000, used: 190000 },
+      { category: "보험비", amount: 30000, used: 30000 },
+      { category: "합계", amount: 760000, used: 680000 },
     ],
   },
 ];
 
 export default function MyTripDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const trip = tripsMock.find((t) => String(t.id) === String(id));
+
+  function getEndDate(dateRange) {
+    if (!dateRange) return null;
+    const parts = dateRange.split("~");
+    if (parts.length < 2) return null;
+    const end = parts[1].trim().replace(/\./g, "-");
+    const [y, m, d] = end.split("-").map(s => s.trim());
+    return new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
+  }
+
+  const isReportAvailable = (() => {
+    const endDate = getEndDate(trip?.dateRange);
+    if (!endDate) return false;
+    const today = new Date();
+    endDate.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+    const diffDays = Math.floor((today - endDate) / (1000 * 60 * 60 * 24));
+    return diffDays > 3;
+  })();
 
   if (!trip) {
     return (
@@ -250,14 +269,25 @@ export default function MyTripDetail() {
             hoverBgColor={colors.gray200}
             onClick={() => {}}
           />
-          <MediumBtn
-            label="수정"
-            bgColor={colors.blue400}
-            textColor={colors.white}
-            width={160}
-            hoverBgColor={colors.blue500}
-            onClick={() => {}}
-          />
+          {isReportAvailable ? (
+            <MediumBtn
+              label="레포트 보기"
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={160}
+              hoverBgColor={colors.blue500}
+              onClick={() => navigate(`/mypage/trip/${trip.id}/report`)}
+            />
+          ) : (
+            <MediumBtn
+              label="수정"
+              bgColor={colors.blue400}
+              textColor={colors.white}
+              width={160}
+              hoverBgColor={colors.blue500}
+              onClick={() => {}}
+            />
+          )}
         </BtnRow>
       </TripDetail>
     </Wrapper>

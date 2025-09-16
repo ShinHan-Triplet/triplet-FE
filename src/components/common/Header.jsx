@@ -42,10 +42,11 @@ export default function Header({ onTabChange }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
-  const bellRef = useRef();
   const [notifications, setNotifications] = useState([]);
-  const iconBtnRef = useRef();
-  const { loading, isAuthed, user } = useAuth();
+  const { isAuthed } = useAuth();
+
+  const iconRefs = useRef({ user: null, bell: null });
+  const notifPanelRef = useRef(null);
 
   useEffect(() => {
     const path = location.pathname;
@@ -82,20 +83,25 @@ export default function Header({ onTabChange }) {
   };
 
   useEffect(() => {
-    if (!dropdownOpen) return;
+    if (!dropdownOpen && !bellOpen) return;
+
     const handleClickOutside = (e) => {
-      if (iconBtnRef.current && !iconBtnRef.current.contains(e.target)) {
-        setDropdownOpen(false);
-      }
+      const clickedInsideUser = iconRefs.current.user?.contains(e.target);
+      const clickedInsideBell = iconRefs.current.bell?.contains(e.target);
+      const clickedInsidePanel = notifPanelRef.current?.contains(e.target);
+
+      if (!clickedInsideUser) setDropdownOpen(false);
+      if (!clickedInsideBell && !clickedInsidePanel) setBellOpen(false);
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [dropdownOpen]);
+  }, [dropdownOpen, bellOpen]);
 
   // MOCK: 로그인 시 더미 알림 데이터 로드
   useEffect(() => {
     if (!isLoggedIn) return;
-    const myId = 101; // 초대받은 사용자 id
+    const myId = 3; // 초대받은 사용자 id
     const invitesForMe = MOCK_GATHER_INVITES.filter(
       (it) => it.invited_id === myId
     ).map((it) => ({
@@ -160,7 +166,7 @@ export default function Header({ onTabChange }) {
           ) : (
             <IconGroup>
               <IconBtn
-                ref={iconBtnRef}
+                ref={(el) => (iconRefs.current.user = el)}
                 onClick={() => setDropdownOpen((v) => !v)}
                 style={{ position: "relative" }}
               >
@@ -169,11 +175,11 @@ export default function Header({ onTabChange }) {
                   open={dropdownOpen}
                   onSelect={handleDropdownSelect}
                   onClose={() => setDropdownOpen(false)}
-                  anchorRef={iconBtnRef}
+                  anchorRef={{ current: iconRefs.current.user }}
                 />
               </IconBtn>
               <IconBtn
-                ref={bellRef}
+                ref={(el) => (iconRefs.current.bell = el)}
                 onClick={() => setBellOpen((v) => !v)}
                 style={{ position: "relative" }}
                 aria-label={isWaiting ? "새 알림 있음" : "알림"}
@@ -185,7 +191,8 @@ export default function Header({ onTabChange }) {
                   onApprove={approve}
                   onReject={reject}
                   onClose={() => setBellOpen(false)}
-                  anchorRef={bellRef}
+                  anchorRef={{ current: iconRefs.current.bell }}
+                  panelRef={notifPanelRef} // 패널 ref
                 />
               </IconBtn>
             </IconGroup>

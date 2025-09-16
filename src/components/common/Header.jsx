@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
+import { useAuth } from "../../auth/AuthProvider";
 
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
@@ -14,11 +15,24 @@ import bellNewIcon from "../../assets/icon/bell-new.svg";
 
 const MOCK_GATHERS = [
   { gather_id: 5001, gather_name: "제주여행" },
-  { gather_id: 5002, gather_name: "입짧은주원과 식도락" }];
+  { gather_id: 5002, gather_name: "입짧은주원과 식도락" },
+];
 
 const MOCK_GATHER_INVITES = [
-  { invite_id: 90001, invited_id: 101, gather_id: 5001, status: 1, created_at: "2025-09-10T09:12:00Z" },
-  { invite_id: 90002, invited_id: 101, gather_id: 5002, status: 1, created_at: "2025-09-10T09:13:00Z" },
+  {
+    invite_id: 90001,
+    invited_id: 101,
+    gather_id: 5001,
+    status: 1,
+    created_at: "2025-09-10T09:12:00Z",
+  },
+  {
+    invite_id: 90002,
+    invited_id: 101,
+    gather_id: 5002,
+    status: 1,
+    created_at: "2025-09-10T09:13:00Z",
+  },
 ];
 
 export default function Header({ onTabChange }) {
@@ -31,6 +45,7 @@ export default function Header({ onTabChange }) {
   const bellRef = useRef();
   const [notifications, setNotifications] = useState([]);
   const iconBtnRef = useRef();
+  const { loading, isAuthed, user } = useAuth();
 
   useEffect(() => {
     const path = location.pathname;
@@ -62,13 +77,14 @@ export default function Header({ onTabChange }) {
     }
   };
 
+  const gotoLogin = () => {
+    navigate("/login");
+  };
+
   useEffect(() => {
     if (!dropdownOpen) return;
     const handleClickOutside = (e) => {
-      if (
-        iconBtnRef.current &&
-        !iconBtnRef.current.contains(e.target)
-      ) {
+      if (iconBtnRef.current && !iconBtnRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
     };
@@ -80,31 +96,44 @@ export default function Header({ onTabChange }) {
   useEffect(() => {
     if (!isLoggedIn) return;
     const myId = 101; // 초대받은 사용자 id
-    const invitesForMe = MOCK_GATHER_INVITES
-      .filter(it => it.invited_id === myId)
-      .map(it => ({
-        ...it,
-        gather_name: MOCK_GATHERS.find(g => g.gather_id === it.gather_id).gather_name,
-      }));
+    const invitesForMe = MOCK_GATHER_INVITES.filter(
+      (it) => it.invited_id === myId
+    ).map((it) => ({
+      ...it,
+      gather_name: MOCK_GATHERS.find((g) => g.gather_id === it.gather_id)
+        .gather_name,
+    }));
     setNotifications(invitesForMe);
   }, [isLoggedIn]);
 
-  const isWaiting = notifications.some(n => n.status === 1);
+  const isWaiting = notifications.some((n) => n.status === 1);
 
   const approve = (n) => {
-    setNotifications(prev => prev.map(it => it.invite_id === n.invite_id ? { ...it, status: 2 } : it));
+    setNotifications((prev) =>
+      prev.map((it) =>
+        it.invite_id === n.invite_id ? { ...it, status: 2 } : it
+      )
+    );
     // 서버 연결:  PATCH /api/gather-invites/{id} { status:2 } + gathers_mapping insert
   };
   const reject = (n) => {
-    setNotifications(prev => prev.map(it => it.invite_id === n.invite_id ? { ...it, status: 3 } : it));
+    setNotifications((prev) =>
+      prev.map((it) =>
+        it.invite_id === n.invite_id ? { ...it, status: 3 } : it
+      )
+    );
     // 서버 연결:  PATCH /api/gather-invites/{id} { status:3 }
   };
-
 
   return (
     <HeaderWrap>
       <Inner>
-        <Logo onClick={() => { setActiveTab(null); navigate("/"); }}>
+        <Logo
+          onClick={() => {
+            setActiveTab(null);
+            navigate("/");
+          }}
+        >
           <img src={logo} alt="Triplet" />
         </Logo>
 
@@ -126,10 +155,8 @@ export default function Header({ onTabChange }) {
         </Nav>
 
         <Actions>
-          {!isLoggedIn ? (
-            <LoginBtn onClick={() => setIsLoggedIn(true)}>
-              로그인 / 회원가입
-            </LoginBtn>
+          {!isAuthed ? (
+            <LoginBtn onClick={() => gotoLogin()}>로그인 / 회원가입</LoginBtn>
           ) : (
             <IconGroup>
               <IconBtn
@@ -147,7 +174,7 @@ export default function Header({ onTabChange }) {
               </IconBtn>
               <IconBtn
                 ref={bellRef}
-                onClick={() => setBellOpen(v => !v)}
+                onClick={() => setBellOpen((v) => !v)}
                 style={{ position: "relative" }}
                 aria-label={isWaiting ? "새 알림 있음" : "알림"}
               >
@@ -223,7 +250,7 @@ const TabBtn = styled.button`
     color: ${colors.blue500};
   }
   &.active::after {
-    content: '';
+    content: "";
     position: absolute;
     left: 0;
     right: 0;

@@ -12,6 +12,7 @@ export default function ThemeBtn({
   hoverBgColor = colors.gray300,
   selectedBgColor = colors.blue100,
   selectedHoverBgColor = colors.blue200,
+  pointerEvents = "auto",
 }) {
   return (
     <Btn
@@ -24,6 +25,7 @@ export default function ThemeBtn({
       $hoverBgColor={hoverBgColor}
       $selectedBgColor={selectedBgColor}
       $selectedHoverBgColor={selectedHoverBgColor}
+      style={{ pointerEvents: pointerEvents }}
     >
       {label}
     </Btn>

@@ -2,10 +2,15 @@ import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import shadows from "../../styles/shadows";
+import { logout } from "../../lib/auth";
 
 export default function HeaderDropdown({ open, onSelect, onClose, anchorRef }) {
+  const onLogout = async () => {
+    await logout();
+    window.location.replace("/");
+  };
   if (!open) return null;
-  
+
   const handleMypage = () => {
     onSelect("mypage");
     setTimeout(onClose, 0);
@@ -17,7 +22,12 @@ export default function HeaderDropdown({ open, onSelect, onClose, anchorRef }) {
         <DropdownItem onClick={handleMypage}>
           <DropdownText>마이페이지</DropdownText>
         </DropdownItem>
-        <DropdownItem onClick={() => { onSelect("logout"); onClose(); }}>
+        <DropdownItem
+          onClick={() => {
+            onLogout();
+            onClose();
+          }}
+        >
           <DropdownText>로그아웃</DropdownText>
         </DropdownItem>
       </DropdownList>
@@ -40,7 +50,7 @@ const DropdownWrap = styled.div`
 const DropdownList = styled.div`
   display: flex;
   flex-direction: column;
-  padding:12px;
+  padding: 12px;
 `;
 
 const DropdownItem = styled.button`
@@ -63,4 +73,4 @@ const DropdownText = styled.div`
   ${DropdownItem}:hover & {
     background: ${colors.gray200};
   }
-`
+`;

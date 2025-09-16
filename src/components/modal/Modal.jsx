@@ -16,6 +16,8 @@ export default function Modal({
   onClose,
   categoryId = null,
   text = "",
+  func1 = () => {},
+  func2 = () => {},
 }) {
   const [closing, setClosing] = useState(false);
   const handleClose = () => setClosing(true);
@@ -33,9 +35,11 @@ export default function Modal({
       >
         <ModalTop>
           <ModalName>{title}</ModalName>
-          <CloseButton onClick={handleClose}>
-            <img src={close} alt="close" />
-          </CloseButton>
+          {(type === 2 || type === 3) && (
+            <CloseButton onClick={handleClose}>
+              <img src={close} alt="close" />
+            </CloseButton>
+          )}
         </ModalTop>
         <Line />
         <ModalContent>
@@ -51,8 +55,19 @@ export default function Modal({
                 bgColor={colors.gray200}
                 textColor={colors.black}
                 hoverBgColor={colors.gray300}
+                onClick={() => {
+                  func1();
+                  handleClose();
+                }}
               />
-              <MediumBtn label="확인" width={120} />
+              <MediumBtn
+                label="확인"
+                width={120}
+                onClick={() => {
+                  func2();
+                  handleClose();
+                }}
+              />
             </ModalBtnList>
           )}
           {type === 2 && (

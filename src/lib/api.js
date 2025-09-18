@@ -1,5 +1,7 @@
+const portNum = process.env.REACT_APP_PORT_NUM;
+
 export const API_BASE =
-  import.meta?.env?.VITE_API_BASE || "http://localhost:8080"; // 필요 시 .env로 분리
+  import.meta?.env?.VITE_API_BASE || `http://localhost:${portNum}`; // 필요 시 .env로 분리
 
 const ACCESS_KEY = "accessToken";
 

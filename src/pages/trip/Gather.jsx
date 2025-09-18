@@ -55,6 +55,21 @@ export default function Gather() {
     },
   ];
 
+  const soloGathering = [
+    {
+      id: 11,
+      title: "나만의 모임 1",
+      members: ["한주원"],
+      cardImg: { testThumbnail },
+    },
+    {
+      id: 12,
+      title: "나만의 모임 2",
+      members: ["한주원"],
+      cardImg: { testThumbnail },
+    },
+  ];
+
   const cardList = [
     {
       id: 1,
@@ -155,20 +170,49 @@ export default function Gather() {
                   <CheckText>혼자만의 여행이에요</CheckText>
                 </Check>
               </PageTitle>
-              <GatherList $soloTrip={soloTrip}>
+              <GatherList>
                 {soloTrip ? (
-                  cardList.map((card) => (
-                    <MyCard
-                      key={card.id}
-                      selected={selectedCard === card.id}
-                      onClick={() => handleSelectCard(card.id)}
-                    >
-                      <GatherTitle>{card.title}</GatherTitle>
-                      <GatherCard>
-                        <BgImg src={testThumbnail} alt="" />
-                      </GatherCard>
-                    </MyCard>
-                  ))
+                  <>
+                    <SoloGatherList>
+                      {soloGathering.map((gathering) => (
+                        <GatheringCard
+                          key={gathering.id}
+                          selected={selectedCard === gathering.id}
+                          onClick={() => handleSelectCard(gathering.id)}
+                        >
+                          <GatherTitle>{gathering.title}</GatherTitle>
+                          <GatherMember>
+                            <img src={memberIcon} alt="member" />
+                            <Member>
+                              {gathering.members.map((member, index) => (
+                                <span key={index}>
+                                  {member}
+                                  {index < gathering.members.length - 1 && ", "}
+                                </span>
+                              ))}
+                            </Member>
+                          </GatherMember>
+                          <GatherCard>
+                            <BgImg src={testThumbnail} alt="" />
+                          </GatherCard>
+                        </GatheringCard>
+                      ))}
+                    </SoloGatherList>
+                    {/* <SoloCardList>
+                      {cardList.map((card) => (
+                        <MyCard
+                          key={card.id}
+                          selected={selectedCard === card.id}
+                          onClick={() => handleSelectCard(card.id)}
+                        >
+                          <GatherTitle>{card.title}</GatherTitle>
+                          <GatherCard>
+                            <BgImg src={testThumbnail} alt="" />
+                          </GatherCard>
+                        </MyCard>
+                      ))}
+                    </SoloCardList> */}
+                  </>
                 ) : (
                   <>
                     {gatherings.map((gathering) => (
@@ -205,15 +249,15 @@ export default function Gather() {
         <>
           <BtnSpaceSolo>
             <LargeBtn
-              label="지난 카드 그대로"
+              label="지난 모임 그대로"
               bgColor={colors.blue400}
               textColor={colors.white}
-              width={240}
+              width={280}
               disabled={!selectedCard}
               onClick={tripGoingAlone}
             ></LargeBtn>
             <LargeBtn
-              label="새 카드 만들기"
+              label="새 모임 만들기"
               bgColor={colors.blue400}
               textColor={colors.white}
               width={240}
@@ -248,6 +292,19 @@ export default function Gather() {
     </>
   );
 }
+
+const SoloCardList = styled.div`
+  display: grid;
+  width: 880px;
+  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+`;
+const SoloGatherList = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+`;
 
 const Describe = styled.div`
   ${fontSet.body3_m}
@@ -335,8 +392,7 @@ const GatherList = styled.div`
   align-items: center;
   flex-direction: column;
   gap: 20px;
-  grid-template-columns: ${({ $soloTrip }) =>
-    $soloTrip ? "repeat(2, 1fr)" : "1fr"};
+  grid-template-columns: 1fr;
 `;
 
 const Container = styled.div`

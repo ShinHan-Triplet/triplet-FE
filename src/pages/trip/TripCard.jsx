@@ -4,85 +4,13 @@ import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
 import DetailBtn from "../../components/button/DetailBtn";
-import testThumbnail from "./../../assets/img/test_thumbnail.png";
-import card1 from "./../../assets/img/card1.png";
-import card2 from "./../../assets/img/card2.png";
 
 import MediumBtn from "../../components/button/MediumBtn";
 import ModalForCard from "../../components/modal/ModalForCard";
 import { useNavigate, useLocation } from "react-router-dom";
-
-const cardList = [
-  {
-    id: 1,
-    name: "Triplet 힐링 카드",
-    state: false,
-    tagline: "행복한 여행을 돕는 힐링 카드",
-    desc: [
-      "여행에서 가장 큰 즐거움은 역시 ‘힐링’.",
-      "Triplet 힐링 카드는 각종 힐링을 위한 활동에서 특별한 혜택을 제공합니다.",
-      "여행 중 쌓인 피로를 행복하게 관리해보세요.",
-    ],
-    subBenefits: [
-      { exp: "외식·배달·편의점", num: "10% 할인" },
-      { exp: "쇼핑·주유·생활", num: "5~10% 할인" },
-      { exp: "공과금·디지털구독", num: "10~20% 할인" },
-    ],
-    benefits: [
-      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
-      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
-      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
-      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
-    ],
-    image: testThumbnail,
-  },
-  {
-    id: 2,
-    name: "신한카드 Shopping Saver",
-    state: false,
-    tagline: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
-    desc: [
-      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
-      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-    ],
-    subBenefits: [
-      { exp: "쇼핑·패션", num: "15% 할인" },
-      { exp: "온라인 쇼핑", num: "10% 할인" },
-      { exp: "생활·주유", num: "5% 할인" },
-    ],
-    benefits: [
-      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
-      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
-      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
-      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
-    ],
-    image: card1,
-  },
-  {
-    id: 3,
-    name: "신한카드 Travel Plus",
-    state: false,
-    tagline: "맛있게 즐길수록 더 알뜰해지는 여행 파트너",
-    desc: [
-      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
-      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-    ],
-    subBenefits: [
-      { exp: "항공·호텔", num: "20% 할인" },
-      { exp: "렌터카·여행", num: "15% 할인" },
-      { exp: "해외 결제", num: "10% 할인" },
-    ],
-    benefits: [
-      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
-      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
-      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
-      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
-    ],
-    image: card2,
-  },
-];
+import { api, setAccessToken } from "../../lib/api";
+import { getCardCoverById } from "../../assets/cardCoverSquare";
+import { loadTripDraft } from "./TripDraftSession";
 
 const CardImgWrap = styled.div`
   position: relative;
@@ -144,20 +72,109 @@ function CardPreview({ src }) {
   );
 }
 
+const WHY_BY_THEME = {
+  1: [
+    "맛집 탐방과 카페 투어가 중심이 되는 일정이에요.",
+    "식당·카페·편의점 지출을 든든히 챙겨줄 카드를 우선 추천해 드릴게요.",
+  ],
+  2: [
+    "이동과 레저·체험이 많은 역동적인 일정이에요.",
+    "교통·레저·장비 대여 등 액티비티 카테고리에 강한 혜택 카드를 먼저 보여드릴게요.",
+  ],
+  3: [
+    "숙소 중심의 휴식과 스파·온천이 어울리는 느긋한 일정이에요.",
+    "숙박·스파·리조트처럼 휴식 지출에 유리한 혜택 카드를 중심으로 골라 드릴게요.",
+  ],
+  4: [
+    "식비·이동·숙박이 고르게 섞인 다채로운 일정이에요.",
+    "여러 카테고리에서 폭넓게 혜택을 주는 범용 카드를 우선 추천할게요.",
+  ],
+};
+
 export default function TripCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
   const { state } = useLocation();
+  const [cardList, setCardList] = useState([]);
+  const [whyMsgs, setWhyMsgs] = useState(WHY_BY_THEME[4]);
   var prevUrl = state?.prevUrl || "/trip";
   var soloTrip = state?.soloTrip || false; // 전달받은 soloTrip 상태
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const migrateThemeNum = (snap) => {
+    if (snap && snap.themeNum != null) return snap.themeNum;
+  };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const params = new URLSearchParams(location.search);
+        const tokenFromQS = params.get("accessToken");
+        if (tokenFromQS) {
+          setAccessToken(tokenFromQS);
+          window.history.replaceState({}, "", location.pathname);
+        } else {
+          const newAccess = await api("/api/auth/refresh", { method: "POST" });
+          const token =
+            typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
+          if (!token) throw new Error("no access from refresh");
+          setAccessToken(token);
+        }
+        const snap = loadTripDraft();
+        const themeNum = migrateThemeNum(snap);
+        setWhyMsgs(WHY_BY_THEME[themeNum]);
+
+        const res = await api(`/api/card/recommandCard?themeNum=${themeNum}`, {
+          method: "GET",
+        });
+
+        const list = Array.isArray(res) ? res : res?.data ?? [];
+
+        const toUI = (c) => {
+          const descStr = c.cardDesc;
+          const desc = Array.isArray(descStr)
+            ? descStr
+            : String(descStr)
+                .split(/\r?\n/) // \n 또는 \r\n 모두 대응
+                .map((s) => s.trim()) // 앞뒤 공백 제거
+                .filter(Boolean); // 빈 항목 제거
+
+          const subBenefits = (c.benefits || []).map((sb) => ({
+            exp: sb.shortTitle,
+            num: sb.shortContent,
+          }));
+
+          const benefits = (c.benefits || []).map((b) => ({
+            title: b.title,
+            content: b.content,
+          }));
+
+          return {
+            id: c.cardId,
+            name: c.cardName,
+            tagline: c.cardIntro ?? "",
+            desc,
+            subBenefits,
+            benefits,
+            image: getCardCoverById(c.cardId),
+          };
+        };
+
+        const recommCard = list.map(toUI);
+        console.log(recommCard);
+        setCardList(recommCard);
+      } catch (e) {
+        setCardList([]);
+      }
+    })();
+  }, [navigate, location]);
 
   const handleDetailClick = (card) => {
     setSelectedCard(card);
     setIsModalOpen(true);
   };
 
-  const location = useLocation();
   useEffect(() => {
     if (location.state?.soloTrip !== undefined) {
       soloTrip = location.state.soloTrip;
@@ -204,12 +221,9 @@ export default function TripCard() {
               </PageTitle>
               <div>
                 <DetailContainer>
-                  <DetailTitle>
-                    특정 항목에 치우치지 않고 균형 있게 계획하셨어요.
-                  </DetailTitle>
-                  <DetailTitle>
-                    다양한 혜택을 고르게 제공하는 카드를 준비했습니다.
-                  </DetailTitle>
+                  {whyMsgs.map((msg, i) => (
+                    <DetailTitle key={i}>{msg}</DetailTitle>
+                  ))}
                 </DetailContainer>
               </div>
             </Contents>
@@ -226,11 +240,11 @@ export default function TripCard() {
                         <CardExplain>
                           <CardMain>
                             <CardTitle>{card.name}</CardTitle>
-                            {card.state && (
+                            {/* {card.state && (
                               <CardState>
                                 이미 모임에서 사용중인 카드입니다.
                               </CardState>
-                            )}
+                            )} */}
                           </CardMain>
                           <CardBenefits>
                             {card.subBenefits.map((benefit, index) => (

@@ -72,7 +72,7 @@ const CardImg = styled.img`
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 10px;
 
   transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(0);
   transition: transform 120ms ease, filter 200ms ease, box-shadow 200ms ease;
@@ -742,7 +742,7 @@ const Benefit = styled.div`
   flex-direction: row;
   align-items: center;
   gap: 7px;
-  width: 367px;
+  width: 500px;
 `;
 const BenefitTitle = styled.div`
   ${fontSet.body3_m}
@@ -763,9 +763,10 @@ const Title = styled.div`
 const MainTitle = styled.div`
   ${fontSet.heading1}
   display: flex;
-  width: 367px;
+  width: 500px;
   flex-direction: row;
-  align-items: center;
+  align-items: flex-start;
+  text-align: left;
 `;
 
 const SubTitle = styled.div`

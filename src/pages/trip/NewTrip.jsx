@@ -17,6 +17,11 @@ import {
 } from "./TripDraftSession";
 
 const THEMES = ["식도락", "액티비티", "힐링", "기타"];
+const themeToNum = (t) => {
+  const idx = THEMES.indexOf(t);
+  return idx >= 0 ? idx + 1 : 1; // 1~4
+};
+const numToTheme = (n) => THEMES[(n ?? 1) - 1] ?? THEMES[0];
 
 // const toStartOfDay = (d) =>
 //   new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -49,21 +54,8 @@ export default function NewTrip() {
     const snap = loadTripDraft();
     if (!snap) return;
 
-    // const ok = window.confirm(
-    //   "이전에 작성한 내용이 있어요. 이어서 작성할까요?"
-    // );
-    // if (ok) {
-    //   setTitle(snap.title ?? "");
-    //   setTheme(snap.theme ?? "");
-    //   setRange({
-    //     start: snap.startMs ? new Date(snap.startMs) : null,
-    //     end: snap.endMs ? new Date(snap.endMs) : null,
-    //   });
-    // } else {
-    //   clearTripDraft();
-    // }
     setTitle(snap.title ?? "");
-    setTheme(snap.theme ?? "");
+    setTheme(numToTheme(snap.themeNum));
     setRange({
       start: snap.startMs ? new Date(snap.startMs) : null,
       end: snap.endMs ? new Date(snap.endMs) : null,
@@ -86,9 +78,10 @@ export default function NewTrip() {
         if (existed) clearTripDraft();
         return; // 저장 스킵
       }
+      const themeNum = themeToNum(theme);
       saveTripDraft({
         title,
-        theme,
+        themeNum,
         startMs: range.start ? toStartOfDay(range.start).getTime() : null,
         endMs: range.end ? toStartOfDay(range.end).getTime() : null,
       });
@@ -117,10 +110,11 @@ export default function NewTrip() {
       return;
     }
     const days = diffDaysInclusive(range.start, range.end);
+    const themeNum = themeToNum(theme);
 
     saveTripDraft({
       title,
-      theme,
+      themeNum,
       startMs: toStartOfDay(range.start).getTime(),
       endMs: toStartOfDay(range.end).getTime(),
     });

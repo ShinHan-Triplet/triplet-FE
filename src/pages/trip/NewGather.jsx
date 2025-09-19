@@ -3,24 +3,28 @@ import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
-import testThumbnail from "./../../assets/img/test_thumbnail.png";
 import shadows from "../../styles/shadows";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import InputBox from "../../components/input/InputBox";
 import checkIcon from "../../assets/icon/check.svg";
 import LargeBtn from "../../components/button/LargeBtn";
 import Modal from "../../components/modal/Modal";
+import { api, setAccessToken } from "../../lib/api";
+import { getCardCoverById } from "../../assets/cardCoverSquare";
 
 export default function NewGather() {
   const [selectedCard, setselectedCard] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cardList, setCardList] = useState([]);
+  const { state } = useLocation();
+  var soloTrip = state?.soloTrip || false;
 
   const gotoTripCard = () => {
     const prevUrl = location.pathname;
-    navigate("/trip/new/card", { state: { prevUrl } });
+    navigate("/trip/new/card", { state: { prevUrl, soloTrip } });
   };
   const gotoHome = () => {
     navigate("/");
@@ -37,32 +41,38 @@ export default function NewGather() {
     setIsModalOpen(true);
   };
 
-  const cardList = [
-    {
-      id: 1,
-      title: "Triplet 식도락 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 2,
-      title: "Triplet 먹보 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 3,
-      title: "Triplet 다우니 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 4,
-      title: "Triplet 때지 카드",
-      cardImg: { testThumbnail },
-    },
-  ];
-
   const handleSelectCard = (id) => {
     setselectedCard((prev) => (prev === id ? null : id));
   };
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const params = new URLSearchParams(location.search);
+        const tokenFromQS = params.get("accessToken");
+        if (tokenFromQS) {
+          setAccessToken(tokenFromQS);
+          window.history.replaceState({}, "", location.pathname);
+        } else {
+          const newAccess = await api("/api/auth/refresh", { method: "POST" });
+          const token =
+            typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
+          if (!token) throw new Error("no access from refresh");
+          setAccessToken(token);
+        }
+
+        const res = await api("/api/gather/myCard", { method: "GET" });
+        const myCard = (res?.personalCards ?? []).map((g) => ({
+          id: g.mcardId,
+          title: g.nickname,
+          cardImg: getCardCoverById(g.cardId),
+        }));
+        setCardList(myCard);
+      } catch (e) {
+        setCardList(e?.message ?? "불러오기에 실패했어요");
+      }
+    })();
+  }, [navigate, location]);
 
   return (
     <>
@@ -85,7 +95,11 @@ export default function NewGather() {
           <MiniTitle>멤버 관리는 방장이 언제든 할 수 있어요.</MiniTitle>
         </Title>
         <div>
-          <BackBtn url="/trip/new/companions" text="이전" />
+          <BackBtn
+            url="/trip/new/companions"
+            text="이전"
+            state={{ soloTrip }}
+          />
           <Fill>
             <Contents>
               <PageTitle>
@@ -104,12 +118,16 @@ export default function NewGather() {
                     <img src={checkIcon} alt="member" />
                     모임 멤버 초대는 마이페이지 &gt; 내 모임 에서 할 수 있어요
                   </TextContainer>
+                  <TextContainer>
+                    <img src={checkIcon} alt="member" />
+                    모임 멤버 초대는 여행 전날까지만 가능해요
+                  </TextContainer>
                 </MiniText>
               </div>
             </Contents>
             <Contents>
               <PageTitle>
-                <BlueTitle>모임 체크</BlueTitle>
+                <BlueTitle>모임 카드 선택</BlueTitle>
               </PageTitle>
               <GatherList>
                 {cardList.map((card) => (
@@ -120,7 +138,7 @@ export default function NewGather() {
                   >
                     <GatherTitle>{card.title}</GatherTitle>
                     <GatherCard>
-                      <BgImg src={testThumbnail} alt="" />
+                      <BgImg src={card.cardImg} alt="" />
                     </GatherCard>
                   </MyCard>
                 ))}

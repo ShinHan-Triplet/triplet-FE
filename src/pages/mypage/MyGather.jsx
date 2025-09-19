@@ -11,30 +11,6 @@ import Modal from "../../components/modal/Modal";
 
 import { api } from "../../lib/api";
 
-// export const groups = [
-//   {
-//     id: 1,
-//     name: "Shin_Han",
-//     members: ["신다운", "한주원"],
-//     linkedCard: { name: "HJW BABO 체크" },
-//     isOwner: true,
-//   },
-//   {
-//     id: 2,
-//     name: "신한DS 맛집탐방패밀리",
-//     members: ["한주원", "신다운", "오선정", "서가은", "박지원", "정재웅"],
-//     linkedCard: { name: "MUKJJANG 체크" },
-//     isOwner: false,
-//   },
-//   {
-//     id: 3,
-//     name: "가족",
-//     members: ["아빠", "엄마", "언니", "신다운"],
-//     linkedCard: { name: "FAMILY 체크" },
-//     isOwner: false,
-//   },
-// ];
-
 export default function MyGather() {
   const navigate = useNavigate();
 

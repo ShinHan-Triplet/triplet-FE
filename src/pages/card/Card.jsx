@@ -4,20 +4,21 @@ import fontSet from "../../styles/fonts";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import LargeBtn from "../../components/button/LargeBtn";
-import sampleCard from "./../../assets/img/test_thumbnail.png";
-import card1 from "./../../assets/img/card1.png";
-import card2 from "./../../assets/img/card2.png";
+import card1 from "./../../assets/img/card/basic/food2.png";
+import card2 from "./../../assets/img/card/basic/healing2.png"
+import card3 from "./../../assets/img/card/basic/healing1.png";
+import card4 from "./../../assets/img/card/basic/healing3.png";
 import left from "./../../assets/icon/chevron-left.svg";
 import right from "./../../assets/icon/chevron-right.svg";
 
 const CARD_DATA = [
   {
     id: "foodie",
-    name: "Triplet 식도락 카드",
+    name: "MUKJJANG 체크",
     tagline: "맛있게 플러스만큼 더 알뜰해지는 여행 파트너",
     desc: [
       "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
-      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
+      "MUKJJANG 체크 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
       "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
     ],
     benefits: [
@@ -26,7 +27,7 @@ const CARD_DATA = [
       { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
       { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
     ],
-    image: sampleCard,
+    image: card1,
   },
   {
     id: "activity",
@@ -43,7 +44,7 @@ const CARD_DATA = [
       { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
       { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
     ],
-    image: card1,
+    image: card2,
   },
   {
     id: "shopping",
@@ -60,11 +61,11 @@ const CARD_DATA = [
       { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
       { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
     ],
-    image: card2,
+    image: card3,
   },
   {
-    id: "shopping2",
-    name: "Triplet 쇼핑 카드",
+    id: "healing",
+    name: "Triplet 힐링 카드",
     tagline: "기념품·면세 쇼핑이 많은 여행에",
     desc: [
       "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
@@ -77,7 +78,7 @@ const CARD_DATA = [
       { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
       { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
     ],
-    image: card1,
+    image: card4,
   },
 ];
 
@@ -323,8 +324,8 @@ const CardsRow = styled.div`
 const CarouselCard = styled.div`
   position: absolute;
   top: 0;
-  width: 240px;
-  height: 319px;
+  width: 201px;
+  height: 320px;
   background: ${(p) => `url(${p.$img}) center / cover no-repeat`};
   transform-origin: center center;
   border-radius: 4px;

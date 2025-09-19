@@ -1,3 +1,5 @@
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
@@ -7,65 +9,111 @@ import BackBtn from "../../components/button/BackBtn";
 import FilterDropdown from "../../components/mypage/FilterDropdown";
 import ProgressBar from "../../components/mypage/ProgressBar";
 import HistoryList from "../../components/mypage/HistoryList";
-import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { api } from "../../lib/api";
 
-const cards = [
-  {
-    id: 1,
-    name: "WITH HJW 체크",
-    nickname: "한쭈카드",
-    linkedAccount: "111-234-5678",
-  },
-  {
-    id: 2,
-    name: "MUKJJANG 체크",
-    nickname: "쩝쩝박사",
-    linkedAccount: "777-654-9999",
-  },
-  {
-    id: 3,
-    name: "UP&DOWN 체크",
-    nickname: "다운카드",
-    linkedAccount: "987-654-3210",
-  },
-];
-
-const costs = {
-  total: {
-    전체: 200000,
-    식비: 120000,
-    교통비: 30000,
-    여가비: 40000,
-    기타: 10000,
-  },
-  used: {
-    전체: 160000,
-    식비: 90000,
-    교통비: 20000,
-    여가비: 30000,
-    기타: 20000,
-  },
+const CATEGORY_LABEL = {
+  1: "식비",
+  2: "교통비",
+  3: "여가비",
+  4: "기타",
 };
+const CATEGORY_ORDER = ["전체", ...Object.values(CATEGORY_LABEL)];
 
-const historyItems = [
-  { id: 1, date: "2025-08-22", title: "시로모케이블카", category: "교통비", type: "expense", amount: 20000, balanceAfter: 40000 },
-  { id: 2, date: "2025-08-22", title: "개쩌는 식당", category: "식비", type: "expense", amount: 30000, balanceAfter: 60000 },
-  { id: 3, date: "2025-08-21", title: "루이지마트", category: "기타", type: "expense", amount: 40000, balanceAfter: 90000 },
-  { id: 4, date: "2025-08-21", title: "쏘카(렌트)", category: "교통비", type: "expense", amount: 70000, balanceAfter: 130000 },
-  { id: 5, date: "2025-08-06", title: "한주원", category: "입금", type: "income", amount: 100000, balanceAfter: 200000 },
-  { id: 6, date: "2025-08-06", title: "신다운", category: "입금", type: "income", amount: 100000, balanceAfter: 100000 },
-];
-
+function toDateYYYYMMDD(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
 
 export default function MyCardHistory() {
   const { id } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+  const [data, setData] = useState(null);
   const [category, setCategory] = useState("전체");
   const [array, setArray] = useState("최신순");
 
-  const card = cards.find((c) => String(c.id) === String(id));
-  const total = costs.total[category] ?? 0;
-  const used = costs.used[category] ?? 0;
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setErr("");
+        const resp = await api(`/api/mycard/${id}/history`);
+        if (!mounted) return;
+        setData(resp);
+      } catch (e) {
+        console.error("GET /api/mycard/:id/history failed:", e?.status, e?.body || e?.message);
+        if (mounted) setErr("카드 사용 내역을 불러오지 못했어요.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
+
+  // 히스토리 원본 → HistoryList용 아이템으로 변환
+  const items = useMemo(() => {
+    if (!data?.histories) return [];
+    return data.histories.map(h => {
+      const label = CATEGORY_LABEL[h.category] ?? "기타";
+      return {
+        id: h.usageId,
+        date: toDateYYYYMMDD(h.costDate),
+        title: h.memo || "-",
+        category: label,
+        type: "expense",
+        amount: h.usageCost,
+        // balanceAfter: undefined
+      };
+    });
+  }, [data]);
+
+  // 드롭다운(필터/정렬)
+  const viewItems = useMemo(() => {
+    let arr = items;
+    if (category !== "전체") {
+      arr = arr.filter(it => it.category === category);
+    }
+    arr = [...arr].sort((a, b) => {
+      if (array === "오래된 순") return (a.date > b.date ? 1 : a.date < b.date ? -1 : b.id - a.id);
+      return (a.date < b.date ? 1 : a.date > b.date ? -1 : a.id - b.id);
+    });
+    return arr;
+  }, [items, category, array]);
+
+  // 진행바 값 (지금은 예산 없음 → 사용액 합계를 used/total로 동일 적용)
+  const used = useMemo(() => viewItems.reduce((sum, it) => sum + (it.amount || 0), 0), [viewItems]);
+  const total = used; // 예산 연동 전까지는 같은 값으로 표시
+
+  if (loading) {
+    return (
+      <Wrapper>
+        <HistoryDetail>
+          <BackRow>
+            <BackBtn url={`/mypage/card/${id}`} text="내 카드" />
+          </BackRow>
+          <Empty>불러오는 중…</Empty>
+        </HistoryDetail>
+      </Wrapper>
+    );
+  }
+
+  if (err || !data) {
+    return (
+      <Wrapper>
+        <HistoryDetail>
+          <BackRow>
+            <BackBtn url={`/mypage/card/${id}`} text="내 카드" />
+          </BackRow>
+          <Empty>{err || "데이터가 없어요."}</Empty>
+        </HistoryDetail>
+      </Wrapper>
+    );
+  }
 
   return (
     <Wrapper>
@@ -74,23 +122,22 @@ export default function MyCardHistory() {
           <BackBtn url={`/mypage/card/${id}`} text="내 카드" />
         </BackRow>
 
-        {card && (
-          <HeaderBox>
-            <TitleRow>
-              <Name>{card.name}</Name>
-              <Divider>|</Divider>
-              <Nickname>{card.nickname}</Nickname>
-            </TitleRow>
-            <Account>{card.linkedAccount}</Account>
-          </HeaderBox>
-        )}
+        <HeaderBox>
+          <TitleRow>
+            <Name>{data.name}</Name>
+            <Divider>|</Divider>
+            <Nickname>{data.nickname}</Nickname>
+          </TitleRow>
+          {/* 계좌(or 카드번호) 중 하나만 보여주고 싶으면 아래 라인 조정 */}
+          {data.linkedAccount && <Account>{data.linkedAccount}</Account>}
+        </HeaderBox>
 
         <FilterRow>
           <FilterDropdown
             label="카테고리"
             value={category}
             onChange={setCategory}
-            options={["전체", "식비", "교통비", "여가비", "기타"]}
+            options={CATEGORY_ORDER}
           />
           <FilterDropdown
             label="정렬"
@@ -107,8 +154,8 @@ export default function MyCardHistory() {
         />
 
         <HistoryList
-          items={historyItems}
-          showBalance
+          items={viewItems}
+          showBalance={false}
           showEdit
           onClickItem={(it) => console.log("click", it)}
         />
@@ -193,4 +240,11 @@ const FilterRow = styled.div`
   display: flex;
   gap: 10px;
   margin-top: 60px;
+`;
+
+const Empty = styled.div`
+  ${fontSet.body2_m};
+  color: ${colors.gray700};
+  padding: 40px 0 20px;
+  text-align: center;
 `;

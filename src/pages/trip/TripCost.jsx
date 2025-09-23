@@ -11,13 +11,11 @@ import { useLocation } from "react-router-dom";
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  clearTripDraft,
   loadTripDraft,
   patchTripDraft,
   saveTripDraft,
 } from "./TripDraftSession";
 
-const DETAIL_ROUTE = "/trip/new/details";
 const toStartOfDay = (d) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate());
 const diffDaysInclusive = (s, e) => {

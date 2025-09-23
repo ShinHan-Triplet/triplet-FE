@@ -23,15 +23,6 @@ const themeToNum = (t) => {
 };
 const numToTheme = (n) => THEMES[(n ?? 1) - 1] ?? THEMES[0];
 
-// const toStartOfDay = (d) =>
-//   new Date(d.getFullYear(), d.getMonth(), d.getDate());
-// const diffDaysInclusive = (s, e) => {
-//   if (!s || !e) return 0;
-//   const start = toStartOfDay(s);
-//   const end = toStartOfDay(e);
-//   return Math.round((end - start) / 86400000) + 1;
-// };
-
 export default function NewTrip() {
   const navigate = useNavigate();
 
@@ -84,10 +75,11 @@ export default function NewTrip() {
         themeNum,
         startMs: range.start ? toStartOfDay(range.start).getTime() : null,
         endMs: range.end ? toStartOfDay(range.end).getTime() : null,
+        tripImg: fileName,
       });
     }, 600);
     return () => clearTimeout(saveTimer.current);
-  }, [title, theme, range.start, range.end]);
+  }, [title, theme, range.start, range.end, fileName]);
 
   const toStartOfDay = (d) =>
     new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -108,6 +100,9 @@ export default function NewTrip() {
     } else if (!range.start || !range.end) {
       alert("여행 일정을 선택해주세요.");
       return;
+    } else if (!fileName) {
+      alert("여행 대표사진을 선택해주세요.");
+      return;
     }
     const days = diffDaysInclusive(range.start, range.end);
     const themeNum = themeToNum(theme);
@@ -117,6 +112,7 @@ export default function NewTrip() {
       themeNum,
       startMs: toStartOfDay(range.start).getTime(),
       endMs: toStartOfDay(range.end).getTime(),
+      tripImg: fileName,
     });
 
     // state에 안전하게 밀리초 타임스탬프를 넣어 전달 (타임존 이슈 방지)
@@ -127,6 +123,7 @@ export default function NewTrip() {
         days,
         title,
         theme,
+        tripImg: fileName,
       },
     });
   };

@@ -162,7 +162,7 @@ export default function TripCard() {
         };
 
         const recommCard = list.map(toUI);
-        console.log(recommCard);
+        console.log(recommCard.length);
         setCardList(recommCard);
       } catch (e) {
         setCardList([]);

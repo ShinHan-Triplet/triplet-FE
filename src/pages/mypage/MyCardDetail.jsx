@@ -89,10 +89,6 @@ export default function MyCardDetail(){
     CARD_COVERS[(Number(data.card_id) - 1 + CARD_COVERS.length) % CARD_COVERS.length] ||
     CARD_COVERS[0];
 
-    console.log("detail payload:", data);
-console.log("cardStatus:", data.cardStatus, "status:", data.status, "card_status:", data.card_status);
-
-
   const STATUS = Object.freeze({
     1: { text: "사용 중",     color: colors.blue500 },
     2: { text: "일시 정지",   color: colors.error },
@@ -148,23 +144,6 @@ console.log("cardStatus:", data.cardStatus, "status:", data.status, "card_status
                   ))}
                 </BenefitList>
             </Section>
-
-            {/* <Section>
-              <SectionTitle>비밀번호 수정</SectionTitle>
-              <PwdRow>
-                <InputBox
-                  placeholder="***********"
-                  width={380}
-                />
-                <SmallBtn
-                  label="수정"
-                  onClick={() => console.log("비밀번호 수정")}
-                  bgColor={colors.blue400}
-                  textColor={colors.white}
-                  width={120}
-                />
-              </PwdRow>
-            </Section> */}
             </DetailRow>
           </Right>
         </DetailGrid>

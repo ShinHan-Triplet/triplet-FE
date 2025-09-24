@@ -4,14 +4,15 @@ import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
 import shadows from "../../styles/shadows";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import InputBox from "../../components/input/InputBox";
 import checkIcon from "../../assets/icon/check.svg";
 import LargeBtn from "../../components/button/LargeBtn";
 import Modal from "../../components/modal/Modal";
-import { api, setAccessToken } from "../../lib/api";
+import { api, ensureAccessToken } from "../../lib/api";
 import { getCardCoverById } from "../../assets/cardCoverSquare";
+import { getDraft, patchDraft } from "../../lib/draft";
 
 export default function NewGather() {
   const [selectedCard, setselectedCard] = useState(null);
@@ -20,7 +21,10 @@ export default function NewGather() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [cardList, setCardList] = useState([]);
   const { state } = useLocation();
+  const [gatherName, setGatherName] = useState("");
+  const [authReady, setAuthReady] = useState(false);
   var soloTrip = state?.soloTrip || false;
+  const saveTimer = useRef(null);
 
   const gotoTripCard = () => {
     const prevUrl = location.pathname;
@@ -37,30 +41,70 @@ export default function NewGather() {
     setIsModalOpen(false);
   };
 
-  const newGather = () => {
-    setIsModalOpen(true);
+  const newGather = async () => {
+    if (!selectedCard) return;
+    try {
+      await ensureAccessToken();
+      await api("/api/trips/from-draft", {
+        method: "POST",
+        body: {
+          newGather: {
+            name: gatherName,
+            mcardId: selectedCard,
+          },
+        },
+      });
+      setIsModalOpen(true);
+    } catch (e) {
+      alert("모임 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   };
 
   const handleSelectCard = (id) => {
     setselectedCard((prev) => (prev === id ? null : id));
   };
 
+  // 1. 마운트 시 Redis 초안 로드 (모임 이름)
   useEffect(() => {
     (async () => {
       try {
-        const params = new URLSearchParams(location.search);
-        const tokenFromQS = params.get("accessToken");
-        if (tokenFromQS) {
-          setAccessToken(tokenFromQS);
-          window.history.replaceState({}, "", location.pathname);
-        } else {
-          const newAccess = await api("/api/auth/refresh", { method: "POST" });
-          const token =
-            typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
-          if (!token) throw new Error("no access from refresh");
-          setAccessToken(token);
-        }
+        await ensureAccessToken(window.location);
+        setAuthReady(true);
+        const res = await getDraft();
+        if (!res?.hasDraft) return;
+        const d = res.draft;
+        setGatherName(d.gatherName ?? "");
+      } catch (e) {}
+    })();
+  }, []);
 
+  // 2. 자동 저장(디바운스 600ms) -> redis
+  useEffect(() => {
+    if (!authReady) return;
+
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await ensureAccessToken();
+      } catch {
+        return;
+      }
+
+      try {
+        await patchDraft({
+          gatherName,
+        });
+      } catch (e) {
+        console.error("draft save failed", e);
+      }
+    }, 600);
+    return () => clearTimeout(saveTimer.current);
+  }, [gatherName, authReady]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureAccessToken(window.location);
         const res = await api("/api/gather/myCard", { method: "GET" });
         const myCard = (res?.personalCards ?? []).map((g) => ({
           id: g.mcardId,
@@ -111,6 +155,8 @@ export default function NewGather() {
                   <InputBox
                     placeholder="모임 이름을 작성해주세요"
                     width={700}
+                    value={gatherName}
+                    onChange={(e) => setGatherName(e.target.value)}
                   ></InputBox>
                 </Detail>
                 <MiniText>

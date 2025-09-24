@@ -8,9 +8,10 @@ import DetailBtn from "../../components/button/DetailBtn";
 import MediumBtn from "../../components/button/MediumBtn";
 import ModalForCard from "../../components/modal/ModalForCard";
 import { useNavigate, useLocation } from "react-router-dom";
-import { api, setAccessToken } from "../../lib/api";
+import { api, setAccessToken, ensureAccessToken } from "../../lib/api";
 import { getCardCoverById } from "../../assets/cardCoverSquare";
-import { loadTripDraft } from "./TripDraftSession";
+// import { loadTripDraft } from "./TripDraftSession";
+import { getDraft } from "../../lib/draft";
 
 const CardImgWrap = styled.div`
   position: relative;
@@ -94,7 +95,7 @@ const WHY_BY_THEME = {
 export default function TripCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null);
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   const [cardList, setCardList] = useState([]);
   const [whyMsgs, setWhyMsgs] = useState(WHY_BY_THEME[4]);
   var prevUrl = state?.prevUrl || "/trip";
@@ -109,36 +110,29 @@ export default function TripCard() {
   useEffect(() => {
     (async () => {
       try {
-        const params = new URLSearchParams(location.search);
-        const tokenFromQS = params.get("accessToken");
-        if (tokenFromQS) {
-          setAccessToken(tokenFromQS);
-          window.history.replaceState({}, "", location.pathname);
-        } else {
-          const newAccess = await api("/api/auth/refresh", { method: "POST" });
-          const token =
-            typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
-          if (!token) throw new Error("no access from refresh");
-          setAccessToken(token);
-        }
-        const snap = loadTripDraft();
-        const themeNum = migrateThemeNum(snap);
-        setWhyMsgs(WHY_BY_THEME[themeNum]);
+        // 1) 토큰 확보
+        await ensureAccessToken(window.location);
 
-        const res = await api(`/api/card/recommandCard?themeNum=${themeNum}`, {
+        // 2) Redis 초안에서 themeNum 로드 (없으면 4)
+        const res = await getDraft();
+        const themeNum = res?.draft?.themeNum ?? 4;
+        setWhyMsgs(WHY_BY_THEME[themeNum] ?? WHY_BY_THEME[4]);
+
+        // 3) 서버에 추천 카드 요청 (api()가 Authorization 붙여줌)
+        const r = await api(`/api/card/recommandCard?themeNum=${themeNum}`, {
           method: "GET",
         });
+        const list = Array.isArray(r) ? r : r?.data ?? [];
 
-        const list = Array.isArray(res) ? res : res?.data ?? [];
-
+        // 4) UI 매핑
         const toUI = (c) => {
           const descStr = c.cardDesc;
           const desc = Array.isArray(descStr)
             ? descStr
             : String(descStr)
-                .split(/\r?\n/) // \n 또는 \r\n 모두 대응
-                .map((s) => s.trim()) // 앞뒤 공백 제거
-                .filter(Boolean); // 빈 항목 제거
+                .split(/\r?\n/)
+                .map((s) => s.trim())
+                .filter(Boolean);
 
           const subBenefits = (c.benefits || []).map((sb) => ({
             exp: sb.shortTitle,
@@ -161,14 +155,77 @@ export default function TripCard() {
           };
         };
 
-        const recommCard = list.map(toUI);
-        console.log(recommCard.length);
-        setCardList(recommCard);
+        setCardList(list.map(toUI));
       } catch (e) {
+        console.error("card recommend load failed", e);
         setCardList([]);
       }
     })();
-  }, [navigate, location]);
+  }, [pathname]); // 경로 바뀌면 새로고침
+
+  // useEffect(() => {
+  //   (async () => {
+  //     try {
+  //       const params = new URLSearchParams(location.search);
+  //       const tokenFromQS = params.get("accessToken");
+  //       if (tokenFromQS) {
+  //         setAccessToken(tokenFromQS);
+  //         window.history.replaceState({}, "", location.pathname);
+  //       } else {
+  //         const newAccess = await api("/api/auth/refresh", { method: "POST" });
+  //         const token =
+  //           typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
+  //         if (!token) throw new Error("no access from refresh");
+  //         setAccessToken(token);
+  //       }
+  //       const snap = loadTripDraft();
+  //       const themeNum = migrateThemeNum(snap);
+  //       setWhyMsgs(WHY_BY_THEME[themeNum]);
+
+  //       const res = await api(`/api/card/recommandCard?themeNum=${themeNum}`, {
+  //         method: "GET",
+  //       });
+
+  //       const list = Array.isArray(res) ? res : res?.data ?? [];
+
+  //       const toUI = (c) => {
+  //         const descStr = c.cardDesc;
+  //         const desc = Array.isArray(descStr)
+  //           ? descStr
+  //           : String(descStr)
+  //               .split(/\r?\n/) // \n 또는 \r\n 모두 대응
+  //               .map((s) => s.trim()) // 앞뒤 공백 제거
+  //               .filter(Boolean); // 빈 항목 제거
+
+  //         const subBenefits = (c.benefits || []).map((sb) => ({
+  //           exp: sb.shortTitle,
+  //           num: sb.shortContent,
+  //         }));
+
+  //         const benefits = (c.benefits || []).map((b) => ({
+  //           title: b.title,
+  //           content: b.content,
+  //         }));
+
+  //         return {
+  //           id: c.cardId,
+  //           name: c.cardName,
+  //           tagline: c.cardIntro ?? "",
+  //           desc,
+  //           subBenefits,
+  //           benefits,
+  //           image: getCardCoverById(c.cardId),
+  //         };
+  //       };
+
+  //       const recommCard = list.map(toUI);
+  //       console.log(recommCard.length);
+  //       setCardList(recommCard);
+  //     } catch (e) {
+  //       setCardList([]);
+  //     }
+  //   })();
+  // }, [navigate, location]);
 
   const handleDetailClick = (card) => {
     setSelectedCard(card);

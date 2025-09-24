@@ -10,7 +10,7 @@ import memberIcon from "../../assets/icon/gather_black.svg";
 import shadows from "../../styles/shadows";
 import { useNavigate, useLocation } from "react-router-dom";
 import Modal from "../../components/modal/Modal";
-import { api, setAccessToken } from "../../lib/api";
+import { api, ensureAccessToken } from "../../lib/api";
 import { getCardCoverById } from "../../assets/cardCoverBasic";
 
 export default function Gather() {
@@ -32,23 +32,7 @@ export default function Gather() {
     (async () => {
       try {
         setLoading(true);
-
-        // 1) 쿼리에 accessToken 있으면 저장 후 URL 정리
-        const params = new URLSearchParams(location.search);
-        const tokenFromQS = params.get("accessToken");
-        if (tokenFromQS) {
-          setAccessToken(tokenFromQS);
-          window.history.replaceState({}, "", location.pathname);
-        } else {
-          // ★ 새 방식: 쿼리 없이 왔으면 refresh로 access 발급
-          const newAccess = await api("/api/auth/refresh", { method: "POST" });
-          const token =
-            typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
-          if (!token) throw new Error("no access from refresh");
-          setAccessToken(token);
-        }
-
-        // 2) 그냥 보호 API 호출 (api()가 401 처리 + refresh + 재시도해줌)
+        await ensureAccessToken();
         const res = await api("/api/gather/me", { method: "GET" });
         if (!mounted) return;
 
@@ -117,12 +101,32 @@ export default function Gather() {
     setIsModalOpen(false);
   };
 
-  const gatherUsingMyCard = () => {
-    setIsModalOpen(true);
+  const gatherUsingMyCard = async () => {
+    if (!selectedGathering) return;
+    try {
+      await ensureAccessToken();
+      await api("/api/trips/from-draft", {
+        method: "POST",
+        body: { gatherId: selectedGathering },
+      });
+      setIsModalOpen(true);
+    } catch (e) {
+      alert("여행 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   };
 
-  const tripGoingAlone = () => {
-    setIsModal2Open(true);
+  const tripGoingAlone = async () => {
+    if (!selectedCard) return;
+    try {
+      await ensureAccessToken();
+      await api("/api/trips/from-draft", {
+        method: "POST",
+        body: { gatherId: selectedCard },
+      });
+      setIsModal2Open(true);
+    } catch (e) {
+      alert("여행 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   };
 
   useEffect(() => {

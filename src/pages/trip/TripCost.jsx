@@ -1,3 +1,4 @@
+// TripCost.jsx (Redis 초안 연동 버전)
 import * as React from "react";
 import styled from "styled-components";
 import colors from "../../styles/colors";
@@ -7,14 +8,11 @@ import InputBox from "../../components/input/InputBox";
 import LargeBtn from "../../components/button/LargeBtn";
 import CategoryChip from "../../components/chip/CategoryChip";
 import DayCost from "../../components/trip/DayCost";
-import { useLocation } from "react-router-dom";
-import { useState, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  loadTripDraft,
-  patchTripDraft,
-  saveTripDraft,
-} from "./TripDraftSession";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+
+import { getDraft, patchDraft } from "../../lib/draft";
+import { ensureAccessToken } from "../../lib/api";
 
 const toStartOfDay = (d) =>
   new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -27,17 +25,76 @@ const diffDaysInclusive = (s, e) => {
 
 export default function TripCost() {
   const { state } = useLocation();
-  const [dayTotals, setDayTotals] = useState({});
   const navigate = useNavigate();
+
+  const [authReady, setAuthReady] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
+
+  const [dayTotals, setDayTotals] = useState({});
   const [daySnapshots, setDaySnapshots] = useState({});
+  const [amounts, setAmounts] = useState({ stay: "", insurance: "" });
+
+  const saveTimer = useRef(null);
+
+  // days 계산 (라우터 state 우선)
   const [daysCount, setDaysCount] = useState(() => {
     if (state?.days) return state.days;
     const s = state?.startMs ? new Date(state.startMs) : null;
     const e = state?.endMs ? new Date(state.endMs) : null;
     return s && e ? diffDaysInclusive(s, e) : 0;
   });
-  const [hydrated, setHydrated] = useState(false);
 
+  // 1) 마운트 시 토큰 확보 + 초안 불러오기
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureAccessToken(window.location);
+        setAuthReady(true);
+
+        const res = await getDraft();
+        const d = res?.draft;
+        if (!d) {
+          setHydrated(true);
+          return;
+        }
+
+        // budgets 복원
+        if (d.budgets) {
+          setAmounts({
+            stay: String(d.budgets.stay ?? ""),
+            insurance: String(d.budgets.insurance ?? ""),
+          });
+          setDaySnapshots(d.budgets.days ?? {});
+        }
+
+        // days가 없으면 초안의 날짜로 보정
+        if (!state?.days && d.startMs && d.endMs) {
+          setDaysCount(
+            diffDaysInclusive(new Date(d.startMs), new Date(d.endMs))
+          );
+        }
+
+        setHydrated(true);
+      } catch {
+        setAuthReady(false);
+        setHydrated(true); // 읽기는 실패해도 화면은 그려줌
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 2) days 범위 바뀌면 snapshots 범위 정리
+  useEffect(() => {
+    if (!hydrated || !daysCount) return;
+    setDaySnapshots((prev) => {
+      const entries = Object.entries(prev).filter(
+        ([k]) => Number(k) >= 1 && Number(k) <= daysCount
+      );
+      return Object.fromEntries(entries);
+    });
+  }, [daysCount, hydrated]);
+
+  // 유틸
   const equalAmounts = (a = {}, b = {}) =>
     String(a.food ?? "") === String(b.food ?? "") &&
     String(a.transport ?? "") === String(b.transport ?? "") &&
@@ -50,75 +107,9 @@ export default function TripCost() {
       !!a.noSchedule === !!b.noSchedule && equalAmounts(a.amounts, b.amounts)
     );
   };
-
-  // 처음 진입 - 세션에 이전 기록이 있으면 이어쓰기 묻기
-  useEffect(() => {
-    const snap = loadTripDraft();
-    if (!snap) return;
-
-    // const ok = window.confirm(
-    //   "이전에 작성한 내용이 있어요. 이어서 작성할까요?"
-    // );
-    // if (!ok) {
-    //   clearTripDraft();
-    //   navigate(DETAIL_ROUTE, { replace: true });
-    //   return;
-    // }
-    if (snap.budgets) {
-      setAmounts({
-        stay: String(snap.budgets.stay || ""),
-        insurance: String(snap.budgets.insurance || ""),
-      });
-      setDaySnapshots(snap.budgets.days || {});
-    }
-
-    if (!state?.days && snap.startMs && snap.endMs) {
-      setDaysCount(
-        diffDaysInclusive(new Date(snap.startMs), new Date(snap.endMs))
-      );
-    }
-    setHydrated(true);
-  }, [navigate, state?.days]);
-
-  const nextPage = () => {
-    navigate("/trip/new/companions");
-  };
-
-  //자식이 total값을 알려줄 때 호출
-  const handleTotalChange = (dayIndex) => (total) => {
-    setDayTotals((prev) => ({ ...prev, [dayIndex]: Number(total) || 0 }));
-  };
-
-  // 새로고침 등으로 직접 진입했을 때 state가 없을 수도 있으니 방어
-  const start = state?.startMs ? new Date(state.startMs) : null;
-  const end = state?.endMs ? new Date(state.endMs) : null;
-  const days =
-    state?.days ??
-    (start && end
-      ? Math.round((toStartOfDay(end) - toStartOfDay(start)) / 86400000) + 1
-      : 0);
-
-  // days 변경 시 범위 정리
-  useEffect(() => {
-    if (!hydrated) return;
-    if (!daysCount) return;
-    setDaySnapshots((prev) => {
-      const entries = Object.entries(prev).filter(
-        ([k]) => Number(k) >= 1 && Number(k) <= daysCount
-      );
-      return Object.fromEntries(entries);
-    });
-  }, [daysCount, hydrated]);
-
-  // 유틸: 문자열에서 숫자만 추출
   const toDigits = (s) => String(s ?? "").replace(/\D/g, "");
-  // 유틸: 입력창 표시용 포맷 (빈 문자열이면 그대로 빈칸 유지)
   const formatDigits = (digits) =>
     digits === "" ? "" : new Intl.NumberFormat("ko-KR").format(Number(digits));
-  const [amounts, setAmounts] = useState({
-    stay: "",
-    insurance: "",
-  });
 
   const handleAmount = (key) => (e) => {
     const input = e.target.value;
@@ -127,14 +118,17 @@ export default function TripCost() {
     setAmounts((prev) => ({ ...prev, [key]: digits }));
   };
 
-  // 자식이 보내주는 일자별 스냅샷 저장
   const handleDaySnapshotChange = useCallback((day, snapshot) => {
     setDaySnapshots((prev) => {
       const prevSnap = prev[day];
-      if (equalSnapshot(prevSnap, snapshot)) return prev; // 동등하면 갱신 안 함
+      if (equalSnapshot(prevSnap, snapshot)) return prev;
       return { ...prev, [day]: snapshot };
     });
   }, []);
+
+  const handleTotalChange = (dayIndex) => (total) => {
+    setDayTotals((prev) => ({ ...prev, [dayIndex]: Number(total) || 0 }));
+  };
 
   const stayPlusInsurance = useMemo(() => {
     const n = (v) => (v === "" ? 0 : Number(v));
@@ -149,40 +143,51 @@ export default function TripCost() {
     return daySum + stayPlusInsurance;
   }, [dayTotals, stayPlusInsurance]);
 
-  // 자동 저장
+  // 3) 자동 저장(디바운스 600ms) → Redis draft.budgets 에 저장
   useEffect(() => {
-    if (!hydrated) return;
-    const timer = setTimeout(() => {
-      const hasTop = !!amounts.stay || !!amounts.insurance;
-      const hasDays = Object.values(daySnapshots).some((d) => {
-        if (!d) return false;
-        const hasNo = !!d.noSchedule;
-        const a = d.amounts || {};
-        const hasAmt = !!(a.food || a.transport || a.leisure || a.etc);
-        return hasNo || hasAmt;
-      });
+    if (!authReady || !hydrated) return;
 
-      if (!hasTop && !hasDays) {
-        const prev = loadTripDraft() || {};
-        if (prev.budgets) {
-          const next = { ...prev };
-          delete next.budgets;
-          saveTripDraft(next);
-        }
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await ensureAccessToken();
+      } catch {
         return;
       }
 
-      patchTripDraft({
-        budgets: {
-          stay: amounts.stay,
-          insurance: amounts.insurance,
-          days: daySnapshots,
-        },
+      // 의미 있는 데이터 존재 여부
+      const hasTop = !!amounts.stay || !!amounts.insurance;
+      const hasDays = Object.values(daySnapshots).some((d) => {
+        if (!d) return false;
+        const a = d.amounts || {};
+        return (
+          !!d.noSchedule || !!(a.food || a.transport || a.leisure || a.etc)
+        );
       });
+
+      // 데이터가 있으면 budgets 통째로 패치
+      if (hasTop || hasDays) {
+        await patchDraft({
+          budgets: {
+            stay: amounts.stay,
+            insurance: amounts.insurance,
+            days: daySnapshots,
+          },
+        });
+      } else {
+        // 비어 있으면 budgets 제거 시도(서버 upsertMerge에서 null 제거 처리 권장)
+        try {
+          await patchDraft({ budgets: null });
+        } catch {
+          /* 서버가 null 제거를 지원하지 않으면 그냥 스킵 */
+        }
+      }
     }, 600);
 
-    return () => clearTimeout(timer);
-  }, [amounts, daySnapshots, hydrated]);
+    return () => clearTimeout(saveTimer.current);
+  }, [authReady, hydrated, amounts, daySnapshots]);
+
+  const nextPage = () => navigate("/trip/new/companions");
 
   return (
     <Container>
@@ -202,7 +207,7 @@ export default function TripCost() {
               <BlueTitleAll>전체 예산</BlueTitleAll>
               <Tags>
                 <Tag>
-                  <CategoryChip type="stay"></CategoryChip>
+                  <CategoryChip type="stay" />
                   <Money>
                     <InputBox
                       placeholder="0"
@@ -210,12 +215,12 @@ export default function TripCost() {
                       value={formatDigits(amounts.stay)}
                       onChange={handleAmount("stay")}
                       style={{ textAlign: "right" }}
-                    ></InputBox>
-                    <Won style={{ textAlign: "right" }}>원</Won>
+                    />
+                    <Won>원</Won>
                   </Money>
                 </Tag>
                 <Tag>
-                  <CategoryChip type="insurance"></CategoryChip>
+                  <CategoryChip type="insurance" />
                   <Money>
                     <InputBox
                       placeholder="0"
@@ -223,8 +228,8 @@ export default function TripCost() {
                       value={formatDigits(amounts.insurance)}
                       onChange={handleAmount("insurance")}
                       style={{ textAlign: "right" }}
-                    ></InputBox>
-                    <Won style={{ textAlign: "right" }}>원</Won>
+                    />
+                    <Won>원</Won>
                   </Money>
                 </Tag>
               </Tags>
@@ -234,6 +239,7 @@ export default function TripCost() {
                 </CostText>
               </BasisCost>
             </AllCost>
+
             {Array.from({ length: Math.max(0, daysCount) }, (_, i) => {
               const day = i + 1;
               return (
@@ -248,10 +254,12 @@ export default function TripCost() {
                 />
               );
             })}
+
             <TotalCost>총 예산: {totalSum.toLocaleString()}원</TotalCost>
           </Contents>
         </Fill>
       </div>
+
       <BtnSpace>
         <LargeBtn
           label="다음"
@@ -259,43 +267,37 @@ export default function TripCost() {
           bgColor={colors.blue400}
           textColor={colors.white}
           width={180}
-        ></LargeBtn>
+        />
       </BtnSpace>
     </Container>
   );
 }
 
+/* styles — 기존 그대로 */
 const TotalCost = styled.div`
-  ${fontSet.body1_b}
-  width:100%;
+  ${fontSet.body1_b} width:100%;
   display: flex;
   justify-content: center;
 `;
-
 const BasisCost = styled.div`
-  ${fontSet.body1_b}
-  display: flex;
+  ${fontSet.body1_b} display:flex;
   flex-direction: column;
   align-items: flex-end;
   margin-top: 20px;
 `;
-
 const CostText = styled.div`
   ${fontSet.body2_m}
 `;
-
 const Won = styled.div`
-  ${fontSet.body2_m}
-  width: 30px;
+  ${fontSet.body2_m} width:30px;
+  text-align: right;
 `;
-
 const Money = styled.div`
   gap: 4px;
   display: flex;
   flex-direction: row;
   align-items: center;
 `;
-
 const Container = styled.div`
   display: flex;
   margin: 0 auto;
@@ -306,14 +308,12 @@ const Container = styled.div`
   background: transparent;
   margin-top: 100px;
 `;
-
 const Title = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 12px;
 `;
-
 const Fill = styled.div`
   width: 880px;
   margin-left: 90px;
@@ -323,14 +323,11 @@ const Fill = styled.div`
   background: transparent;
   margin-top: 40px;
 `;
-
 const BlueTitleAll = styled.div`
-  ${fontSet.heading3}
-  color: ${colors.blue500};
+  ${fontSet.heading3} color:${colors.blue500};
   margin-bottom: 24px;
   height: 29px;
 `;
-
 const BtnSpace = styled.div`
   width: 100%;
   display: flex;
@@ -338,39 +335,32 @@ const BtnSpace = styled.div`
   align-items: center;
   margin-top: 60px;
 `;
-
 const Contents = styled.div`
   display: flex;
   flex-direction: column;
   gap: 48px;
 `;
-
 const AllCost = styled.div`
   gap: 20px;
 `;
-
 const Tags = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-column-gap: 20px;
   grid-row-gap: 20px;
 `;
-
 const Tag = styled.div`
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 20px;
 `;
-
 const MainTitle = styled.div`
   ${fontSet.heading1}
 `;
-
 const SubTitle = styled.div`
   ${fontSet.heading2}
 `;
-
 const MiniTitle = styled.div`
   ${fontSet.body1_m}
 `;

@@ -97,3 +97,30 @@ export async function api(
   }
   return parsed;
 }
+
+export async function ensureAccessToken(loc = window.location) {
+  // 1) URL ?accessToken=... 으로 넘어온 경우 우선 사용
+  const params = new URLSearchParams(loc.search);
+  const tokenFromQS = params.get("accessToken");
+  if (tokenFromQS) {
+    setAccessToken(tokenFromQS);
+    // 주소창 정리
+    const url = loc.pathname + (loc.hash || "");
+    window.history.replaceState({}, "", url);
+    return tokenFromQS;
+  }
+
+  // 2) 로컬스토리지에 있으면 그대로 사용
+  const existing = getAccessToken();
+  if (existing) return existing;
+
+  // 3) 없으면 refresh 시도 (쿠키 필요 → credentials: 'include'는 api()에서 이미 사용)
+  try {
+    const t = await refreshAccessToken();
+    return t;
+  } catch (e) {
+    // 리프레시 실패 ⇒ 로그인 필요
+    clearAccessToken();
+    throw new Error("auth_required");
+  }
+}

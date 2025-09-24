@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
@@ -6,78 +7,99 @@ import { useNavigate } from "react-router-dom";
 import TripList from "../../components/mypage/TripList";
 import Empty from "./MyEmpty";
 import MediumBtn from "../../components/button/MediumBtn";
+import { api } from "../../lib/api";
 
 import trip_cover_test from "../../assets/img/trip/trip_cover_test.png";
-// import trip_cover1 from "../../assets/img/trip/trip_cover1.png";
+import trip_cover1 from "../../assets/img/trip/trip_cover1.png";
 import trip_cover2 from "../../assets/img/trip/trip_cover2.png";
 import trip_cover3 from "../../assets/img/trip/trip_cover3.png";
 import trip_cover4 from "../../assets/img/trip/trip_cover4.png";
 import trip_cover5 from "../../assets/img/trip/trip_cover5.png";
 import trip_cover6 from "../../assets/img/trip/trip_cover6.png";
 
-const coverById = {
-  // 1: trip_cover1,
-  1: trip_cover_test,
-  2: trip_cover2,
-  3: trip_cover3,
-  4: trip_cover4,
-  5: trip_cover5,
-  6: trip_cover6,
+const COVER_BY_NAME = {
+  trip_cover_test,
+  trip_cover1,
+  trip_cover2,
+  trip_cover3,
+  trip_cover4,
+  trip_cover5,
+  trip_cover6,
 };
 
+function getCoverByFilename(name) {
+  return COVER_BY_NAME[name] ?? trip_cover_test;
+}
+
+function fmtDate(iso) {
+  // '2025-05-03' -> '2025. 05. 03'
+  if (!iso) return "";
+  const d = new Date(iso);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}. ${m}. ${day}`;
+}
 
 export default function MyTrip() {
   const navigate = useNavigate();
-    // 더미 데이터 예시 (나중에 API 연결)
-  const trips = [
-    // {
-    //   id: 1,
-    //   title: "신혼여행",
-    //   members: "신다운, 남편",
-    //   dateRange: "2035. 03. 13 ~ 2035. 03. 18",
-    // },
-    {
-      id: 1,
-      title: "힐링을 주세요",
-      members: "신다운",
-      dateRange: "2025. 09. 16 ~ 2035. 09. 17",
-    },
-    {
-      id: 2,
-      title: "현실도피여행",
-      members: "신다운, 한주원, 오선정, 박지원, 정재웅",
-      dateRange: "2025. 08. 28 ~ 2025. 09. 01",
-    },
-    {
-      id: 3,
-      title: "즉흥여행",
-      members: "신다운",
-      dateRange: "2025. 08. 13~ 2025. 08. 13",
-    },
-    {
-      id: 4,
-      title: "입짧은주원과 식도락",
-      members: "신다운, 한주원",
-      dateRange: "2025. 07. 20 ~ 2025. 07. 21",
-    },
-    {
-      id: 5,
-      title: "가족이랑 제주도",
-      members: "신다운, 엄마, 아빠, 언니",
-      dateRange: "2024. 04. 08 ~ 2024. 04. 11",
-    },
-    {
-      id: 6,
-      title: "우정포에버 추억쌓기",
-      members: "신다운, 짱친1, 짱친2, 짱친3, 짱친4, 짱친5",
-      dateRange: "2024. 01. 25 ~ 2024. 01. 29",
-    },
-  ];
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await api("/api/mytrip");
+        const list = Array.isArray(res?.trips) ? res.trips : [];
+
+        if (!mounted) return;
+
+        // 데이터 가공
+        const normalized = list.map((t) => ({
+          id: t.tripId,
+          title: t.title,
+          members: Array.isArray(t.members)
+            ? t.members.map((m) => m.name).join(", ")
+            : "",
+          dateRange: `${fmtDate(t.startDate)} ~ ${fmtDate(t.endDate)}`,
+          thumbnail: getCoverByFilename(t.thumbnail || t.trip_img),
+        }));
+
+        setTrips(normalized);
+        setErr("");
+      } catch (e) {
+        console.error("GET /api/mytrip failed:", e?.status, e?.body || e?.message);
+        if (mounted) setErr("내 여행 목록을 불러오지 못했어요.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  if (loading) {
+    return (
+      <Wrapper>
+        <div>내 여행을 불러오는 중...</div>
+      </Wrapper>
+    );
+  }
+
+  if (err) {
+    return (
+      <Wrapper>
+        <div style={{ color: colors.error }}>{err}</div>
+      </Wrapper>
+    );
+  }
 
   const isEmpty = trips.length === 0;
 
   return (
-    <Wrapper isEmpty={isEmpty}>
+    <Wrapper $isEmpty={isEmpty}>
       {isEmpty ? (
         <Empty
           title="아직 여행이 없어요."
@@ -85,7 +107,7 @@ export default function MyTrip() {
           action={
             <MediumBtn
               label="계획 세우기"
-              onClick={() => navigate('/trip/create')}
+              onClick={() => navigate("/trip/create")}
               bgColor={colors.blue400}
               textColor={colors.white}
               width={180}
@@ -97,7 +119,7 @@ export default function MyTrip() {
           {trips.map((trip) => (
             <TripList
               key={trip.id}
-              thumbnail={coverById[trip.id]}
+              thumbnail={trip.thumbnail}
               title={trip.title}
               members={trip.members}
               dateRange={trip.dateRange}
@@ -120,10 +142,10 @@ const Wrapper = styled.div`
 
   display: grid;
   grid-auto-rows: min-content;
-  row-gap: 20px;  
+  row-gap: 20px;
 
-  ${({ isEmpty }) =>
-    isEmpty &&
+  ${({ $isEmpty }) =>
+    $isEmpty &&
     `
     place-content: center;
     place-items: center;
@@ -135,4 +157,4 @@ const Grid = styled.div`
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
   width: 100%;
-`
+`;

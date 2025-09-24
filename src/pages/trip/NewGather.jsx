@@ -3,24 +3,32 @@ import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
-import testThumbnail from "./../../assets/img/test_thumbnail.png";
 import shadows from "../../styles/shadows";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import InputBox from "../../components/input/InputBox";
 import checkIcon from "../../assets/icon/check.svg";
 import LargeBtn from "../../components/button/LargeBtn";
 import Modal from "../../components/modal/Modal";
+import { api, ensureAccessToken } from "../../lib/api";
+import { getCardCoverById } from "../../assets/cardCoverSquare";
+import { getDraft, patchDraft } from "../../lib/draft";
 
 export default function NewGather() {
   const [selectedCard, setselectedCard] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [cardList, setCardList] = useState([]);
+  const { state } = useLocation();
+  const [gatherName, setGatherName] = useState("");
+  const [authReady, setAuthReady] = useState(false);
+  var soloTrip = state?.soloTrip || false;
+  const saveTimer = useRef(null);
 
   const gotoTripCard = () => {
     const prevUrl = location.pathname;
-    navigate("/trip/new/card", { state: { prevUrl } });
+    navigate("/trip/new/card", { state: { prevUrl, soloTrip } });
   };
   const gotoHome = () => {
     navigate("/");
@@ -33,36 +41,82 @@ export default function NewGather() {
     setIsModalOpen(false);
   };
 
-  const newGather = () => {
-    setIsModalOpen(true);
+  const newGather = async () => {
+    if (!selectedCard) return;
+    try {
+      await ensureAccessToken();
+      await api("/api/trips/from-draft", {
+        method: "POST",
+        body: {
+          newGather: {
+            name: gatherName,
+            mcardId: selectedCard,
+          },
+        },
+      });
+      setIsModalOpen(true);
+    } catch (e) {
+      alert("모임 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   };
-
-  const cardList = [
-    {
-      id: 1,
-      title: "Triplet 식도락 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 2,
-      title: "Triplet 먹보 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 3,
-      title: "Triplet 다우니 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 4,
-      title: "Triplet 때지 카드",
-      cardImg: { testThumbnail },
-    },
-  ];
 
   const handleSelectCard = (id) => {
     setselectedCard((prev) => (prev === id ? null : id));
   };
+
+  // 1. 마운트 시 Redis 초안 로드 (모임 이름)
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureAccessToken(window.location);
+        setAuthReady(true);
+        const res = await getDraft();
+        if (!res?.hasDraft) return;
+        const d = res.draft;
+        setGatherName(d.gatherName ?? "");
+      } catch (e) {}
+    })();
+  }, []);
+
+  // 2. 자동 저장(디바운스 600ms) -> redis
+  useEffect(() => {
+    if (!authReady) return;
+
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await ensureAccessToken();
+      } catch {
+        return;
+      }
+
+      try {
+        await patchDraft({
+          gatherName,
+        });
+      } catch (e) {
+        console.error("draft save failed", e);
+      }
+    }, 600);
+    return () => clearTimeout(saveTimer.current);
+  }, [gatherName, authReady]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureAccessToken(window.location);
+        const res = await api("/api/gather/myCard", { method: "GET" });
+        const myCard = (res?.personalCards ?? []).map((g) => ({
+          id: g.mcardId,
+          title: g.nickname,
+          cardImg: getCardCoverById(g.cardId),
+        }));
+        setCardList(myCard);
+      } catch (e) {
+        setCardList(e?.message ?? "불러오기에 실패했어요");
+      }
+    })();
+  }, [navigate, location]);
 
   return (
     <>
@@ -85,7 +139,11 @@ export default function NewGather() {
           <MiniTitle>멤버 관리는 방장이 언제든 할 수 있어요.</MiniTitle>
         </Title>
         <div>
-          <BackBtn url="/trip/new/companions" text="이전" />
+          <BackBtn
+            url="/trip/new/companions"
+            text="이전"
+            state={{ soloTrip }}
+          />
           <Fill>
             <Contents>
               <PageTitle>
@@ -97,6 +155,8 @@ export default function NewGather() {
                   <InputBox
                     placeholder="모임 이름을 작성해주세요"
                     width={700}
+                    value={gatherName}
+                    onChange={(e) => setGatherName(e.target.value)}
                   ></InputBox>
                 </Detail>
                 <MiniText>
@@ -104,12 +164,16 @@ export default function NewGather() {
                     <img src={checkIcon} alt="member" />
                     모임 멤버 초대는 마이페이지 &gt; 내 모임 에서 할 수 있어요
                   </TextContainer>
+                  <TextContainer>
+                    <img src={checkIcon} alt="member" />
+                    모임 멤버 초대는 여행 전날까지만 가능해요
+                  </TextContainer>
                 </MiniText>
               </div>
             </Contents>
             <Contents>
               <PageTitle>
-                <BlueTitle>모임 체크</BlueTitle>
+                <BlueTitle>모임 카드 선택</BlueTitle>
               </PageTitle>
               <GatherList>
                 {cardList.map((card) => (
@@ -120,7 +184,7 @@ export default function NewGather() {
                   >
                     <GatherTitle>{card.title}</GatherTitle>
                     <GatherCard>
-                      <BgImg src={testThumbnail} alt="" />
+                      <BgImg src={card.cardImg} alt="" />
                     </GatherCard>
                   </MyCard>
                 ))}

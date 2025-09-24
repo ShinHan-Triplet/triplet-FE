@@ -6,6 +6,7 @@ import loginBtnImg from "../../assets/img/LoginBtn.png";
 import loginBtnHoverImg from "../../assets/img/LoginBtnHover.png";
 import logo from "../../assets/logo/logo.svg";
 import { useNavigate } from "react-router-dom";
+const portNum = process.env.REACT_APP_PORT_NUM;
 
 export default function Login() {
   const navigate = useNavigate();
@@ -32,8 +33,7 @@ export default function Login() {
         type="button"
         aria-label="네이버로 로그인"
         onClick={() => {
-          window.location.href =
-            "http://localhost:8080/oauth2/authorization/naver";
+          window.location.href = `http://localhost:${portNum}/oauth2/authorization/naver`;
         }}
       />
     </BgWrap>

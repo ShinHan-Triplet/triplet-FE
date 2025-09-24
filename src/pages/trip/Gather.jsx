@@ -6,19 +6,65 @@ import LargeBtn from "../../components/button/LargeBtn";
 import BackBtn from "../../components/button/BackBtn";
 import CheckBox from "../../components/trip/CheckBox";
 import { useState, useEffect } from "react";
-import testThumbnail from "./../../assets/img/test_thumbnail.png";
 import memberIcon from "../../assets/icon/gather_black.svg";
 import shadows from "../../styles/shadows";
 import { useNavigate, useLocation } from "react-router-dom";
 import Modal from "../../components/modal/Modal";
+import { api, ensureAccessToken } from "../../lib/api";
+import { getCardCoverById } from "../../assets/cardCoverBasic";
 
 export default function Gather() {
-  const [soloTrip, setSoloTrip] = useState(false);
+  var [soloTrip, setSoloTrip] = useState(false);
   const [selectedGathering, setSelectedGathering] = useState(null);
   const [selectedCard, setselectedCard] = useState(null);
   const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalOpen2, setIsModal2Open] = useState(false);
+
+  const [gatherings, setGatherings] = useState([]);
+  const [soloGathering, setSoloGathering] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        setLoading(true);
+        await ensureAccessToken();
+        const res = await api("/api/gather/me", { method: "GET" });
+        if (!mounted) return;
+
+        const ownerUi = (res?.ownerGathers ?? []).map((g) => ({
+          id: g.gatherId,
+          title: g.title,
+          members: g.members ?? [],
+          cardImg: getCardCoverById(g.cardId),
+        }));
+        const soloUi = (res?.soloGathers ?? []).map((g) => ({
+          id: g.gatherId,
+          title: g.title,
+          members: g.members ?? [],
+          cardImg: getCardCoverById(g.cardId),
+        }));
+
+        setGatherings(ownerUi);
+        setSoloGathering(soloUi);
+        setError(null);
+      } catch (e) {
+        setError(e?.message ?? "불러오기에 실패했어요");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+    // location을 의존성에 넣고 싶으면 pathname 정도만:
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.state?.soloTrip !== undefined) {
@@ -27,56 +73,6 @@ export default function Gather() {
       setSoloTrip(false);
     }
   }, [location.state]);
-
-  const gatherings = [
-    {
-      id: 1,
-      title: "안농",
-      members: ["한주원", "이연재", "신다운"],
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 2,
-      title: "신한모임",
-      members: ["김철수", "박영희"],
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 3,
-      title: "고등학교띠예",
-      members: ["한주원", "이다함", "최은빈"],
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 4,
-      title: "먹보들",
-      members: ["때지1", "때지2"],
-      cardImg: { testThumbnail },
-    },
-  ];
-
-  const cardList = [
-    {
-      id: 1,
-      title: "Triplet 식도락 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 2,
-      title: "Triplet 먹보 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 3,
-      title: "Triplet 다우니 카드",
-      cardImg: { testThumbnail },
-    },
-    {
-      id: 4,
-      title: "Triplet 때지 카드",
-      cardImg: { testThumbnail },
-    },
-  ];
 
   const handleSelect = (id) => {
     setSelectedGathering((prev) => (prev === id ? null : id));
@@ -87,7 +83,8 @@ export default function Gather() {
 
   const navigate = useNavigate();
   const gotoNewGather = () => {
-    navigate("/trip/new/gather");
+    const prevUrl = location.pathname;
+    navigate("/trip/new/gather", { state: { prevUrl, soloTrip } });
   };
   const gotoNewCard = () => {
     const prevUrl = location.pathname;
@@ -104,13 +101,41 @@ export default function Gather() {
     setIsModalOpen(false);
   };
 
-  const gatherUsingMyCard = () => {
-    setIsModalOpen(true);
+  const gatherUsingMyCard = async () => {
+    if (!selectedGathering) return;
+    try {
+      await ensureAccessToken();
+      await api("/api/trips/from-draft", {
+        method: "POST",
+        body: { gatherId: selectedGathering },
+      });
+      setIsModalOpen(true);
+    } catch (e) {
+      alert("여행 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   };
 
-  const tripGoingAlone = () => {
-    setIsModal2Open(true);
+  const tripGoingAlone = async () => {
+    if (!selectedCard) return;
+    try {
+      await ensureAccessToken();
+      await api("/api/trips/from-draft", {
+        method: "POST",
+        body: { gatherId: selectedCard },
+      });
+      setIsModal2Open(true);
+    } catch (e) {
+      alert("여행 생성에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    }
   };
+
+  useEffect(() => {
+    if (location.state?.soloTrip !== undefined) {
+      soloTrip = location.state.soloTrip;
+    } else {
+      soloTrip = false;
+    }
+  }, [location.state]);
 
   return (
     <>
@@ -155,20 +180,35 @@ export default function Gather() {
                   <CheckText>혼자만의 여행이에요</CheckText>
                 </Check>
               </PageTitle>
-              <GatherList $soloTrip={soloTrip}>
+              <GatherList>
                 {soloTrip ? (
-                  cardList.map((card) => (
-                    <MyCard
-                      key={card.id}
-                      selected={selectedCard === card.id}
-                      onClick={() => handleSelectCard(card.id)}
-                    >
-                      <GatherTitle>{card.title}</GatherTitle>
-                      <GatherCard>
-                        <BgImg src={testThumbnail} alt="" />
-                      </GatherCard>
-                    </MyCard>
-                  ))
+                  <>
+                    <SoloGatherList>
+                      {soloGathering.map((gathering) => (
+                        <GatheringCard
+                          key={gathering.id}
+                          selected={selectedCard === gathering.id}
+                          onClick={() => handleSelectCard(gathering.id)}
+                        >
+                          <GatherTitle>{gathering.title}</GatherTitle>
+                          <GatherMember>
+                            <img src={memberIcon} alt="member" />
+                            <Member>
+                              {gathering.members.map((member, index) => (
+                                <span key={index}>
+                                  {member}
+                                  {index < gathering.members.length - 1 && ", "}
+                                </span>
+                              ))}
+                            </Member>
+                          </GatherMember>
+                          <GatherCard>
+                            <BgImg src={gathering.cardImg} alt="" />
+                          </GatherCard>
+                        </GatheringCard>
+                      ))}
+                    </SoloGatherList>
+                  </>
                 ) : (
                   <>
                     {gatherings.map((gathering) => (
@@ -190,7 +230,7 @@ export default function Gather() {
                           </Member>
                         </GatherMember>
                         <GatherCard>
-                          <BgImg src={testThumbnail} alt="" />
+                          <BgImg src={gathering.cardImg} alt="" />
                         </GatherCard>
                       </GatheringCard>
                     ))}
@@ -205,7 +245,7 @@ export default function Gather() {
         <>
           <BtnSpaceSolo>
             <LargeBtn
-              label="지난 카드 그대로"
+              label="지난 모임 그대로"
               bgColor={colors.blue400}
               textColor={colors.white}
               width={240}
@@ -213,12 +253,13 @@ export default function Gather() {
               onClick={tripGoingAlone}
             ></LargeBtn>
             <LargeBtn
-              label="새 카드 만들기"
+              label="새 모임 만들기"
               bgColor={colors.blue400}
               textColor={colors.white}
               width={240}
               disabled={!!selectedCard}
-              onClick={gotoNewCard}
+              // onClick={gotoNewCard}
+              onClick={gotoNewGather}
             ></LargeBtn>
           </BtnSpaceSolo>
         </>
@@ -248,6 +289,19 @@ export default function Gather() {
     </>
   );
 }
+
+const SoloCardList = styled.div`
+  display: grid;
+  width: 880px;
+  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+`;
+const SoloGatherList = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+`;
 
 const Describe = styled.div`
   ${fontSet.body3_m}
@@ -335,8 +389,7 @@ const GatherList = styled.div`
   align-items: center;
   flex-direction: column;
   gap: 20px;
-  grid-template-columns: ${({ $soloTrip }) =>
-    $soloTrip ? "repeat(2, 1fr)" : "1fr"};
+  grid-template-columns: 1fr;
 `;
 
 const Container = styled.div`

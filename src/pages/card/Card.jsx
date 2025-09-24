@@ -5,81 +5,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import LargeBtn from "../../components/button/LargeBtn";
 import sampleCard from "./../../assets/img/test_thumbnail.png";
-import card1 from "./../../assets/img/card1.png";
-import card2 from "./../../assets/img/card2.png";
 import left from "./../../assets/icon/chevron-left.svg";
 import right from "./../../assets/icon/chevron-right.svg";
-
-const CARD_DATA = [
-  {
-    id: "foodie",
-    name: "Triplet 식도락 카드",
-    tagline: "맛있게 플러스만큼 더 알뜰해지는 여행 파트너",
-    desc: [
-      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
-      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-    ],
-    benefits: [
-      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
-      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
-      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
-      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
-    ],
-    image: sampleCard,
-  },
-  {
-    id: "activity",
-    name: "Triplet 액티비티 카드",
-    tagline: "레저·교통 특화로 더 가볍게 즐기기",
-    desc: [
-      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
-      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-    ],
-    benefits: [
-      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
-      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
-      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
-      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
-    ],
-    image: card1,
-  },
-  {
-    id: "shopping",
-    name: "Triplet 쇼핑 카드",
-    tagline: "기념품·면세 쇼핑이 많은 여행에",
-    desc: [
-      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
-      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-    ],
-    benefits: [
-      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
-      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
-      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
-      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
-    ],
-    image: card2,
-  },
-  {
-    id: "shopping2",
-    name: "Triplet 쇼핑 카드",
-    tagline: "기념품·면세 쇼핑이 많은 여행에",
-    desc: [
-      "여행에서 가장 큰 즐거움은 역시 ‘먹는 즐거움’.",
-      "Triplet 식도락 카드는 외식과 카페, 편의점 결제에서 특별한 혜택을 제공합니다.",
-      "여행 중 예상보다 커지기 쉬운 식비 지출을 스마트하게 관리해보세요.",
-    ],
-    benefits: [
-      { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
-      { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
-      { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
-      { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
-    ],
-    image: card1,
-  },
-];
+import { api, setAccessToken } from "../../lib/api";
+import { getCardCoverById } from "../../assets/cardCoverBasic";
 
 const shine = keyframes`
   from { transform: translateX(-120%) skewX(-20deg); }
@@ -91,6 +20,64 @@ export default function Card() {
   const [busy, setBusy] = useState(false); // 연타 방지
   const [phase, setPhase] = useState({ left: "to", right: "to" }); // 들어오는 슬롯 애니메이션 단계
   const [idx, setIdx] = useState(0);
+  const [cardList, setCardList] = useState([]);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const fallbackImg = sampleCard;
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const params = new URLSearchParams(location.search);
+        const tokenFromQS = params.get("accessToken");
+        if (tokenFromQS) {
+          setAccessToken(tokenFromQS);
+          window.history.replaceState({}, "", location.pathname);
+        } else {
+          const newAccess = await api("/api/auth/refresh", { method: "POST" });
+          const token =
+            typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
+          if (!token) throw new Error("no access from refresh");
+          setAccessToken(token);
+        }
+
+        const res = await api(`/api/card/list`, { method: "GET" });
+        const toUI = (c) => {
+          const descStr = c.cardDesc;
+          const desc = Array.isArray(descStr)
+            ? descStr
+            : String(descStr)
+                .split(/\r?\n/)
+                .map((s) => s.trim())
+                .filter(Boolean);
+
+          const benefits = c.benefits.map((b) => ({
+            title: b.title,
+            content: b.content,
+          }));
+
+          return {
+            id: c.cardId,
+            name: c.cardName,
+            tagline: c.cardIntro,
+            desc,
+            benefits,
+            image: getCardCoverById?.(c.cardId) || fallbackImg,
+          };
+        };
+
+        const cards = res.map(toUI);
+        console.log(cards);
+        setCardList(cards);
+        setIdx(0); // 처음으로 정렬
+      } catch (e) {
+        // 실패 시에도 12개 유지(플레이스홀더)
+
+        setIdx(0);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]); // 토큰 쿼리 정리 후 재요청 방지
 
   const animate = (direction) => {
     if (busy) return;
@@ -116,12 +103,14 @@ export default function Card() {
   const goLeft = () => animate(-1);
   const goRight = () => animate(1);
   //====================================================
-  const navigate = useNavigate();
 
-  const n = CARD_DATA.length;
-  const current = CARD_DATA[idx];
+  const n = cardList.length;
+  const current = cardList[idx];
   const prevIdx = (idx - 1 + n) % n;
   const nextIdx = (idx + 1) % n;
+  const prevCard = n > 1 ? cardList[prevIdx] : null;
+  const nextCard = n > 1 ? cardList[nextIdx] : null;
+  const imgOr = (img) => img || fallbackImg;
 
   useEffect(() => {
     const onKey = (e) => {
@@ -132,7 +121,6 @@ export default function Card() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const location = useLocation();
   const gotoApply = () => {
     const prev2Url = location.pathname;
     navigate(`/card/${current.id}/apply`, {
@@ -231,36 +219,42 @@ export default function Card() {
         </ArrowButton>
 
         <CardsRow>
-          <CarouselCard
-            key={CARD_DATA[prevIdx].id}
-            $img={CARD_DATA[prevIdx].image}
-            $pos="left"
-            $phase={phase.left} // ← 추가
-            role="button"
-            aria-label="이전 카드 선택"
-            onClick={goLeft}
-          />
-          <CarouselCard
-            ref={centerRef}
-            key={current.id}
-            $img={current.image}
-            $pos="center"
-            aria-label={current.name}
-            role="img"
-            data-hovered={centerHovered ? "true" : undefined}
-            onMouseEnter={onCenterEnter}
-            onMouseMove={onCenterMove}
-            onMouseLeave={onCenterLeave}
-          />
-          <CarouselCard
-            key={CARD_DATA[nextIdx].id}
-            $img={CARD_DATA[nextIdx].image}
-            $pos="right"
-            $phase={phase.right} // ← 추가
-            role="button"
-            aria-label="다음 카드 선택"
-            onClick={goRight}
-          />
+          {prevCard && (
+            <CarouselCard
+              key={prevCard.id}
+              $img={imgOr(prevCard.image)}
+              $pos="left"
+              $phase={phase.left}
+              role="button"
+              aria-label="이전 카드 선택"
+              onClick={goLeft}
+            />
+          )}
+          {current && (
+            <CarouselCard
+              ref={centerRef}
+              key={current.id}
+              $img={imgOr(current.image)}
+              $pos="center"
+              aria-label={current.name}
+              role="img"
+              data-hovered={centerHovered ? "true" : undefined}
+              onMouseEnter={onCenterEnter}
+              onMouseMove={onCenterMove}
+              onMouseLeave={onCenterLeave}
+            />
+          )}
+          {nextCard && (
+            <CarouselCard
+              key={nextCard.id}
+              $img={imgOr(nextCard.image)}
+              $pos="right"
+              $phase={phase.right}
+              role="button"
+              aria-label="다음 카드 선택"
+              onClick={goRight}
+            />
+          )}
         </CardsRow>
 
         <ArrowButton aria-label="다음 카드" onClick={goRight}>
@@ -269,17 +263,17 @@ export default function Card() {
       </Carousel>
 
       <Details>
-        <Title>{current.name}</Title>
-        <Tagline>{current.tagline}</Tagline>
+        <Title>{current?.name ?? "카드"}</Title>
+        <Tagline>{current?.tagline ?? ""}</Tagline>
         <DescList>
-          {current.desc.map((b, i) => (
+          {(current?.desc ?? []).map((b, i) => (
             <Desc key={i}>{b}</Desc>
           ))}
         </DescList>
         <Line />
         <ListTitle>주요 혜택</ListTitle>
         <BenefitList>
-          {current.benefits.map((b, i) => (
+          {(current?.benefits ?? []).map((b, i) => (
             <Benefit key={i}>
               <BenefitTitle>{b.title}</BenefitTitle>
               <BenefitContent>{b.content}</BenefitContent>
@@ -496,10 +490,9 @@ const SubTextList = styled.div`
 
 const Container = styled.div`
   display: flex;
-  margin: 0 auto;
-  width: 1060px;
+  width: 100%;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 80px;
   background: transparent;
   margin-top: 100px;

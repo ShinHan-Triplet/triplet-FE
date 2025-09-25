@@ -10,6 +10,7 @@ import MyGather from "./MyGather";
 import MyCard from "./MyCard";
 import MyTrip from "./MyTrip";
 import MediumBtn from "../../components/button/MediumBtn";
+import { api } from "../../lib/api";
 
 const TABS = ["gather", "card", "trip"];
 
@@ -22,6 +23,13 @@ export default function Mypage() {
   }, [searchParams]);
 
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [profileData, setProfileData] = useState({
+    name: "",
+    birthday: "",
+    profileImage: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
@@ -31,17 +39,54 @@ export default function Mypage() {
 
   const handleTab = (key) => () => setActiveTab(key);
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await api("/api/mypage");
+        if (!mounted) return;
+        setProfileData({
+          name: data?.name ?? "",
+          birthday: data?.birthday ?? "",
+          profileImage: data?.profileImage ?? "",
+        });
+        setError("");
+      } catch (e) {
+        console.error("GET /mypage failed:", e?.status, e?.body || e?.message);
+        if (mounted) setError("내 정보를 불러오지 못했어요.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   return (
     <MypageWrap>
       <Container>
         <Sidebar>
           <ProfileCard>
-            <ProfileImg>
-              <img src={profile} alt="프로필" />
+            <ProfileImg aria-busy={loading}>
+              <img
+                src={profileData.profileImage || profile}
+                alt="프로필"
+                onError={(e) => (e.currentTarget.src = profile)}
+              />
             </ProfileImg>
-            <Name>신다운</Name>
-            <Birth>2002. 09. 17</Birth>
+            {error ? (
+              <>
+                <Name>정보 로드 실패</Name>
+                <Birth style={{ color: colors.error }}>{error}</Birth>
+              </>
+            ) : (
+              <>
+                <Name>{loading ? "불러오는 중..." : (profileData.name || "이름 없음")}</Name>
+                <Birth>{loading ? "" : (profileData.birthday || "")}</Birth>
+              </>
+            )}
           </ProfileCard>
+
           <NavCard>
             <NavItem className={activeTab === "gather" ? "active" : ""} onClick={handleTab("gather")}>
               내 모임

@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
 
@@ -9,46 +9,61 @@ import MediumBtn from "../../components/button/MediumBtn";
 import GatherList from "../../components/mypage/GatherList";
 import Modal from "../../components/modal/Modal";
 
-export const groups = [
-  {
-    id: 1,
-    name: "Shin_Han",
-    members: ["신다운", "한주원"],
-    linkedCard: { name: "HJW BABO 체크" },
-    isOwner: true,
-  },
-  {
-    id: 2,
-    name: "신한DS 맛집탐방패밀리",
-    members: ["한주원", "신다운", "오선정", "서가은", "박지원", "정재웅"],
-    linkedCard: { name: "MUKJJANG 체크" },
-    isOwner: false,
-  },
-  {
-    id: 3,
-    name: "가족",
-    members: ["아빠", "엄마", "언니", "신다운"],
-    linkedCard: { name: "FAMILY 체크" },
-    isOwner: false,
-  },
-];
+import { api } from "../../lib/api";
 
 export default function MyGather() {
   const navigate = useNavigate();
+
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalGroup, setModalGroup] = useState("");
   const [modalType, setModalType] = useState(2);
-  const [modalAction, setModalAction] = useState(""); // "delete" or "leave"
+  const [modalAction, setModalAction] = useState(""); // "delete" 또는 "leave"
 
   const handleCreatePlan = () => {
     navigate("/trip");
   };
 
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await api("/api/mypage/gather");
+        if (!mounted) return;
+
+        const uiGroups = (Array.isArray(data) ? data : []).map((g) => ({
+          id: g.gatherId,
+          name: g.gatherName,
+          members: Array.isArray(g.members) ? g.members : [],
+          linkedCard: g.cardNickname ? { name: g.cardNickname } : null,
+          isOwner: !!g.owner,
+        }));
+
+        setGroups(uiGroups);
+        setLoadError("");
+      } catch (e) {
+        console.error("GET /api/mypage/gather failed:", e?.status, e?.body || e?.message);
+        if (mounted) setLoadError("내 모임을 불러오지 못했어요.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
+
   const isEmpty = groups.length === 0;
 
   return (
     <Wrapper isEmpty={isEmpty}>
-      {isEmpty ? (
+      {loading ? (
+        <div style={{ color: colors.gray700 }}>불러오는 중...</div>
+      ) : loadError ? (
+        <div style={{ color: colors.error }}>{loadError}</div>
+      ) : isEmpty ? (
         <Empty
           title="아직 모임이 없어요."
           desc="여행 계획을 세우면 모임을 만들 수 있어요."
@@ -93,6 +108,7 @@ export default function MyGather() {
           ))}
         </ListWrap>
       )}
+
       {isModalOpen && (
         <Modal
           title={

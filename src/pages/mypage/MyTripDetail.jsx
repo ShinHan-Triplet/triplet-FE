@@ -6,185 +6,145 @@ import BackBtn from "../../components/button/BackBtn";
 import MediumBtn from "../../components/button/MediumBtn";
 import CardList from "../../components/mypage/CardList";
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { api } from "../../lib/api";
+import { toThemeKo } from "../../components/util/TripTheme";
 
-const tripsMock = [
-  {
-    id: 1,
-    title: "힐링을 주세요",
-    groupName: "힐링이 필요한 사람",
-    members: ["신다운"],
-    dateRange: "2025. 09. 16 ~ 2025. 09. 17",
-    status: "여행 중",
-    card: {
-      name: "Triplet 힐링 카드",
-      number: "1234-56**-****-5678",
-      account: "111-234-5678",
-      checkGather: true,
-    },
-    theme: "힐링",
-    budget: [
-      { category: "식비", amount: 100000, used: 80000 },
-      { category: "교통비", amount: 100000, used: 50000 },
-      { category: "여가비", amount: 100000, used: 60000 },
-      { category: "기타", amount: 100000, used: 20000 },
-      { category: "숙박비", amount: 100000, used: 0 },
-      { category: "보험비", amount: 100000, used: 0 },
-      { category: "합계", amount: 600000, used: 210000 },
-    ],
-  },
-  {
-    id: 2,
-    title: "현실도피여행",
-    groupName: "도피단",
-    members: ["신다운", "한주원", "오선정", "박지원", "정재웅"],
-    dateRange: "2025. 08. 28 ~ 2025. 09. 01",
-    status: "여행완료",
-    card: {
-      name: "MUKJJANG 체크",
-      number: "6666-58**-****-7070",
-      account: "777-654-9999",
-      checkGather: true,
-    },
-    theme: "힐링",
-    budget: [
-      { category: "식비", amount: 300000, used: 290000 },
-      { category: "교통비", amount: 150000, used: 140000 },
-      { category: "여가비", amount: 100000, used: 90000 },
-      { category: "기타", amount: 50000, used: 30000 },
-      { category: "숙박비", amount: 250000, used: 250000 },
-      { category: "보험비", amount: 50000, used: 50000 },
-      { category: "합계", amount: 900000, used: 850000 },
-    ],
-  },
-  {
-    id: 3,
-    title: "즉흥여행",
-    members: ["신다운"],
-    dateRange: "2025. 08. 13~ 2025. 08. 13",
-    status: "여행완료",
-    card: {
-      name: "UP&DOWN 체크",
-      number: "0202-12**-****-9876",
-      account: "987-654-3210",
-      checkGather: false,
-    },
-    theme: "힐링",
-    budget: [
-      { category: "식비", amount: 100000, used: 70000 },
-      { category: "교통비", amount: 50000, used: 30000 },
-      { category: "여가비", amount: 50000, used: 20000 },
-      { category: "기타", amount: 20000, used: 5000 },
-      { category: "숙박비", amount: 0, used: 0 },
-      { category: "보험비", amount: 0, used: 0 },
-      { category: "합계", amount: 220000, used: 125000 },
-    ],
-  },
-  {
-    id: 4,
-    title: "입짧은주원과 식도락",
-    groupName: "식도락단",
-    members: ["신다운", "한주원"],
-    dateRange: "2025. 07. 20 ~ 2025. 07. 21",
-    status: "여행완료",
-    card: {
-      name: "HJW BABO 체크",
-      number: "1234-56**-****-5678",
-      account: "111-234-5678",
-      checkGather: true,
-    },
-    theme: "식도락",
-    budget: [
-      { category: "식비", amount: 200000, used: 180000 },
-      { category: "교통비", amount: 200000, used: 120000 },
-      { category: "여가비", amount: 200000, used: 100000 },
-      { category: "기타", amount: 200000, used: 40000 },
-      { category: "숙박비", amount: 200000, used: 200000 },
-      { category: "보험비", amount: 200000, used: 20000 },
-      { category: "합계", amount: 1200000, used: 660000 },
-    ],
-  },
-  {
-    id: 5,
-    title: "가족이랑 제주도",
-    groupName: "가족단",
-    members: ["신다운", "엄마", "아빠", "언니"],
-    dateRange: "2024. 04. 08 ~ 2024. 04. 11",
-    status: "여행완료",
-    card: {
-      name: "FAMILY 카드",
-      number: "5555-11**-****-2222",
-      account: "222-333-4444",
-      checkGather: true,
-    },
-    theme: "힐링",
-    budget: [
-      { category: "식비", amount: 180000, used: 170000 },
-      { category: "교통비", amount: 960000, used: 960000 },
-      { category: "여가비", amount: 80000, used: 60000 },
-      { category: "기타", amount: 40000, used: 15000 },
-      { category: "숙박비", amount: 300000, used: 300000 },
-      { category: "보험비", amount: 20000, used: 20000 },
-      { category: "합계", amount: 1580000, used: 1525000 },
-    ],
-  },
-  {
-    id: 6,
-    title: "우정포에버 추억쌓기",
-    groupName: "우정단",
-    members: ["신다운", "짱친1", "짱친2", "짱친3", "짱친4", "짱친5"],
-    dateRange: "2024. 01. 25 ~ 2024. 01. 29",
-    status: "여행완료",
-    card: {
-      name: "FRIEND 카드",
-      number: "8888-77**-****-9999",
-      account: "555-666-7777",
-      checkGather: true,
-    },
-    theme: "액티비티",
-    budget: [
-      { category: "식비", amount: 250000, used: 230000 },
-      { category: "교통비", amount: 100000, used: 90000 },
-      { category: "여가비", amount: 120000, used: 110000 },
-      { category: "기타", amount: 60000, used: 30000 },
-      { category: "숙박비", amount: 200000, used: 190000 },
-      { category: "보험비", amount: 30000, used: 30000 },
-      { category: "합계", amount: 760000, used: 680000 },
-    ],
-  },
-];
+const pad2 = (n) => String(n).padStart(2, "0");
+const formatDate = (d) => {
+  if (!d) return "";
+  const [y, m, day] = d.split("-");
+  return `${y}. ${pad2(m)}. ${pad2(day)}`;
+};
+const formatDateRange = (s, e) => `${formatDate(s)} ~ ${formatDate(e)}`;
+
+const mapDtoToView = (dto) => {
+  if (!dto) return null;
+
+  const start = dto.startDate;
+  const end   = dto.endDate;
+
+  return {
+    id: dto.tripId,
+    title: dto.title ?? "-",
+    groupName: dto.gatherName || undefined,
+    members: Array.isArray(dto.members)
+      ? dto.members.map((m) => m?.name ?? m?.memberName ?? "?")
+      : [],
+    dateRange: formatDateRange(start, end),
+    status: dto.status ?? "",
+    card: dto.card
+      ? {
+          productName: dto.card.cardName,
+          nickname: dto.card.cardNickname ?? "",
+          number: dto.card.cardNum,
+          account: dto.card.account,
+          checkGather: true,
+        }
+      : null,
+    theme: toThemeKo(dto.theme ?? dto.themes),
+    budget: Array.isArray(dto.budget)
+      ? dto.budget.map((b) => ({
+          category: b.categoryName,
+          amount: Number(b.planned ?? 0),
+          used: Number(b.used ?? 0),
+        }))
+      : [],
+  };
+};
 
 export default function MyTripDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const trip = tripsMock.find((t) => String(t.id) === String(id));
 
-  function getEndDate(dateRange) {
-    if (!dateRange) return null;
-    const parts = dateRange.split("~");
-    if (parts.length < 2) return null;
+  const [view, setView] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [raw, setRaw] = useState(null);
+  const [error, setError] = useState("");
+
+  // 레포트 노출 여부 계산 (여행 종료 3일 이후)
+  const isReportAvailable = useMemo(() => {
+    if (!view?.dateRange) return false;
+    const parts = view.dateRange.split("~");
+    if (parts.length < 2) return false;
     const end = parts[1].trim().replace(/\./g, "-");
-    const [y, m, d] = end.split("-").map(s => s.trim());
-    return new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
-  }
-
-  const isReportAvailable = (() => {
-    const endDate = getEndDate(trip?.dateRange);
-    if (!endDate) return false;
+    const [y, m, d] = end.split("-").map((s) => s.trim());
+    const endDate = new Date(`${y}-${pad2(m)}-${pad2(d)}`);
     const today = new Date();
-    endDate.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
+    endDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
     const diffDays = Math.floor((today - endDate) / (1000 * 60 * 60 * 24));
     return diffDays > 3;
-  })();
+  }, [view?.dateRange]);
 
-  if (!trip) {
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      setView(null);
+      setError("");
+      try {
+        const res = await api(`/api/mytrip/${id}`);
+        const payload = res?.data ?? res?.result ?? res;
+        if (!alive) return;
+
+        const mapped = mapDtoToView(payload);
+        if (mapped) {
+          setView(mapped);
+        } else {
+          setView(null);
+          setRaw(payload);
+          setError("응답 포맷을 해석하지 못했어요.");
+        }
+      } catch (e) {
+        if (!alive) return;
+        console.error("[Detail] api error:", e?.response?.status, e?.message, e?.response?.data);
+        setError(e?.response?.data?.message || "상세 정보를 불러오지 못했어요.");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, [id]);
+
+  if (loading) {
     return (
       <Wrapper>
         <TripDetail>
           <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
-          <Header>
-            <h2>여행 정보를 찾을 수 없습니다.</h2>
-          </Header>
+          <Header><h2>불러오는 중…</h2></Header>
+        </TripDetail>
+      </Wrapper>
+    );
+  }
+
+  if (error) {
+    return (
+      <Wrapper>
+        <TripDetail>
+          <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+          <Header><h2 style={{color: colors.error}}>{error}</h2></Header>
+          {raw && (
+            <pre style={{maxHeight: 400, overflow:'auto', background:'#f7f7f7', padding:16, borderRadius:8}}>
+              {JSON.stringify(raw, null, 2)}
+            </pre>
+          )}
+        </TripDetail>
+      </Wrapper>
+    );
+  }
+
+  if (!view) {
+    return (
+      <Wrapper>
+        <TripDetail>
+          <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+          <Header><h2>여행 정보를 찾을 수 없습니다.</h2></Header>
+          {raw && (
+            <pre style={{maxHeight: 400, overflow:'auto', background:'#f7f7f7', padding:16, borderRadius:8}}>
+              {JSON.stringify(raw, null, 2)}
+            </pre>
+          )}
         </TripDetail>
       </Wrapper>
     );
@@ -196,25 +156,26 @@ export default function MyTripDetail() {
         <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
 
         <Header>
-          <TripTitle>{trip.title}</TripTitle>
-          <Status>{trip.status}</Status>
+          <TripTitle>{view?.title ?? "-"}</TripTitle>
+          <Status>{view?.status ?? ""}</Status>
         </Header>
 
         <TwoCol>
           <Col>
             <Section>
               <BoxSubtitle>사용카드</BoxSubtitle>
-              <CardList
-                thumbnail={undefined}
-                name={trip.card.name}
-                nickname={trip.card.nickname}
-                status={undefined}
-                maskedNumber={trip.card.number}
-                linkedAccount={trip.card.account}
-                onDetail={undefined}
-                width="450px"
-                checkGather={trip.card.checkGather}
-              />
+              {view?.card ? (
+                <CardList
+                  thumbnail={undefined}
+                  name={`${view.card?.productName ?? "이름 없음"} | ${view.card?.nickname ?? "-"}`}
+                  maskedNumber={view.card?.number}
+                  linkedAccount={view.card?.account}
+                  width="450px"
+                  checkGather={!!view.card?.checkGather}
+                />
+              ) : (
+                <EmptyText>연결된 카드가 없습니다.</EmptyText>
+              )}
             </Section>
 
             <Section>
@@ -222,23 +183,23 @@ export default function MyTripDetail() {
               <InfoGrid>
                 <InfoRow>
                   <InfoLabel>기간</InfoLabel>
-                  <InfoValue>{trip.dateRange}</InfoValue>
+                  <InfoValue>{view?.dateRange ?? "-"}</InfoValue>
                 </InfoRow>
                 <InfoRow>
                   <InfoLabel>테마</InfoLabel>
-                  <InfoValue><ThemeChip>{trip.theme}</ThemeChip></InfoValue>
+                  <InfoValue><ThemeChip>{view?.theme ?? "-"}</ThemeChip></InfoValue>
                 </InfoRow>
-                {trip.groupName && (
+                {view?.groupName && (
                   <InfoRow>
                     <InfoLabel>모임명</InfoLabel>
-                    <InfoValue>{trip.groupName}</InfoValue>
+                    <InfoValue>{view.groupName}</InfoValue>
                   </InfoRow>
                 )}
                 <InfoRow>
-                  <InfoLabel style={{alignSelf: 'flex-start'}}>멤버</InfoLabel>
+                  <InfoLabel style={{ alignSelf: "flex-start" }}>멤버</InfoLabel>
                   <Members>
-                    {trip.members.map((m, idx) => (
-                      <MemberImg key={idx}>{m[0]}</MemberImg>
+                    {(view?.members ?? []).map((m, idx) => (
+                      <MemberImg key={idx}>{(m || "?")[0]}</MemberImg>
                     ))}
                   </Members>
                 </InfoRow>
@@ -249,11 +210,11 @@ export default function MyTripDetail() {
           <Col>
             <Section>
               <BoxSubtitle>여행 예산</BoxSubtitle>
-              {trip.budget.map((b) => (
+              {(view?.budget ?? []).map((b) => (
                 <BudgetRow key={b.category}>
                   <InfoLabel>{b.category}</InfoLabel>
                   <Bar />
-                  <BudgetAmount>{b.amount.toLocaleString()}원</BudgetAmount>
+                  <BudgetAmount>{Number(b.amount || 0).toLocaleString()}원</BudgetAmount>
                 </BudgetRow>
               ))}
             </Section>
@@ -276,7 +237,7 @@ export default function MyTripDetail() {
               textColor={colors.white}
               width={160}
               hoverBgColor={colors.blue500}
-              onClick={() => navigate(`/mypage/trip/${trip.id}/report`)}
+              onClick={() => navigate(`/mypage/trip/${view?.id}/report`)}
             />
           ) : (
             <MediumBtn
@@ -448,4 +409,9 @@ const BudgetAmount = styled.div`
   text-align: right;
   color: ${colors.black};
   ${fontSet.detail};
+`;
+
+const EmptyText = styled.div`
+  ${fontSet.body3_m}; 
+  color: ${colors.gray600};
 `;

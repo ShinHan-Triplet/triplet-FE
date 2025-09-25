@@ -6,17 +6,6 @@ import SmallBtn from "../button/SmallBtn";
 import gatherIcon from "../../assets/icon/gather.svg";
 import cardIcon from "../../assets/icon/card.svg";
 
-/**
- * 단일 카드 아이템
- * @param {object} props
- * @param {string} props.thumbnail
- * @param {string} props.name
- * @param {string} props.nickname
- * @param {'active'|'paused'|'waiting'} props.status
- * @param {string} props.maskedNumber
- * @param {string} props.linkedAccount
- * @param {function} props.onDetail
- */
 export default function CardList({
   thumbnail,
   name,
@@ -28,26 +17,38 @@ export default function CardList({
   width,
   checkGather,
 }) {
-  let statusText, statusColor;
-  if (status) {
-    statusText =
-      status === "paused"
-        ? "일시 정지"
-        : status === "waiting"
-        ? "사용 대기 중"
-        : "사용 중";
-    statusColor =
-      status === "paused"
-        ? colors.error
-        : status === "waiting"
-        ? colors.yellow500
-        : colors.blue500;
+  const STATUS_META = Object.freeze({
+    1: { text: "사용 중",     color: colors.blue500 },
+    2: { text: "일시 정지",   color: colors.error },
+    3: { text: "사용 대기 중", color: colors.yellow500 },
+  });
+
+  const fromLabelToCode = (s) => {
+    if (s === "active") return 1;
+    if (s === "paused") return 2;
+    if (s === "waiting") return 3;
+    return NaN;
+  };
+
+  let code;
+  if (typeof status === "number") {
+    code = status;
+  } else if (typeof status === "string") {
+    const labeled = fromLabelToCode(status);
+    code = Number.isNaN(labeled) ? parseInt(status, 10) : labeled;
   }
+  if (![1, 2, 3].includes(code)) code = 1;
+
+  const statusText = STATUS_META[code].text;
+  const statusColor = STATUS_META[code].color;
+
+  const hasStatus = status !== undefined && status !== null;
+  const hasRight = hasStatus || Boolean(onDetail);
 
   const columns = [
     thumbnail ? "110px" : null,
     "1fr",
-    (status || onDetail) ? "120px" : null,
+    hasRight ? "120px" : null,
   ].filter(Boolean).join(" ");
 
   return (
@@ -86,9 +87,12 @@ export default function CardList({
           <AccountChip>연결된 계좌 : {linkedAccount}</AccountChip>
         )}
       </Left>
-      {(status || onDetail) && (
+
+      {hasRight && (
         <Right>
-          {status && <Status style={{ color: statusColor }}>{statusText}</Status>}
+          {hasStatus && (
+            <Status style={{ color: statusColor }}>{statusText}</Status>
+          )}
           {onDetail && (
             <SmallBtn
               label="카드 관리"
@@ -139,7 +143,7 @@ const Left = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  align-self: stretch;       
+  align-self: stretch;
   min-width: 0;
 `;
 

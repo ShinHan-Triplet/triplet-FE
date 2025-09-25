@@ -4,7 +4,7 @@ import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import shadows from "../../styles/shadows";
-import profile from "../../assets/img/test_profile.png"
+import profile from "../../assets/img/test_profile.png";
 
 import MyGather from "./MyGather";
 import MyCard from "./MyCard";
@@ -59,7 +59,9 @@ export default function Mypage() {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -81,20 +83,31 @@ export default function Mypage() {
               </>
             ) : (
               <>
-                <Name>{loading ? "불러오는 중..." : (profileData.name || "이름 없음")}</Name>
-                <Birth>{loading ? "" : (profileData.birthday || "")}</Birth>
+                <Name>
+                  {loading ? "불러오는 중..." : profileData.name || "이름 없음"}
+                </Name>
+                <Birth>{loading ? "" : profileData.birthday || ""}</Birth>
               </>
             )}
           </ProfileCard>
 
           <NavCard>
-            <NavItem className={activeTab === "gather" ? "active" : ""} onClick={handleTab("gather")}>
+            <NavItem
+              className={activeTab === "gather" ? "active" : ""}
+              onClick={handleTab("gather")}
+            >
               내 모임
             </NavItem>
-            <NavItem className={activeTab === "card" ? "active" : ""} onClick={handleTab("card")}>
+            <NavItem
+              className={activeTab === "card" ? "active" : ""}
+              onClick={handleTab("card")}
+            >
               내 카드
             </NavItem>
-            <NavItem className={activeTab === "trip" ? "active" : ""} onClick={handleTab("trip")}>
+            <NavItem
+              className={activeTab === "trip" ? "active" : ""}
+              onClick={handleTab("trip")}
+            >
               내 여행기록
             </NavItem>
           </NavCard>
@@ -146,7 +159,7 @@ const Sidebar = styled.div`
 `;
 
 const ProfileCard = styled(CardBase)`
- align-self: stretch;
+  align-self: stretch;
   padding: 24px 20px;
   display: flex;
   align-items: center;

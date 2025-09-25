@@ -22,7 +22,7 @@ const mapDtoToView = (dto) => {
   if (!dto) return null;
 
   const start = dto.startDate;
-  const end   = dto.endDate;
+  const end = dto.endDate;
 
   return {
     id: dto.tripId,
@@ -85,6 +85,7 @@ export default function MyTripDetail() {
       setError("");
       try {
         const res = await api(`/api/mytrip/${id}`);
+        console.log(res);
         const payload = res?.data ?? res?.result ?? res;
         if (!alive) return;
 
@@ -98,13 +99,22 @@ export default function MyTripDetail() {
         }
       } catch (e) {
         if (!alive) return;
-        console.error("[Detail] api error:", e?.response?.status, e?.message, e?.response?.data);
-        setError(e?.response?.data?.message || "상세 정보를 불러오지 못했어요.");
+        console.error(
+          "[Detail] api error:",
+          e?.response?.status,
+          e?.message,
+          e?.response?.data
+        );
+        setError(
+          e?.response?.data?.message || "상세 정보를 불러오지 못했어요."
+        );
       } finally {
         if (alive) setLoading(false);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [id]);
 
   if (loading) {
@@ -112,7 +122,9 @@ export default function MyTripDetail() {
       <Wrapper>
         <TripDetail>
           <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
-          <Header><h2>불러오는 중…</h2></Header>
+          <Header>
+            <h2>불러오는 중…</h2>
+          </Header>
         </TripDetail>
       </Wrapper>
     );
@@ -123,9 +135,19 @@ export default function MyTripDetail() {
       <Wrapper>
         <TripDetail>
           <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
-          <Header><h2 style={{color: colors.error}}>{error}</h2></Header>
+          <Header>
+            <h2 style={{ color: colors.error }}>{error}</h2>
+          </Header>
           {raw && (
-            <pre style={{maxHeight: 400, overflow:'auto', background:'#f7f7f7', padding:16, borderRadius:8}}>
+            <pre
+              style={{
+                maxHeight: 400,
+                overflow: "auto",
+                background: "#f7f7f7",
+                padding: 16,
+                borderRadius: 8,
+              }}
+            >
               {JSON.stringify(raw, null, 2)}
             </pre>
           )}
@@ -139,9 +161,19 @@ export default function MyTripDetail() {
       <Wrapper>
         <TripDetail>
           <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
-          <Header><h2>여행 정보를 찾을 수 없습니다.</h2></Header>
+          <Header>
+            <h2>여행 정보를 찾을 수 없습니다.</h2>
+          </Header>
           {raw && (
-            <pre style={{maxHeight: 400, overflow:'auto', background:'#f7f7f7', padding:16, borderRadius:8}}>
+            <pre
+              style={{
+                maxHeight: 400,
+                overflow: "auto",
+                background: "#f7f7f7",
+                padding: 16,
+                borderRadius: 8,
+              }}
+            >
               {JSON.stringify(raw, null, 2)}
             </pre>
           )}
@@ -167,7 +199,9 @@ export default function MyTripDetail() {
               {view?.card ? (
                 <CardList
                   thumbnail={undefined}
-                  name={`${view.card?.productName ?? "이름 없음"} | ${view.card?.nickname ?? "-"}`}
+                  name={`${view.card?.productName ?? "이름 없음"} | ${
+                    view.card?.nickname ?? "-"
+                  }`}
                   maskedNumber={view.card?.number}
                   linkedAccount={view.card?.account}
                   width="450px"
@@ -187,7 +221,9 @@ export default function MyTripDetail() {
                 </InfoRow>
                 <InfoRow>
                   <InfoLabel>테마</InfoLabel>
-                  <InfoValue><ThemeChip>{view?.theme ?? "-"}</ThemeChip></InfoValue>
+                  <InfoValue>
+                    <ThemeChip>{view?.theme ?? "-"}</ThemeChip>
+                  </InfoValue>
                 </InfoRow>
                 {view?.groupName && (
                   <InfoRow>
@@ -196,7 +232,9 @@ export default function MyTripDetail() {
                   </InfoRow>
                 )}
                 <InfoRow>
-                  <InfoLabel style={{ alignSelf: "flex-start" }}>멤버</InfoLabel>
+                  <InfoLabel style={{ alignSelf: "flex-start" }}>
+                    멤버
+                  </InfoLabel>
                   <Members>
                     {(view?.members ?? []).map((m, idx) => (
                       <MemberImg key={idx}>{(m || "?")[0]}</MemberImg>
@@ -214,7 +252,9 @@ export default function MyTripDetail() {
                 <BudgetRow key={b.category}>
                   <InfoLabel>{b.category}</InfoLabel>
                   <Bar />
-                  <BudgetAmount>{Number(b.amount || 0).toLocaleString()}원</BudgetAmount>
+                  <BudgetAmount>
+                    {Number(b.amount || 0).toLocaleString()}원
+                  </BudgetAmount>
                 </BudgetRow>
               ))}
             </Section>
@@ -350,7 +390,7 @@ const InfoLabel = styled.div`
   ${fontSet.body3_m};
   color: ${colors.black};
   width: 70px;
-  padding:0 0 0 20px;
+  padding: 0 0 0 20px;
 `;
 
 const InfoValue = styled.div`
@@ -412,6 +452,6 @@ const BudgetAmount = styled.div`
 `;
 
 const EmptyText = styled.div`
-  ${fontSet.body3_m}; 
+  ${fontSet.body3_m};
   color: ${colors.gray600};
 `;

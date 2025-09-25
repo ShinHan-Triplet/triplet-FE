@@ -65,7 +65,7 @@ export default function MyGather() {
   const isEmpty = groups.length === 0;
 
   return (
-    <Wrapper isEmpty={isEmpty}>
+    <Wrapper $isEmpty={isEmpty}>
       {loading ? (
         <div style={{ color: colors.gray700 }}>불러오는 중...</div>
       ) : loadError ? (
@@ -160,8 +160,8 @@ const Wrapper = styled.div`
   grid-auto-rows: min-content;
   row-gap: 20px;
 
-  ${({ isEmpty }) =>
-    isEmpty &&
+  ${({ $isEmpty }) =>
+    $isEmpty &&
     `
     place-content: center;
     place-items: center;

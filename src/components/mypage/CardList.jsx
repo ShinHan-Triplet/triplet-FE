@@ -52,7 +52,7 @@ export default function CardList({
   ].filter(Boolean).join(" ");
 
   return (
-    <CardWrap columns={columns} width={width}>
+    <CardWrap $columns={columns} $width={width}>
       {thumbnail && (
         <CardImg>
           <img
@@ -110,7 +110,7 @@ export default function CardList({
 
 const CardWrap = styled.div`
   display: grid;
-  grid-template-columns: ${({ columns }) => columns};
+  grid-template-columns: ${({ $columns }) => $columns};
   align-items: stretch;
   height: 150px;
   gap: 20px;
@@ -119,7 +119,7 @@ const CardWrap = styled.div`
   border: 1px solid ${colors.gray300};
   border-radius: 12px;
   box-shadow: ${shadows.card};
-  width: ${({ width }) => width || "650px"};
+  width: ${({ $width }) => $width || "650px"};
   box-sizing: border-box;
 `;
 

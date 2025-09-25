@@ -53,7 +53,9 @@ export default function MyTrip() {
       try {
         setLoading(true);
         const res = await api("/api/mytrip");
+        // console.log(res);
         const list = Array.isArray(res?.trips) ? res.trips : [];
+        console.log(list);
 
         if (!mounted) return;
 
@@ -65,19 +67,25 @@ export default function MyTrip() {
             ? t.members.map((m) => m.name).join(", ")
             : "",
           dateRange: `${fmtDate(t.startDate)} ~ ${fmtDate(t.endDate)}`,
-          thumbnail: getCoverByFilename(t.thumbnail || t.trip_img),
+          thumbnail: getCoverByFilename(t.thumbnail || t.tripImg),
         }));
 
         setTrips(normalized);
         setErr("");
       } catch (e) {
-        console.error("GET /api/mytrip failed:", e?.status, e?.body || e?.message);
+        console.error(
+          "GET /api/mytrip failed:",
+          e?.status,
+          e?.body || e?.message
+        );
         if (mounted) setErr("내 여행 목록을 불러오지 못했어요.");
       } finally {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) {
@@ -107,7 +115,7 @@ export default function MyTrip() {
           action={
             <MediumBtn
               label="계획 세우기"
-              onClick={() => navigate("/trip/create")}
+              onClick={() => navigate("/trip")}
               bgColor={colors.blue400}
               textColor={colors.white}
               width={180}

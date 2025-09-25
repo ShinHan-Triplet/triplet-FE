@@ -17,7 +17,9 @@ const krw = (n = 0) => `${Number(n ?? 0).toLocaleString()}원`;
 const hhmm = (iso) => {
   if (!iso) return "--:--";
   const d = new Date(iso);
-  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(
+    d.getMinutes()
+  ).padStart(2, "0")}`;
 };
 
 // 구름 좌표(고정)
@@ -56,6 +58,7 @@ export default function MyTripReport() {
       try {
         setLoading(true);
         const data = await api(`/api/mytrip/${id}`);
+        console.log(data);
         if (!active) return;
 
         setView({
@@ -66,8 +69,8 @@ export default function MyTripReport() {
         // 기간 → 드롭다운 옵션 생성
         const start = new Date(data.startDate);
         const end = new Date(data.endDate);
-        start.setHours(0,0,0,0);
-        end.setHours(0,0,0,0);
+        start.setHours(0, 0, 0, 0);
+        end.setHours(0, 0, 0, 0);
 
         const dates = [];
         const labels = [];
@@ -77,7 +80,7 @@ export default function MyTripReport() {
           dates.push(new Date(cur));
           labels.push(`${i}일차`);
           cur.setDate(cur.getDate() + 1);
-          cur.setHours(0,0,0,0);
+          cur.setHours(0, 0, 0, 0);
           i++;
         }
         setDayDates(dates);
@@ -89,7 +92,9 @@ export default function MyTripReport() {
         setLoading(false);
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   // 2) 선택된 일자 사용내역 호출
@@ -107,12 +112,15 @@ export default function MyTripReport() {
       try {
         const data = await api(`/api/mytrip/${id}/usages?date=${dateStr}`);
         if (!active) return;
+        console.log(data);
         setUsageItems(data?.day?.items ?? []);
       } catch {
         setUsageItems([]);
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [id, view, dayDates, selectedDay]);
 
   // 예산: 총/사용 합계
@@ -126,7 +134,8 @@ export default function MyTripReport() {
   );
 
   if (loading) return <div style={{ padding: 40 }}>로딩중…</div>;
-  if (err) return <div style={{ padding: 40, color: "red" }}>에러: {String(err)}</div>;
+  if (err)
+    return <div style={{ padding: 40, color: "red" }}>에러: {String(err)}</div>;
   if (!view) return null;
 
   return (
@@ -144,14 +153,18 @@ export default function MyTripReport() {
             <BoxSubtitle>사용카드</BoxSubtitle>
             {view?.card ? (
               <CardList
-                name={`${view.card?.cardName ?? "이름 없음"} | ${view.card?.cardNickname ?? "-"}`}
+                name={`${view.card?.cardName ?? "이름 없음"} | ${
+                  view.card?.cardNickname ?? "-"
+                }`}
                 maskedNumber={view.card?.cardNum ?? ""}
                 linkedAccount={view.card?.account ?? ""}
                 width="450px"
                 checkGather
               />
             ) : (
-              <div style={{ color: colors.gray600 }}>연결된 카드가 없습니다.</div>
+              <div style={{ color: colors.gray600 }}>
+                연결된 카드가 없습니다.
+              </div>
             )}
           </Col>
 
@@ -178,7 +191,9 @@ export default function MyTripReport() {
                 <InfoLabel style={{ alignSelf: "flex-start" }}>멤버</InfoLabel>
                 <Members>
                   {(view.members ?? []).map((m, idx) => (
-                    <MemberImg key={m.memberId ?? idx}>{(m.name ?? "?")[0]}</MemberImg>
+                    <MemberImg key={m.memberId ?? idx}>
+                      {(m.name ?? "?")[0]}
+                    </MemberImg>
                   ))}
                 </Members>
               </InfoRow>
@@ -186,7 +201,11 @@ export default function MyTripReport() {
           </Col>
         </TwoCol>
 
-        <ProgressBar category={"전체"} used={budgetUsed} total={budgetPlanned} />
+        <ProgressBar
+          category={"전체"}
+          used={budgetUsed}
+          total={budgetPlanned}
+        />
 
         <DropdownWrap>
           <BoxSubtitle>일자별 지출 분석</BoxSubtitle>
@@ -200,24 +219,21 @@ export default function MyTripReport() {
 
         <TimelineStage>
           <Overlay>
-            {(usageItems ?? [])
-              .slice(0, FIXED_POS.length)
-              .map((u, i) => (
-                <Marker key={u.usageId ?? `${i}`} style={FIXED_POS[i]}>
-                  {hhmm(u.costDateTime)}
-                  <Tooltip className="tooltip">
-                    <strong style={{ display: "block", marginBottom: 4 }}>
-                      {u.memo ?? "-"}
-                    </strong>
-                    <span style={{ opacity: 0.85 }}>
-                      {(u.categoryName ?? "기타")} · {krw(u.amount)}
-                    </span>
-                  </Tooltip>
-                </Marker>
-              ))}
+            {(usageItems ?? []).slice(0, FIXED_POS.length).map((u, i) => (
+              <Marker key={u.usageId ?? `${i}`} style={FIXED_POS[i]}>
+                {hhmm(u.costDateTime)}
+                <Tooltip className="tooltip">
+                  <strong style={{ display: "block", marginBottom: 4 }}>
+                    {u.memo ?? "-"}
+                  </strong>
+                  <span style={{ opacity: 0.85 }}>
+                    {u.categoryName ?? "기타"} · {krw(u.amount)}
+                  </span>
+                </Tooltip>
+              </Marker>
+            ))}
           </Overlay>
         </TimelineStage>
-
       </TripReport>
     </Wrapper>
   );
@@ -386,12 +402,12 @@ const Marker = styled.div`
   pointer-events: auto;
   cursor: pointer;
   z-index: 1;
-  filter: drop-shadow(0 6px 12px rgba(255,255,255,0.8));
-  transition: transform .15s ease, filter .15s ease;
+  filter: drop-shadow(0 6px 12px rgba(255, 255, 255, 0.8));
+  transition: transform 0.15s ease, filter 0.15s ease;
 
   &:hover {
     transform: translate(-50%, -50%) translateY(-2px);
-    filter: drop-shadow(0 8px 16px rgba(255,255,255,1));
+    filter: drop-shadow(0 8px 16px rgba(255, 255, 255, 1));
   }
 
   &:focus-visible {
@@ -420,7 +436,7 @@ const Tooltip = styled.div`
   white-space: nowrap;
   opacity: 0;
   visibility: hidden;
-  transition: opacity .15s ease, visibility .15s ease, transform .15s ease;
+  transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.15s ease;
   pointer-events: none;
 
   &::after {

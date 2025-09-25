@@ -17,7 +17,7 @@ export default function MyGather() {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalGroup, setModalGroup] = useState("");
   const [modalType, setModalType] = useState(2);
@@ -33,6 +33,7 @@ export default function MyGather() {
       try {
         setLoading(true);
         const data = await api("/api/mypage/gather");
+        console.log(data);
         if (!mounted) return;
 
         const uiGroups = (Array.isArray(data) ? data : []).map((g) => ({
@@ -46,13 +47,19 @@ export default function MyGather() {
         setGroups(uiGroups);
         setLoadError("");
       } catch (e) {
-        console.error("GET /api/mypage/gather failed:", e?.status, e?.body || e?.message);
+        console.error(
+          "GET /api/mypage/gather failed:",
+          e?.status,
+          e?.body || e?.message
+        );
         if (mounted) setLoadError("내 모임을 불러오지 못했어요.");
       } finally {
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const isEmpty = groups.length === 0;
@@ -166,4 +173,3 @@ const ListWrap = styled.div`
   flex-direction: column;
   gap: 20px;
 `;
-

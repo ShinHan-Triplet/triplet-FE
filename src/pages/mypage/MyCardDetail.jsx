@@ -12,15 +12,15 @@ import { api } from "../../lib/api";
 import healing1 from "../../assets/img/card/square/healing1.png";
 import healing2 from "../../assets/img/card/square/healing2.png";
 import healing3 from "../../assets/img/card/square/healing3.png";
-import food1    from "../../assets/img/card/square/food1.png";
-import food2    from "../../assets/img/card/square/food2.png";
-import food3    from "../../assets/img/card/square/food3.png";
+import food1 from "../../assets/img/card/square/food1.png";
+import food2 from "../../assets/img/card/square/food2.png";
+import food3 from "../../assets/img/card/square/food3.png";
 import activity1 from "../../assets/img/card/square/activity1.png";
 import activity2 from "../../assets/img/card/square/activity2.png";
 import activity3 from "../../assets/img/card/square/activity3.png";
-import etc1     from "../../assets/img/card/square/etc1.png";
-import etc2     from "../../assets/img/card/square/etc2.png";
-import etc3     from "../../assets/img/card/square/etc3.png";
+import etc1 from "../../assets/img/card/square/etc1.png";
+import etc2 from "../../assets/img/card/square/etc2.png";
+import etc3 from "../../assets/img/card/square/etc3.png";
 
 const CARD_COVERS = [
   activity1,
@@ -37,7 +37,7 @@ const CARD_COVERS = [
   healing3,
 ];
 
-export default function MyCardDetail(){
+export default function MyCardDetail() {
   const { id } = useParams();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +49,7 @@ export default function MyCardDetail(){
       try {
         setLoading(true);
         const resp = await api(`/api/mycard/${id}`);
+        console.log(resp);
         if (!mounted) return;
         setData(resp);
         setErr("");
@@ -60,7 +61,9 @@ export default function MyCardDetail(){
         if (mounted) setLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   if (loading) {
@@ -86,12 +89,13 @@ export default function MyCardDetail(){
   }
 
   const coverSrc =
-    CARD_COVERS[(Number(data.card_id) - 1 + CARD_COVERS.length) % CARD_COVERS.length] ||
-    CARD_COVERS[0];
+    CARD_COVERS[
+      (Number(data.cardId) - 1 + CARD_COVERS.length) % CARD_COVERS.length
+    ] || CARD_COVERS[0];
 
   const STATUS = Object.freeze({
-    1: { text: "사용 중",     color: colors.blue500 },
-    2: { text: "일시 정지",   color: colors.error },
+    1: { text: "사용 중", color: colors.blue500 },
+    2: { text: "일시 정지", color: colors.error },
     3: { text: "사용 대기 중", color: colors.yellow500 },
   });
 
@@ -103,7 +107,7 @@ export default function MyCardDetail(){
   const statusColor = statusMeta.color;
 
   const isWaiting = code === 3;
-  const isPaused  = code === 2;
+  const isPaused = code === 2;
   const reportLabel = isPaused ? "정지 해제" : "분실 신고";
 
   const handleReport = () => {
@@ -119,7 +123,7 @@ export default function MyCardDetail(){
 
         <DetailGrid>
           <CardImg>
-             <img src={coverSrc} alt="카드 이미지" />
+            <img src={coverSrc} alt="카드 이미지" />
           </CardImg>
           <Right>
             <Status style={{ color: statusColor }}>{statusText}</Status>
@@ -130,20 +134,25 @@ export default function MyCardDetail(){
                 <Nickname>{data.nickname}</Nickname>
               </TitleWrap>
             </HeaderRow>
-            <DetailBtn url={`/mypage/card/${data.mcard_id}/history`} text="카드내역 보기" />
+            <DetailBtn
+              url={`/mypage/card/${data.mcardId}/history`}
+              text="카드내역 보기"
+            />
 
             <DetailRow>
-            <Section>
-              <SectionTitle>주요 혜택</SectionTitle>
-              <BenefitList>
-                 {(data.benefits || []).map((b, i) => (
+              <Section>
+                <SectionTitle>주요 혜택</SectionTitle>
+                <BenefitList>
+                  {(data.benefits || []).map((b, i) => (
                     <BenefitItem key={i}>
-                      <BenefitTitle>{b.title}</BenefitTitle>
-                      {b.content && <BenefitContent>{b.content}</BenefitContent>}
+                      <BenefitTitle>{b.benefitTitle}</BenefitTitle>
+                      {b.benefitContent && (
+                        <BenefitContent>{b.benefitContent}</BenefitContent>
+                      )}
                     </BenefitItem>
                   ))}
                 </BenefitList>
-            </Section>
+              </Section>
             </DetailRow>
           </Right>
         </DetailGrid>
@@ -212,11 +221,11 @@ const DetailGrid = styled.div`
 const CardImg = styled.div`
   width: 340px;
   height: 340px;
-  
+
   img {
     width: 100%;
     height: 100%;
-    object-fit: cover;   /* 중요! */
+    object-fit: cover; /* 중요! */
     border-radius: 12px; /* 선택 */
     display: block;
   }

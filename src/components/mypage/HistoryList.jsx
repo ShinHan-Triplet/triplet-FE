@@ -82,7 +82,9 @@ function HistoryItem({ item, onClick, showBalance, showEdit }) {
             <EditBtn
               type="button"
               aria-label="내역 수정"
-              onClick={(e) => { e.stopPropagation();}}
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
               title="수정"
             >
               <img src={editIcon} alt="" />
@@ -97,9 +99,7 @@ function HistoryItem({ item, onClick, showBalance, showEdit }) {
           {sign}
           {formatKRW(item.amount)}
         </Amount>
-        {showBalance && (
-          <Balance>{formatKRW(item.balanceAfter)}</Balance>
-        )}
+        {showBalance && <Balance>{formatKRW(item.balanceAfter)}</Balance>}
       </AmountCol>
     </Row>
   );
@@ -170,14 +170,16 @@ const EditBtn = styled.button`
 
   opacity: 0;
   pointer-events: none;
-  transition: opacity .15s ease;
+  transition: opacity 0.15s ease;
 
   ${Row}:hover & {
     opacity: 1;
     pointer-events: auto;
   }
 
-  &:hover { background: ${colors.gray100}; }
+  &:hover {
+    background: ${colors.gray100};
+  }
 
   img {
     width: 24px;

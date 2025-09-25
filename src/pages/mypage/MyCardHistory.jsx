@@ -19,6 +19,10 @@ const CATEGORY_LABEL = {
 };
 const CATEGORY_ORDER = ["전체", ...Object.values(CATEGORY_LABEL)];
 
+const LABEL_TO_ID = Object.fromEntries(
+  Object.entries(CATEGORY_LABEL).map(([id, label]) => [label, Number(id)])
+);
+
 function toDateYYYYMMDD(iso) {
   if (!iso) return "";
   const d = new Date(iso);
@@ -67,7 +71,6 @@ export default function MyCardHistory() {
         category: label,
         type: "expense",
         amount: h.usageCost,
-        // balanceAfter: undefined
       };
     });
   }, [data]);
@@ -85,9 +88,29 @@ export default function MyCardHistory() {
     return arr;
   }, [items, category, array]);
 
-  // 진행바 값 (지금은 예산 없음 → 사용액 합계를 used/total로 동일 적용)
-  const used = useMemo(() => viewItems.reduce((sum, it) => sum + (it.amount || 0), 0), [viewItems]);
-  const total = used; // 예산 연동 전까지는 같은 값으로 표시
+  // 진행바
+  const used = useMemo(() => {
+    const src = data?.histories ?? [];
+    if (category === "전체") {
+      return src.reduce((sum, h) => sum + (h.usageCost || 0), 0);
+    }
+    const catId = LABEL_TO_ID[category];
+    return src
+      .filter(h => h.category === catId)
+      .reduce((sum, h) => sum + (h.usageCost || 0), 0);
+  }, [data, category]);
+
+  // 예산
+  const total = useMemo(() => {
+  const budgets = data?.budgets;
+  if (!budgets) return 0;
+
+  if (category === "전체") {
+    return budgets.total ?? used;
+  }
+  const catId = LABEL_TO_ID[category];
+  return budgets.byCategory?.[catId] ?? used;
+}, [data, category, used]);
 
   if (loading) {
     return (
@@ -128,7 +151,6 @@ export default function MyCardHistory() {
             <Divider>|</Divider>
             <Nickname>{data.nickname}</Nickname>
           </TitleRow>
-          {/* 계좌(or 카드번호) 중 하나만 보여주고 싶으면 아래 라인 조정 */}
           {data.linkedAccount && <Account>{data.linkedAccount}</Account>}
         </HeaderBox>
 

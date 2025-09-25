@@ -10,22 +10,22 @@ import { DateRangePicker } from "../../components/trip/DateRange";
 import { useState, useRef, useEffect } from "react";
 import LargeBtn from "../../components/button/LargeBtn";
 import { useNavigate } from "react-router-dom";
+
 import {
-  clearTripDraft,
-  loadTripDraft,
-  saveTripDraft,
-} from "./TripDraftSession";
+  getDraft,
+  patchDraft,
+  clearDraftRemote,
+  presignCover,
+  confirmCover,
+} from "../../lib/draft";
+import { ensureAccessToken } from "../../lib/api";
 
 const THEMES = ["식도락", "액티비티", "힐링", "기타"];
-
-// const toStartOfDay = (d) =>
-//   new Date(d.getFullYear(), d.getMonth(), d.getDate());
-// const diffDaysInclusive = (s, e) => {
-//   if (!s || !e) return 0;
-//   const start = toStartOfDay(s);
-//   const end = toStartOfDay(e);
-//   return Math.round((end - start) / 86400000) + 1;
-// };
+const themeToNum = (t) => {
+  const idx = THEMES.indexOf(t);
+  return idx >= 0 ? idx + 1 : 1; // 1~4
+};
+const numToTheme = (n) => THEMES[(n ?? 1) - 1] ?? THEMES[0];
 
 export default function NewTrip() {
   const navigate = useNavigate();
@@ -34,67 +34,11 @@ export default function NewTrip() {
   const [title, setTitle] = useState("");
   const [theme, setTheme] = useState("");
   const [fileName, setFileName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [authReady, setAuthReady] = useState(false);
 
   const fileInputRef = useRef(null);
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFileName(file.name); // 파일명만 표시
-    }
-  };
-
-  // 처음 진입 - 세션에 이전 기록이 있으면 이어쓰기 묻기
-  useEffect(() => {
-    const snap = loadTripDraft();
-    if (!snap) return;
-
-    // const ok = window.confirm(
-    //   "이전에 작성한 내용이 있어요. 이어서 작성할까요?"
-    // );
-    // if (ok) {
-    //   setTitle(snap.title ?? "");
-    //   setTheme(snap.theme ?? "");
-    //   setRange({
-    //     start: snap.startMs ? new Date(snap.startMs) : null,
-    //     end: snap.endMs ? new Date(snap.endMs) : null,
-    //   });
-    // } else {
-    //   clearTripDraft();
-    // }
-    setTitle(snap.title ?? "");
-    setTheme(snap.theme ?? "");
-    setRange({
-      start: snap.startMs ? new Date(snap.startMs) : null,
-      end: snap.endMs ? new Date(snap.endMs) : null,
-    });
-  }, []);
-
-  // 상태가 바뀌면 600ms 후에 세션에 자동 저장
-  const saveTimer = useRef();
-  useEffect(() => {
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => {
-      const startMs = range.start ? toStartOfDay(range.start).getTime() : null;
-      const endMs = range.end ? toStartOfDay(range.end).getTime() : null;
-
-      const hasMeaningful = !!title.trim() || !!theme || (startMs && endMs);
-
-      if (!hasMeaningful) {
-        // 전부 빈 상태면 세션에 빈 드래프트를 남기지 말고 제거
-        const existed = loadTripDraft();
-        if (existed) clearTripDraft();
-        return; // 저장 스킵
-      }
-      saveTripDraft({
-        title,
-        theme,
-        startMs: range.start ? toStartOfDay(range.start).getTime() : null,
-        endMs: range.end ? toStartOfDay(range.end).getTime() : null,
-      });
-    }, 600);
-    return () => clearTimeout(saveTimer.current);
-  }, [title, theme, range.start, range.end]);
+  const saveTimer = useRef(null);
 
   const toStartOfDay = (d) =>
     new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -103,6 +47,111 @@ export default function NewTrip() {
     const start = toStartOfDay(s);
     const end = toStartOfDay(e);
     return Math.round((end - start) / 86400000) + 1;
+  };
+
+  // 1. 마운트 시 Redis 초안 로드
+  useEffect(() => {
+    (async () => {
+      try {
+        await ensureAccessToken(window.location);
+        setAuthReady(true);
+        const res = await getDraft();
+        if (!res?.hasDraft) return;
+        const d = res.draft;
+        setTitle(d.title ?? "");
+        setTheme(numToTheme(d.themeNum));
+        setRange({
+          start: d.startMs ? new Date(d.startMs) : null,
+          end: d.endMs ? new Date(d.endMs) : null,
+        });
+        setFileName(d.cover?.fileName || "");
+      } catch (e) {
+        setAuthReady(false);
+      }
+    })();
+  }, []);
+
+  // 2. 자동 저장(디바운스 600ms) -> redis
+  useEffect(() => {
+    if (!authReady) return;
+
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await ensureAccessToken();
+      } catch {
+        return; // 로그인 필요
+      }
+
+      const startMs = range.start ? toStartOfDay(range.start).getTime() : null;
+      const endMs = range.end ? toStartOfDay(range.end).getTime() : null;
+      const hasMeaningful =
+        !!title.trim() || !!theme || (startMs && endMs) || !!fileName;
+
+      if (!hasMeaningful) {
+        try {
+          await clearDraftRemote();
+        } catch {}
+        return;
+      }
+
+      const themeNum = themeToNum(theme);
+      try {
+        await patchDraft({
+          title,
+          themeNum,
+          startMs,
+          endMs,
+          // 대표사진은 confirmCover에서 cover 객체로 별도 저장되므로 여기선 fileName만 참고 표시 용
+        });
+      } catch (e) {
+        console.error("draft save failed", e);
+      }
+    }, 600);
+    return () => clearTimeout(saveTimer.current);
+  }, [title, theme, range.start, range.end, fileName, authReady]);
+
+  // 3.대표사진 선택 -> S3 presign 업로드 -> 초안에 cover 저장
+  const handleFileChange = async (e) => {
+    if (!authReady) {
+      alert("로그인 세션이 만료되었습니다. 다시 로그인 후 시도해주세요.");
+      return;
+    }
+
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      setFileName(file.name);
+
+      // 3-1 presign
+      const presigned = await presignCover({
+        filename: file.name,
+        contentType: file.type || "application/octet-stream",
+      });
+      // 3-2 실제 업로드 (PUT to S3)
+      await fetch(presigned.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": file.type || "application/octet-stream" },
+        body: file,
+      });
+      // 3-3 초안에 cover 메타 반영
+      await confirmCover({
+        fileName: file.name,
+        objectKey: presigned.objectKey,
+        contentType: file.type || "application/octet-stream",
+        size: file.size,
+        viewUrl: presigned.viewUrl, // 미리보기 URL
+      });
+    } catch (e) {
+      console.error("cover upload failed", e);
+      alert("대표사진 업로드에 실패했습니다.");
+      setFileName("");
+    } finally {
+      setUploading(false);
+      // 같은 파일 다시 선택 가능하도록 초기화
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const nextPage = () => {
@@ -115,17 +164,13 @@ export default function NewTrip() {
     } else if (!range.start || !range.end) {
       alert("여행 일정을 선택해주세요.");
       return;
+    } else if (!fileName) {
+      alert("여행 대표사진을 선택해주세요.");
+      return;
     }
     const days = diffDaysInclusive(range.start, range.end);
+    const themeNum = themeToNum(theme);
 
-    saveTripDraft({
-      title,
-      theme,
-      startMs: toStartOfDay(range.start).getTime(),
-      endMs: toStartOfDay(range.end).getTime(),
-    });
-
-    // state에 안전하게 밀리초 타임스탬프를 넣어 전달 (타임존 이슈 방지)
     navigate("/trip/new/cost", {
       state: {
         startMs: range.start.getTime(),
@@ -133,6 +178,7 @@ export default function NewTrip() {
         days,
         title,
         theme,
+        tripImg: fileName,
       },
     });
   };

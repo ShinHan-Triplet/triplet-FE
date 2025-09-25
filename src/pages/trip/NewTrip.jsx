@@ -201,6 +201,7 @@ export default function NewTrip() {
                 placeholder="여행 제목은 알아보기 쉽게 작성해주세요"
                 width={700}
                 value={title}
+                maxLength={20}
                 onChange={(e) => setTitle(e.target.value)}
               ></InputBox>
             </Detail>

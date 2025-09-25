@@ -7,14 +7,6 @@ import SmallBtn from "../button/SmallBtn";
 import gather from "../../assets/icon/gather.svg";
 import calendar from "../../assets/icon/calendar-blue.svg"
 
-/**
- * @param {object} props
- * @param {string} props.thumbnail
- * @param {string} props.title
- * @param {string} props.members
- * @param {string} props.dateRange
- * @param {function} props.onDetail
- */
 export default function TripList({
   thumbnail,
   title,
@@ -104,6 +96,11 @@ const TripInfo = styled.div`
 const Title = styled.div`
   ${fontSet.body2_b};
   color: ${colors.black};
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
 const TripSummary = styled.div`

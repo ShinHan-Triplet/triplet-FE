@@ -317,8 +317,8 @@ const CardsRow = styled.div`
 const CarouselCard = styled.div`
   position: absolute;
   top: 0;
-  width: 240px;
-  height: 319px;
+  width: 201px;
+  height: 320px;
   background: ${(p) => `url(${p.$img}) center / cover no-repeat`};
   transform-origin: center center;
   border-radius: 4px;

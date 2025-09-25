@@ -1,98 +1,116 @@
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import shadows from "../../styles/shadows";
 import BackBtn from "../../components/button/BackBtn";
 import DetailBtn from "../../components/button/DetailBtn";
-// import SmallBtn from "../../components/button/SmallBtn";
 import MediumBtn from "../../components/button/MediumBtn";
-// import InputBox from "../../components/input/InputBox";
-import defaultThumb from "../../assets/img/test_thumbnail.png";
+import { api } from "../../lib/api";
 
-import { useParams } from "react-router-dom";
+import healing1 from "../../assets/img/card/square/healing1.png";
+import healing2 from "../../assets/img/card/square/healing2.png";
+import healing3 from "../../assets/img/card/square/healing3.png";
+import food1    from "../../assets/img/card/square/food1.png";
+import food2    from "../../assets/img/card/square/food2.png";
+import food3    from "../../assets/img/card/square/food3.png";
+import activity1 from "../../assets/img/card/square/activity1.png";
+import activity2 from "../../assets/img/card/square/activity2.png";
+import activity3 from "../../assets/img/card/square/activity3.png";
+import etc1     from "../../assets/img/card/square/etc1.png";
+import etc2     from "../../assets/img/card/square/etc2.png";
+import etc3     from "../../assets/img/card/square/etc3.png";
 
-const thumbnailUrl = defaultThumb;
-const cards = [
-  {
-    id: 1,
-    thumbnail: thumbnailUrl,
-    name: "WITH HJW 체크",
-    nickname: "한쭈카드",
-    status: "active",
-    maskedNumber: "1234-56**-****-5678",
-    linkedAccount: "111-234-5678",
-    card_pw: 1234
-  },
-  {
-    id: 2,
-    thumbnail: thumbnailUrl,
-    name: "MUKJJANG 체크",
-    nickname: "쩝쩝박사",
-    status: "waiting",
-    maskedNumber: "6666-58**-****-7070",
-    linkedAccount: "777-654-9999",
-    card_pw: 9876
-  },
-  {
-    id: 3,
-    thumbnail: thumbnailUrl,
-    name: "UP&DOWN 체크",
-    nickname: "다운카드",
-    status: "paused",
-    maskedNumber: "0202-12**-****-9876",
-    linkedAccount: "987-654-3210",
-    card_pw: 2468
-  },
-];
-
-const benefits = [
-  { title: "일반 음식점 결제 10% 캐시백", content: "(월 최대 30,000원)" },
-  { title: "카페·베이커리 5% 적립", content: "(스타벅스, 이디야 등)" },
-  { title: "편의점 결제 5% 캐시백", content: "(CU, GS25, 세븐일레븐)" },
-  { title: "해외 결제 수수료 0% + 3% 추가 적립", content: "" },
+const CARD_COVERS = [
+  activity1,
+  activity2,
+  activity3,
+  food1,
+  food2,
+  food3,
+  etc1,
+  etc2,
+  etc3,
+  healing1,
+  healing2,
+  healing3,
 ];
 
 export default function MyCardDetail(){
   const { id } = useParams();
-  const card = cards.find((c) => String(c.id) === String(id));
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState(null);
 
-  if (!card) {
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        const resp = await api(`/api/mycard/${id}`);
+        if (!mounted) return;
+        setData(resp);
+        setErr("");
+      } catch (e) {
+        if (!mounted) return;
+        console.error("GET /api/mycard/:id failed:", e);
+        setErr("카드를 불러오지 못했어요.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [id]);
+
+  if (loading) {
     return (
       <Wrapper>
         <CardDetail>
           <BackBtn url="/mypage?tab=card" text="내 카드 목록" />
-          <EmptyState>해당 카드를 찾을 수 없습니다.</EmptyState>
+          <EmptyState>불러오는 중…</EmptyState>
         </CardDetail>
       </Wrapper>
     );
   }
 
-  const statusText =
-    card.status === "paused"
-      ? "일시 정지"
-      : card.status === "waiting"
-      ? "사용 대기 중"
-      : "사용 중";
+  if (err || !data) {
+    return (
+      <Wrapper>
+        <CardDetail>
+          <BackBtn url="/mypage?tab=card" text="내 카드 목록" />
+          <EmptyState>{err || "해당 카드를 찾을 수 없습니다."}</EmptyState>
+        </CardDetail>
+      </Wrapper>
+    );
+  }
 
-  const statusColor =
-    card.status === "paused"
-      ? colors.error
-      : card.status === "waiting"
-      ? colors.yellow500
-      : colors.blue500;
+  const coverSrc =
+    CARD_COVERS[(Number(data.card_id) - 1 + CARD_COVERS.length) % CARD_COVERS.length] ||
+    CARD_COVERS[0];
 
-  const isWaiting = card.status === "waiting";
-  const isPaused  = card.status === "paused";
+  const STATUS = Object.freeze({
+    1: { text: "사용 중",     color: colors.blue500 },
+    2: { text: "일시 정지",   color: colors.error },
+    3: { text: "사용 대기 중", color: colors.yellow500 },
+  });
+
+  const codeRaw = data.cardStatus ?? data.status ?? 1;
+  const code = Number.isFinite(Number(codeRaw)) ? Number(codeRaw) : 1;
+
+  const statusMeta = STATUS[code] || STATUS[1];
+  const statusText = statusMeta.text;
+  const statusColor = statusMeta.color;
+
+  const isWaiting = code === 3;
+  const isPaused  = code === 2;
   const reportLabel = isPaused ? "정지 해제" : "분실 신고";
 
-const handleReport = () => {
-  if (isWaiting) return;
-  if (isPaused) {
-    console.log("정지 해제");
-  } else {
-    console.log("분실 신고");
-  }
-};
+  const handleReport = () => {
+    if (isWaiting) return;
+    if (isPaused) console.log("정지 해제");
+    else console.log("분실 신고");
+  };
 
   return (
     <Wrapper>
@@ -101,48 +119,31 @@ const handleReport = () => {
 
         <DetailGrid>
           <CardImg>
-            <img src={card.thumbnail} alt="카드 이미지" />
+             <img src={coverSrc} alt="카드 이미지" />
           </CardImg>
           <Right>
             <Status style={{ color: statusColor }}>{statusText}</Status>
             <HeaderRow>
               <TitleWrap>
-                <Title>{card.name}</Title>
+                <Title>{data.name}</Title>
                 <Divider>|</Divider>
-                <Nickname>{card.nickname}</Nickname>
+                <Nickname>{data.nickname}</Nickname>
               </TitleWrap>
             </HeaderRow>
-            <DetailBtn url={`/mypage/card/${card.id}/history`} text="카드내역 보기" />
+            <DetailBtn url={`/mypage/card/${data.mcard_id}/history`} text="카드내역 보기" />
 
             <DetailRow>
             <Section>
               <SectionTitle>주요 혜택</SectionTitle>
               <BenefitList>
-                {benefits.map((b, i) => (
-                  <BenefitItem key={i}>
-                    <BenefitTitle>{b.title}</BenefitTitle>
-                    {b.content && <BenefitContent>{b.content}</BenefitContent>}
-                  </BenefitItem>
-                ))}
-              </BenefitList>
+                 {(data.benefits || []).map((b, i) => (
+                    <BenefitItem key={i}>
+                      <BenefitTitle>{b.title}</BenefitTitle>
+                      {b.content && <BenefitContent>{b.content}</BenefitContent>}
+                    </BenefitItem>
+                  ))}
+                </BenefitList>
             </Section>
-
-            {/* <Section>
-              <SectionTitle>비밀번호 수정</SectionTitle>
-              <PwdRow>
-                <InputBox
-                  placeholder="***********"
-                  width={380}
-                />
-                <SmallBtn
-                  label="수정"
-                  onClick={() => console.log("비밀번호 수정")}
-                  bgColor={colors.blue400}
-                  textColor={colors.white}
-                  width={120}
-                />
-              </PwdRow>
-            </Section> */}
             </DetailRow>
           </Right>
         </DetailGrid>
@@ -211,6 +212,14 @@ const DetailGrid = styled.div`
 const CardImg = styled.div`
   width: 340px;
   height: 340px;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;   /* 중요! */
+    border-radius: 12px; /* 선택 */
+    display: block;
+  }
 `;
 
 const Right = styled.div`

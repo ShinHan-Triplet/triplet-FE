@@ -20,6 +20,7 @@ import ScrollToTop from "./components/util/ScrollToTop";
 import Card from "./pages/card/Card";
 import NewCard from "./pages/card/NewCard";
 import RequireAuth from "./auth/RequireAuth";
+import MyTripEdit from "./pages/mypage/MyTripEdit";
 
 function AppLayout() {
   const location = useLocation();
@@ -46,6 +47,7 @@ function AppLayout() {
         <Route path="/mypage/card/:id/history" element={<MyCardHistory />} />
         <Route path="/mypage/trip/:id" element={<MyTripDetail />} />
         <Route path="/mypage/trip/:id/report" element={<MyTripReport />} />
+        <Route path="/mypage/trip/:id/edit" element={<MyTripEdit />} />
         <Route path="/trip" element={<Trip />} />
         <Route path="/trip/new/details" element={<NewTrip />} />
         <Route path="/trip/new/cost" element={<TripCost />} />

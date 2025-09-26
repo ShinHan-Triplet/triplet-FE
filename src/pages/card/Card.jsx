@@ -67,7 +67,6 @@ export default function Card() {
         };
 
         const cards = res.map(toUI);
-        console.log(cards);
         setCardList(cards);
         setIdx(0); // 처음으로 정렬
       } catch (e) {
@@ -124,7 +123,7 @@ export default function Card() {
   const gotoApply = () => {
     const prev2Url = location.pathname;
     navigate(`/card/${current.id}/apply`, {
-      state: { card: current, prev2Url },
+      state: { card: current, prev2Url, checkGather: false },
     });
     sessionStorage.setItem("triplet:selectedCardId", current.id);
   };

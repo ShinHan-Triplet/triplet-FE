@@ -50,6 +50,9 @@ const mapDtoToView = (dto) => {
           used: Number(b.used ?? 0),
         }))
       : [],
+    total: Array.isArray(dto.budget)
+      ? dto.budget.reduce((sum, b) => sum + Number(b.planned ?? 0), 0)
+      : 0,
   };
 };
 
@@ -206,6 +209,16 @@ export default function MyTripDetail() {
                   linkedAccount={view.card?.account}
                   width="450px"
                   checkGather={!!view.card?.checkGather}
+                  hasTrip = {true}
+                  onHistory={() =>
+                    navigate(`/mypage/trip/${view.id}/history`, {
+                      state: {
+                        card: view.card,
+                        budgets: view.budget,
+                        total: view.total
+                      },
+                    })
+                  }
                 />
               ) : (
                 <EmptyText>연결된 카드가 없습니다.</EmptyText>

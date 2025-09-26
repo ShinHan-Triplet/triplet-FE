@@ -28,7 +28,7 @@ export default function GatherList({
         
         <Members title={members.join(", ")}>
           <img src={GatherIcon} alt="멤버 아이콘" />
-          {members.join(", ")}
+          <MemberText>{members.join(", ")}</MemberText>
         </Members>
 
         {linkedCard && <AccountChip>연결된 카드 : {cardName}</AccountChip>}
@@ -114,8 +114,19 @@ const Members = styled.div`
   display: flex;
   align-items: center;
   gap: 20px;
+  min-width: 0;
+
+  img {
+    flex: 0 0 auto;
+  }
+`;
+
+const MemberText = styled.span`
+  flex: 1 1 auto;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 `;
 
 const AccountChip = styled.div`

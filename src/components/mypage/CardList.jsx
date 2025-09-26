@@ -3,6 +3,7 @@ import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import shadows from "../../styles/shadows";
 import SmallBtn from "../button/SmallBtn";
+import DetailBtn from "../button/DetailBtn";
 import gatherIcon from "../../assets/icon/gather.svg";
 import cardIcon from "../../assets/icon/card.svg";
 
@@ -16,6 +17,7 @@ export default function CardList({
   onDetail,
   width,
   checkGather,
+  onHistory, 
 }) {
   const STATUS_META = Object.freeze({
     1: { text: "사용 중",     color: colors.blue500 },
@@ -44,15 +46,17 @@ export default function CardList({
 
   const hasStatus = status !== undefined && status !== null;
   const hasRight = hasStatus || Boolean(onDetail);
+  const hasTrip = Boolean(onHistory);
 
   const columns = [
     thumbnail ? "110px" : null,
     "1fr",
     hasRight ? "120px" : null,
+    hasTrip ? "80px" : null,
   ].filter(Boolean).join(" ");
 
   return (
-    <CardWrap columns={columns} width={width}>
+    <CardWrap $columns={columns} $width={width}>
       {thumbnail && (
         <CardImg>
           <img
@@ -104,13 +108,22 @@ export default function CardList({
           )}
         </Right>
       )}
+
+      {onHistory && (
+        <RightBottom>
+          <DetailBtn
+            onClick={onHistory}
+            text="자세히"
+          />
+        </RightBottom>
+      )}
     </CardWrap>
   );
 }
 
 const CardWrap = styled.div`
   display: grid;
-  grid-template-columns: ${({ columns }) => columns};
+  grid-template-columns: ${({ $columns }) => $columns};
   align-items: stretch;
   height: 150px;
   gap: 20px;
@@ -119,7 +132,7 @@ const CardWrap = styled.div`
   border: 1px solid ${colors.gray300};
   border-radius: 12px;
   box-shadow: ${shadows.card};
-  width: ${({ width }) => width || "650px"};
+  width: ${({ $width }) => $width || "650px"};
   box-sizing: border-box;
 `;
 
@@ -200,6 +213,11 @@ const Right = styled.div`
   flex-direction: column;
   justify-content: space-between;
   align-items: flex-end;
+`;
+
+const RightBottom = styled(Right)`
+  justify-content: flex-end;
+  gap: 0;
 `;
 
 const Status = styled.div`

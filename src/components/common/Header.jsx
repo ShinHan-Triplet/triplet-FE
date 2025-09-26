@@ -46,7 +46,6 @@ export default function Header({ onTabChange }) {
   const { isAuthed } = useAuth();
 
   const iconRefs = useRef({ user: null, bell: null });
-  const notifPanelRef = useRef(null);
 
   useEffect(() => {
     const path = location.pathname;
@@ -86,12 +85,11 @@ export default function Header({ onTabChange }) {
     if (!dropdownOpen && !bellOpen) return;
 
     const handleClickOutside = (e) => {
-      const clickedInsideUser = iconRefs.current.user?.contains(e.target);
-      const clickedInsideBell = iconRefs.current.bell?.contains(e.target);
-      const clickedInsidePanel = notifPanelRef.current?.contains(e.target);
+      const insideUser = iconRefs.current.user?.contains(e.target);
+      const insideBell = iconRefs.current.bell?.contains(e.target);
 
-      if (!clickedInsideUser) setDropdownOpen(false);
-      if (!clickedInsideBell && !clickedInsidePanel) setBellOpen(false);
+      if (!insideUser) setDropdownOpen(false);
+      if (!insideBell) setBellOpen(false);
     };
 
     document.addEventListener("mousedown", handleClickOutside);
@@ -165,39 +163,45 @@ export default function Header({ onTabChange }) {
             <LoginBtn onClick={() => gotoLogin()}>로그인 / 회원가입</LoginBtn>
           ) : (
             <IconGroup>
-              <IconBtn
-                ref={(el) => (iconRefs.current.user = el)}
-                onClick={() => setDropdownOpen((v) => !v)}
-                style={{ position: "relative" }}
-              >
-                <img src={userIcon} alt="내 정보" />
+              <IconWrap ref={(el) => (iconRefs.current.user = el)}>
+                <IconBtn
+                  onClick={() => setDropdownOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={dropdownOpen}
+                  aria-label="내 정보"
+                >
+                  <img src={userIcon} alt="내 정보" />
+                </IconBtn>
+
                 <HeaderDropdown
                   open={dropdownOpen}
                   onSelect={handleDropdownSelect}
                   onClose={() => setDropdownOpen(false)}
-                  anchorRef={{ current: iconRefs.current.user }}
                 />
-              </IconBtn>
-              <IconBtn
-                ref={(el) => (iconRefs.current.bell = el)}
-                onClick={() => setBellOpen((v) => !v)}
-                style={{ position: "relative" }}
-                aria-label={isWaiting ? "새 알림 있음" : "알림"}
-              >
-                <img src={isWaiting ? bellNewIcon : bellIcon} alt="알림" />
+              </IconWrap>
+
+              <IconWrap ref={(el) => (iconRefs.current.bell = el)}>
+                <IconBtn
+                  onClick={() => setBellOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={bellOpen}
+                  aria-label={isWaiting ? "새 알림 있음" : "알림"}
+                >
+                  <img src={isWaiting ? bellNewIcon : bellIcon} alt="알림" />
+                </IconBtn>
+
                 <NotificationDropdown
                   open={bellOpen}
                   items={notifications}
                   onApprove={approve}
                   onReject={reject}
                   onClose={() => setBellOpen(false)}
-                  anchorRef={{ current: iconRefs.current.bell }}
-                  panelRef={notifPanelRef} // 패널 ref
                 />
-              </IconBtn>
+              </IconWrap>
             </IconGroup>
           )}
         </Actions>
+
       </Inner>
     </HeaderWrap>
   );
@@ -312,4 +316,9 @@ const IconBtn = styled.button`
     width: 32px;
     height: 32px;
   }
+`;
+
+const IconWrap = styled.div`
+  position: relative;
+  display: inline-block;
 `;

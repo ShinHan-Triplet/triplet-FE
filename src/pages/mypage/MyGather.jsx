@@ -23,6 +23,9 @@ export default function MyGather() {
   const [modalType, setModalType] = useState(2);
   const [modalAction, setModalAction] = useState(""); // "delete" 또는 "leave"
 
+  const [selected, setSelected] = useState(null);
+  const [acting, setActing] = useState(false);
+
   const handleCreatePlan = () => {
     navigate("/trip");
   };
@@ -33,7 +36,6 @@ export default function MyGather() {
       try {
         setLoading(true);
         const data = await api("/api/mypage/gather");
-        console.log(data);
         if (!mounted) return;
 
         const uiGroups = (Array.isArray(data) ? data : []).map((g) => ({
@@ -62,10 +64,36 @@ export default function MyGather() {
     };
   }, []);
 
+  const handleConfirm = async () => {
+    if (acting || !selected) return;
+    try {
+      setActing(true);
+
+      if (modalAction === "delete") {
+        await api(`/api/mypage/gather/${selected.id}`, { method: "DELETE" });
+      } else if (modalAction === "leave") {
+        await api(`/api/mypage/gather/${selected.id}/leave`, { method: "DELETE" });
+      } else {
+        return;
+      }
+
+      // 목록에서 제거
+      setGroups(prev => prev.filter(g => g.id !== selected.id));
+
+      // 모달 닫기 & 선택 해제
+      setIsModalOpen(false);
+      setSelected(null);
+    } catch (e) {
+      alert(e?.response?.data || e?.body || e?.message || "처리에 실패했습니다.");
+    } finally {
+      setActing(false);
+    }
+  };
+
   const isEmpty = groups.length === 0;
 
   return (
-    <Wrapper isEmpty={isEmpty}>
+    <Wrapper $isEmpty={isEmpty}>
       {loading ? (
         <div style={{ color: colors.gray700 }}>불러오는 중...</div>
       ) : loadError ? (
@@ -100,16 +128,18 @@ export default function MyGather() {
                 setModalAction("");
               }}
               onDelete={() => {
+                setSelected({ id: g.id, name: g.name });
                 setModalGroup(g.name);
                 setModalType(1);
-                setIsModalOpen(true);
                 setModalAction("delete");
+                setIsModalOpen(true);
               }}
               onLeave={() => {
+                setSelected({ id: g.id, name: g.name });
                 setModalGroup(g.name);
                 setModalType(1);
-                setIsModalOpen(true);
                 setModalAction("leave");
+                setIsModalOpen(true);
               }}
             />
           ))}
@@ -120,9 +150,7 @@ export default function MyGather() {
         <Modal
           title={
             modalType === 1
-              ? modalAction === "delete"
-                ? "모임 삭제"
-                : "모임 탈퇴"
+              ? modalAction === "delete" ? "모임 삭제" : "모임 탈퇴"
               : "멤버 초대"
           }
           def1={
@@ -135,13 +163,22 @@ export default function MyGather() {
           def2={
             modalType === 1
               ? modalAction === "delete"
-                ? "삭제한 모임과 연결된 모든 여행 기록도 사라집니다."
-                : "탈퇴한 모임과 연결된 모든 여행 기록이 사라집니다."
+                ? "삭제 시 모임과 연결된 모든 여행 기록이 함께 삭제됩니다."
+                : "탈퇴 후에는 이 모임의 여행/기록에 더 이상 접근할 수 없습니다."
               : "Triplet 계정이 있어야 함께할 수 있어요."
           }
           type={modalType}
           btnLabel={modalType === 1 ? "취소" : undefined}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => {
+            if (!acting) {
+              setIsModalOpen(false);
+              setSelected(null);
+              setModalAction("");
+            }
+          }}
+          
+          func1={() => { }}
+          func2={() => { if (!acting) handleConfirm(); }}
         />
       )}
     </Wrapper>
@@ -160,8 +197,8 @@ const Wrapper = styled.div`
   grid-auto-rows: min-content;
   row-gap: 20px;
 
-  ${({ isEmpty }) =>
-    isEmpty &&
+  ${({ $isEmpty }) =>
+    $isEmpty &&
     `
     place-content: center;
     place-items: center;

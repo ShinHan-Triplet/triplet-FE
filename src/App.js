@@ -8,6 +8,7 @@ import MyCardDetail from "./pages/mypage/MyCardDetail";
 import MyCardHistory from "./pages/mypage/MyCardHistory";
 import MyTripDetail from "./pages/mypage/MyTripDetail";
 import MyTripReport from "./pages/mypage/MyTripReport";
+import MyTripHistory from "./pages/mypage/MyTripHistory";
 import NewTrip from "./pages/trip/NewTrip";
 import Login from "./pages/login/Login";
 import LoginCheck from "./pages/login/LoginCheck";
@@ -48,6 +49,7 @@ function AppLayout() {
         <Route path="/mypage/trip/:id" element={<MyTripDetail />} />
         <Route path="/mypage/trip/:id/report" element={<MyTripReport />} />
         <Route path="/mypage/trip/:id/edit" element={<MyTripEdit />} />
+        <Route path="/mypage/trip/:id/history" element={<MyTripHistory />} />
         <Route path="/trip" element={<Trip />} />
         <Route path="/trip/new/details" element={<NewTrip />} />
         <Route path="/trip/new/cost" element={<TripCost />} />

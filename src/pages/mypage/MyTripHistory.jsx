@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
@@ -25,47 +25,84 @@ const LABEL_TO_ID = Object.fromEntries(
   Object.entries(CATEGORY_LABEL).map(([id, label]) => [label, Number(id)])
 );
 
-function toDateYYYYMMDD(iso) {
+// function toDateYYYYMMDD(iso) {
+//   if (!iso) return "";
+//   const d = new Date(iso);
+//   const yyyy = d.getFullYear();
+//   const mm = String(d.getMonth() + 1).padStart(2, "0");
+//   const dd = String(d.getDate()).padStart(2, "0");
+//   return `${yyyy}-${mm}-${dd}`;
+// }
+
+function toDateMMDD(iso) {
   if (!iso) return "";
-  const d = new Date(iso);
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
+  const s = String(iso);
+  const datePart = s.includes("T") ? s.split("T")[0] : s;
+  const [, mm, dd] = datePart.split("-");
+  return `${mm}.${dd}`;
 }
 
-export default function MyCardHistory() {
+export default function MyTripHistory({tripId}) {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [data, setData] = useState(null);
   const [category, setCategory] = useState("전체");
   const [array, setArray] = useState("최신순");
+  const [history, setHistory] = useState([]);
+  const location = useLocation();
+  const card = location.state?.card;
+  const budgets = location.state?.budgets;
+  const totalFromDetail = location.state?.total;
 
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        setLoading(true);
-        setErr("");
-        const resp = await api(`/api/mycard/${id}/history`);
-        if (!mounted) return;
-        setData(resp);
-      } catch (e) {
-        console.error(
-          "GET /api/mycard/:id/history failed:",
-          e?.status,
-          e?.body || e?.message
-        );
-        if (mounted) setErr("카드 사용 내역을 불러오지 못했어요.");
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, [id]);
+  let mounted = true;
+  (async () => {
+    try {
+      setLoading(true);
+      setErr("");
+
+      const resp = await api(`/api/mytrip/${id}/history`);
+
+      if (!mounted) return;
+
+      // resp.day 를 배열로 감싸서 days처럼 사용
+      const days = resp.day ? [resp.day] : [];
+      setHistory(days);
+
+      // 평탄화해서 histories 만들어주기
+      const histories = days.flatMap((day) =>
+        (day.items || []).map((h) => {
+          const iso = String(h.costDateTime || day.date);
+          const base = iso.includes("T") ? iso.split("T")[0] : iso;
+          return {
+            usageId: h.usageId,
+            category: h.categoryId,
+            memo: h.memo,
+            usageCost: h.amount,
+            costDate: base,
+          };
+        })
+      );
+      setData({
+        histories,
+        budgets: resp.budgets ?? null,
+        total: totalFromDetail ?? 0,
+        cardName: resp.cardName ?? "",
+        cardNickname: resp.cardNickname ?? "",
+        account: resp.account ?? "",
+      });
+    } catch (e) {
+      console.error("GET /api/mytrip/:id/history failed:", e);
+      if (mounted) setErr("카드 사용 내역을 불러오지 못했어요.");
+    } finally {
+      if (mounted) setLoading(false);
+    }
+  })();
+  return () => {
+    mounted = false;
+  };
+}, [id]);
 
   // 히스토리 원본 → HistoryList용 아이템으로 변환
   const items = useMemo(() => {
@@ -74,7 +111,8 @@ export default function MyCardHistory() {
       const label = CATEGORY_LABEL[h.category] ?? "기타";
       return {
         id: h.usageId,
-        date: toDateYYYYMMDD(h.costDate),
+        date: toDateMMDD(h.costDate),
+        isoDate: h.costDate,
         title: h.memo || "-",
         category: label,
         type: "expense",
@@ -89,15 +127,32 @@ export default function MyCardHistory() {
     if (category !== "전체") {
       arr = arr.filter((it) => it.category === category);
     }
-    arr = [...arr].sort((a, b) => {
-      if (array === "오래된 순")
-        return a.date > b.date ? 1 : a.date < b.date ? -1 : b.id - a.id;
-      return a.date < b.date ? 1 : a.date > b.date ? -1 : a.id - b.id;
+    return [...arr].sort((a, b) => {
+      if (array === "오래된 순") {
+        return a.isoDate < b.isoDate ? -1
+            : a.isoDate > b.isoDate ?  1
+            : a.id - b.id;
+      }
+      return a.isoDate > b.isoDate ? -1
+          : a.isoDate < b.isoDate ?  1
+          : b.id - a.id;
     });
-    return arr;
   }, [items, category, array]);
 
-  // 진행바
+  // 카테고리별 예산
+  const budgetsFromDetail = location.state?.budgets ?? [];
+  const plannedByCategory = useMemo(
+    () =>
+      (budgetsFromDetail || []).reduce((acc, b) => {
+        const label = b.category;
+        const planned = Number(b.amount || 0);
+        acc[label] = (acc[label] || 0) + planned;
+        return acc;
+      }, {}),
+    [budgetsFromDetail]
+  );
+
+  // 사용 금액
   const used = useMemo(() => {
     const src = data?.histories ?? [];
     if (category === "전체") {
@@ -109,24 +164,22 @@ export default function MyCardHistory() {
       .reduce((sum, h) => sum + (h.usageCost || 0), 0);
   }, [data, category]);
 
-  // 예산
+  // 전체 예산
   const total = useMemo(() => {
-    const budgets = data?.budgets;
-    if (!budgets) return 0;
-
     if (category === "전체") {
-      return budgets.total ?? used;
+      const sumAll =
+        Object.values(plannedByCategory).reduce((s, v) => s + v, 0);
+      return (location.state?.total ?? 0) || sumAll;
     }
-    const catId = LABEL_TO_ID[category];
-    return budgets.byCategory?.[catId] ?? used;
-  }, [data, category, used]);
+    return plannedByCategory[category] ?? used;
+  }, [category, plannedByCategory, used, location.state?.total]);
 
   if (loading) {
     return (
       <Wrapper>
         <HistoryDetail>
           <BackRow>
-            <BackBtn url={`/mypage/card/${id}`} text="내 카드" />
+            <BackBtn url={`/mypage/trip/${id}`} text="내 여행기록" />
           </BackRow>
           <Empty>불러오는 중…</Empty>
         </HistoryDetail>
@@ -139,7 +192,7 @@ export default function MyCardHistory() {
       <Wrapper>
         <HistoryDetail>
           <BackRow>
-            <BackBtn url={`/mypage/card/${id}`} text="내 카드" />
+            <BackBtn url={`/mypage/trip/${id}`} text="내 여행기록" />
           </BackRow>
           <Empty>{err || "데이터가 없어요."}</Empty>
         </HistoryDetail>
@@ -151,16 +204,18 @@ export default function MyCardHistory() {
     <Wrapper>
       <HistoryDetail>
         <BackRow>
-          <BackBtn url={`/mypage/card/${id}`} text="내 카드" />
+          <BackBtn url={`/mypage/trip/${id}`} text="내 여행기록" />
         </BackRow>
 
         <HeaderBox>
           <TitleRow>
-            <Name>{data.cardName}</Name>
+            <Name>{card?.productName ?? data?.cardName ?? ""}</Name>
             <Divider>|</Divider>
-            <Nickname>{data.cardNickname}</Nickname>
+            <Nickname>{card?.nickname ?? data?.cardNickname ?? ""}</Nickname>
           </TitleRow>
-          {data.account && <Account>{data.account}</Account>}
+          {(card?.account ?? data?.account) && (
+            <Account>{card?.account ?? data?.account}</Account>
+          )}
         </HeaderBox>
 
         <FilterRow>

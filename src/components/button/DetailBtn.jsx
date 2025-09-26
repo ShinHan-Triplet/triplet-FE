@@ -4,11 +4,13 @@ import fontSet from "../../styles/fonts";
 import { useNavigate } from "react-router-dom";
 import rightIcon from "../../assets/icon/chevron-right-m.svg";
 
-export default function DetailBtn({ url = "", text = "", getFunction = null }) {
+export default function DetailBtn({ url = "", text = "", getFunction = null, onClick }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
-    if (url !== "") {
+    if (onClick) {
+      onClick();
+    } else if (url !== "") {
       navigate(url);
     } else if (getFunction) {
       getFunction();
@@ -22,6 +24,7 @@ export default function DetailBtn({ url = "", text = "", getFunction = null }) {
     </IconBtn>
   );
 }
+
 
 const IconBtn = styled.button`
   display: flex;

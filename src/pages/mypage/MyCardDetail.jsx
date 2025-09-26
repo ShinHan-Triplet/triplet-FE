@@ -49,7 +49,6 @@ export default function MyCardDetail() {
       try {
         setLoading(true);
         const resp = await api(`/api/mycard/${id}`);
-        console.log(resp);
         if (!mounted) return;
         setData(resp);
         setErr("");

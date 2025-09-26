@@ -55,8 +55,6 @@ export default function MyCard() {
         setLoading(true);
         const data = await api("/api/mycard");
 
-        console.log(data);
-
         if (!mounted) return;
 
         const normalized = (Array.isArray(data) ? data : []).map((c) => {
@@ -102,7 +100,7 @@ export default function MyCard() {
   const isEmpty = cards.length === 0;
 
   return (
-    <Wrapper isEmpty={isEmpty}>
+    <Wrapper $isEmpty={isEmpty}>
       {isEmpty ? (
         <Empty
           title="아직 카드가 없어요."
@@ -148,8 +146,8 @@ const Wrapper = styled.div`
   grid-auto-rows: min-content;
   row-gap: 20px;
 
-  ${({ isEmpty }) =>
-    isEmpty &&
+  ${({ $isEmpty }) =>
+    $isEmpty &&
     `
     place-content: center;
     place-items: center;

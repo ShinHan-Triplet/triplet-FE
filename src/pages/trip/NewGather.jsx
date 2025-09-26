@@ -28,7 +28,7 @@ export default function NewGather() {
 
   const gotoTripCard = () => {
     const prevUrl = location.pathname;
-    navigate("/trip/new/card", { state: { prevUrl, soloTrip } });
+    navigate("/trip/new/card", { state: { prevUrl, soloTrip, gatherName } });
   };
   const gotoHome = () => {
     navigate("/");
@@ -44,15 +44,15 @@ export default function NewGather() {
   const newGather = async () => {
     if (!selectedCard) return;
     try {
-      await ensureAccessToken();
-      await api("/api/trips/from-draft", {
+      await ensureAccessToken(window.location);
+      await api(`/api/trips/from-draft`, {
         method: "POST",
-        body: {
+        body: JSON.stringify({
           newGather: {
             name: gatherName,
             mcardId: selectedCard,
           },
-        },
+        }),
       });
       setIsModalOpen(true);
     } catch (e) {

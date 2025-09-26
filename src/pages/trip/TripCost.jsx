@@ -273,7 +273,6 @@ export default function TripCost() {
   );
 }
 
-/* styles — 기존 그대로 */
 const TotalCost = styled.div`
   ${fontSet.body1_b} width:100%;
   display: flex;

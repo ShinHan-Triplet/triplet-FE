@@ -100,6 +100,7 @@ export default function TripCard() {
   const [whyMsgs, setWhyMsgs] = useState(WHY_BY_THEME[4]);
   var prevUrl = state?.prevUrl || "/trip";
   var soloTrip = state?.soloTrip || false; // 전달받은 soloTrip 상태
+  const gatherName = state?.gatherName || "";
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -163,70 +164,6 @@ export default function TripCard() {
     })();
   }, [pathname]); // 경로 바뀌면 새로고침
 
-  // useEffect(() => {
-  //   (async () => {
-  //     try {
-  //       const params = new URLSearchParams(location.search);
-  //       const tokenFromQS = params.get("accessToken");
-  //       if (tokenFromQS) {
-  //         setAccessToken(tokenFromQS);
-  //         window.history.replaceState({}, "", location.pathname);
-  //       } else {
-  //         const newAccess = await api("/api/auth/refresh", { method: "POST" });
-  //         const token =
-  //           typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
-  //         if (!token) throw new Error("no access from refresh");
-  //         setAccessToken(token);
-  //       }
-  //       const snap = loadTripDraft();
-  //       const themeNum = migrateThemeNum(snap);
-  //       setWhyMsgs(WHY_BY_THEME[themeNum]);
-
-  //       const res = await api(`/api/card/recommandCard?themeNum=${themeNum}`, {
-  //         method: "GET",
-  //       });
-
-  //       const list = Array.isArray(res) ? res : res?.data ?? [];
-
-  //       const toUI = (c) => {
-  //         const descStr = c.cardDesc;
-  //         const desc = Array.isArray(descStr)
-  //           ? descStr
-  //           : String(descStr)
-  //               .split(/\r?\n/) // \n 또는 \r\n 모두 대응
-  //               .map((s) => s.trim()) // 앞뒤 공백 제거
-  //               .filter(Boolean); // 빈 항목 제거
-
-  //         const subBenefits = (c.benefits || []).map((sb) => ({
-  //           exp: sb.shortTitle,
-  //           num: sb.shortContent,
-  //         }));
-
-  //         const benefits = (c.benefits || []).map((b) => ({
-  //           title: b.title,
-  //           content: b.content,
-  //         }));
-
-  //         return {
-  //           id: c.cardId,
-  //           name: c.cardName,
-  //           tagline: c.cardIntro ?? "",
-  //           desc,
-  //           subBenefits,
-  //           benefits,
-  //           image: getCardCoverById(c.cardId),
-  //         };
-  //       };
-
-  //       const recommCard = list.map(toUI);
-  //       console.log(recommCard.length);
-  //       setCardList(recommCard);
-  //     } catch (e) {
-  //       setCardList([]);
-  //     }
-  //   })();
-  // }, [navigate, location]);
-
   const handleDetailClick = (card) => {
     setSelectedCard(card);
     setIsModalOpen(true);
@@ -249,7 +186,14 @@ export default function TripCard() {
   const gotoApply = (card) => {
     const prev2Url = location.pathname;
     navigate(`/card/${card.id}/apply`, {
-      state: { card: card, prev2Url, soloTrip, prevUrl },
+      state: {
+        card: card,
+        prev2Url,
+        soloTrip,
+        prevUrl,
+        checkGather: true,
+        gatherName,
+      },
     });
     sessionStorage.setItem("triplet:selectedCardId", card.id);
   };

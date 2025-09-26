@@ -34,6 +34,7 @@ export default function Gather() {
         setLoading(true);
         await ensureAccessToken();
         const res = await api("/api/gather/me", { method: "GET" });
+        console.log(res);
         if (!mounted) return;
 
         const ownerUi = (res?.ownerGathers ?? []).map((g) => ({
@@ -85,10 +86,6 @@ export default function Gather() {
   const gotoNewGather = () => {
     const prevUrl = location.pathname;
     navigate("/trip/new/gather", { state: { prevUrl, soloTrip } });
-  };
-  const gotoNewCard = () => {
-    const prevUrl = location.pathname;
-    navigate("/trip/new/card", { state: { prevUrl, soloTrip } });
   };
   const gotoHome = () => {
     navigate("/");

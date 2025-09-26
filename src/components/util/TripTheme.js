@@ -9,8 +9,25 @@ export const THEME_KO_MAP = {
   4: "기타",
 };
 
+export const THEME_KO_MAP2 = {
+  food: 1,
+  activity: 2,
+  healing: 3,
+  etc: 4,
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+};
+
 export function toThemeKo(v) {
   if (v == null) return "-";
   const key = typeof v === "string" ? v.toLowerCase() : v;
   return THEME_KO_MAP[key] ?? "-";
+}
+
+export function toThemeNum(v) {
+  if (v == null) return "-";
+  const key = typeof v === "string" ? v.toLowerCase() : v;
+  return THEME_KO_MAP2[key] ?? "-";
 }

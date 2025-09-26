@@ -10,6 +10,7 @@ import Modal from "../../components/modal/Modal";
 
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { useMemo, useState, useRef, useEffect } from "react";
+import { api, ensureAccessToken } from "../../lib/api";
 // (권장) 공용 카드 데이터가 있으면 import 해서 fallback에 활용
 // import { CARD_DATA } from "../../data/cards"; // 공용 모듈로 빼뒀다면
 
@@ -95,7 +96,13 @@ export default function NewCard() {
   const prev2Url = state?.prev2Url || "/card";
   const prevUrl = state?.prevUrl || "/trip";
   const soloTrip = state?.soloTrip || false;
+  const checkGather = state?.checkGather || false;
+  const gatherName = state?.gatherName || "";
+  console.log(gatherName);
   const [postcodeOpen, setPostcodeOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [account, setAccount] = useState("");
+  const [nickname, setNickname] = useState("");
   const [addr, setAddr] = useState({
     postcode: "",
     address: "",
@@ -109,6 +116,8 @@ export default function NewCard() {
     setAddr((a) => ({ ...a, [key]: v }));
   };
 
+  const handleAccount = (e) =>
+    setAccount(onlyDigits(e.target.value).slice(0, 20));
   const handlePostcodeComplete = (data) => {
     // 도로명/지번 분기
     const address =
@@ -350,6 +359,73 @@ export default function NewCard() {
     );
   }
 
+  const buildAddress = ({ postcode, address, detail, extra }) => {
+    const parts = [];
+    if (postcode) parts.push(`(${postcode})`);
+    if (address) parts.push(address);
+    if (extra) parts.push(extra);
+    if (detail) parts.push(detail);
+    return parts.join(" ").replace(/\s+/g, " ").trim();
+  };
+
+  const buildRRN = ({ rrn1, rrn2 }) => {
+    const parts = [];
+    if (rrn1) parts.push(rrn1);
+    if (rrn2) parts.push(rrn2);
+    return parts.join(" ").replace(/\s+/g, " ").trim();
+  };
+
+  const handleApply = async () => {
+    const fullAddress = buildAddress(addr);
+    const fullRRN = buildRRN(rrn1, rrn2);
+
+    const payload = {
+      cardId: effectiveId,
+      name: name,
+      phone: phone,
+      memberNum: fullRRN, // 서버에서 저장 X (검증용 사용 후 폐기 권장)
+      address: fullAddress,
+      account: account,
+      pw: pw1, // 서버 저장 금지(암호화/해시 사용 또는 미저장)
+      nickName: nickname,
+      checkGather: checkGather,
+    };
+
+    //모임카드인 경우
+    try {
+      await ensureAccessToken(window.location);
+      const result = await api(`/api/card/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      var newCardId;
+      if (typeof result === "number") {
+        newCardId = result;
+      } else if (typeof result === "string") {
+        const n = Number(result);
+        newCardId = Number.isFinite(n) ? n : null;
+      }
+
+      if (checkGather) {
+        await ensureAccessToken(window.location);
+        await api(`/api/trips/from-draft`, {
+          method: "POST",
+          body: JSON.stringify({
+            newGather: {
+              name: gatherName || "새 모임",
+              mcardId: newCardId,
+            },
+          }),
+        });
+      }
+      setIsModalOpen(true); // 기존 모달 사용
+    } catch (e) {
+      alert("카드 발급에 실패했어요. 잠시 후 다시 시도해주세요.");
+    }
+  };
+
   return (
     <>
       {isModalOpen && (
@@ -397,6 +473,8 @@ export default function NewCard() {
                 <InputBox
                   placeholder="이름을 입력해주세요"
                   width={520}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                 ></InputBox>
               </Detail>
 
@@ -495,6 +573,8 @@ export default function NewCard() {
                 <InputBox
                   placeholder="연결할 계좌번호를 입력해주세요"
                   width={520}
+                  value={account}
+                  onChange={handleAccount}
                 ></InputBox>
               </Detail>
             </Contents>
@@ -548,6 +628,9 @@ export default function NewCard() {
                 <InputBox
                   placeholder="카드 별명을 입력해주세요"
                   width={520}
+                  maxLength={15}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
                 ></InputBox>
               </Detail>
             </Contents>
@@ -557,7 +640,7 @@ export default function NewCard() {
         <BtnSpace>
           <LargeBtn
             label="카드 발급완료"
-            onClick={newGather}
+            onClick={handleApply}
             bgColor={colors.blue400}
             textColor={colors.white}
             width={220}

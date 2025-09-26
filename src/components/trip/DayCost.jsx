@@ -11,14 +11,19 @@ export default function DayCost({
   onTotalChange,
   snapshot,
   onSnapshotChange,
+  food = "",
+  transport = "",
+  leisure = "",
+  etc = "",
+  checkPlan = false,
 }) {
-  const [noSchedule, setNoSchedule] = useState(false);
+  const [noSchedule, setNoSchedule] = useState(checkPlan);
 
   const [amounts, setAmounts] = useState({
-    food: "",
-    transport: "",
-    leisure: "",
-    etc: "",
+    food: food,
+    transport: transport,
+    leisure: leisure,
+    etc: etc,
   });
 
   const onSnapshotChangeRef = useRef(onSnapshotChange);
@@ -214,6 +219,7 @@ const Blank = styled.div`
   ${fontSet.body2_m}
   color: ${colors.gray500};
   border: 2px dashed ${colors.gray300};
+  width: 840px;
   border-radius: 10px;
   padding: 16px;
   height: 120px;

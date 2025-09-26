@@ -49,7 +49,6 @@ export default function MyCardHistory() {
         setLoading(true);
         setErr("");
         const resp = await api(`/api/mycard/${id}/history`);
-        console.log(resp);
         if (!mounted) return;
         setData(resp);
       } catch (e) {

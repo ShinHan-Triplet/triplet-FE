@@ -88,7 +88,6 @@ export default function MyTripDetail() {
       setError("");
       try {
         const res = await api(`/api/mytrip/${id}`);
-        console.log(res);
         const payload = res?.data ?? res?.result ?? res;
         if (!alive) return;
 

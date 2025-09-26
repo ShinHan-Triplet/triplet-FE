@@ -63,7 +63,6 @@ export default function MyTripHistory({tripId}) {
       setErr("");
 
       const resp = await api(`/api/mytrip/${id}/history`);
-      console.log("API Response:", resp);
 
       if (!mounted) return;
 
@@ -201,7 +200,6 @@ export default function MyTripHistory({tripId}) {
     );
   }
 
-  console.log(location.state)
   return (
     <Wrapper>
       <HistoryDetail>

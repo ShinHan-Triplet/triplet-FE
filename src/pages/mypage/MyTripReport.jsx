@@ -58,7 +58,6 @@ export default function MyTripReport() {
       try {
         setLoading(true);
         const data = await api(`/api/mytrip/${id}`);
-        console.log(data);
         if (!active) return;
 
         setView({
@@ -112,7 +111,6 @@ export default function MyTripReport() {
       try {
         const data = await api(`/api/mytrip/${id}/usages?date=${dateStr}`);
         if (!active) return;
-        console.log(data);
         setUsageItems(data?.day?.items ?? []);
       } catch {
         setUsageItems([]);

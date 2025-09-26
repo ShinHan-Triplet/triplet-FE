@@ -36,7 +36,6 @@ export default function MyGather() {
       try {
         setLoading(true);
         const data = await api("/api/mypage/gather");
-        console.log(data);
         if (!mounted) return;
 
         const uiGroups = (Array.isArray(data) ? data : []).map((g) => ({

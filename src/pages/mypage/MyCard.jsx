@@ -55,8 +55,6 @@ export default function MyCard() {
         setLoading(true);
         const data = await api("/api/mycard");
 
-        console.log(data);
-
         if (!mounted) return;
 
         const normalized = (Array.isArray(data) ? data : []).map((c) => {

@@ -164,7 +164,7 @@ export default function MyGather() {
             modalType === 1
               ? modalAction === "delete"
                 ? "삭제 시 모임과 연결된 모든 여행 기록이 함께 삭제됩니다."
-                : "탈퇴 후에는 이 모임의 여행/기록에 더 이상 접근할 수 없습니다."
+                : "탈퇴 시 이 모임의 여행기록에 더 이상 접근할 수 없습니다."
               : "Triplet 계정이 있어야 함께할 수 있어요."
           }
           type={modalType}

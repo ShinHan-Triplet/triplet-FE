@@ -7,6 +7,7 @@ import shadows from "../../styles/shadows";
 import BackBtn from "../../components/button/BackBtn";
 import DetailBtn from "../../components/button/DetailBtn";
 import MediumBtn from "../../components/button/MediumBtn";
+import Modal from "../../components/modal/Modal";
 import { api } from "../../lib/api";
 
 import healing1 from "../../assets/img/card/square/healing1.png";
@@ -42,6 +43,9 @@ export default function MyCardDetail() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -111,8 +115,38 @@ export default function MyCardDetail() {
 
   const handleReport = () => {
     if (isWaiting) return;
-    if (isPaused) console.log("정지 해제");
-    else console.log("분실 신고");
+
+    if (isPaused) {
+      setPendingAction("resume");
+      setConfirmMsg({
+        line1: "이 카드를 정지 해제하시겠어요?",
+        line2: "정지 해제 후 바로 다시 사용할 수 있습니다.",
+      });
+    } else {
+      setPendingAction("report");
+      setConfirmMsg({
+        line1: "이 카드를 분실 신고하시겠어요?",
+        line2: "정지 신청 후 바로 사용이 제한됩니다.",
+      });
+    }
+    setConfirmOpen(true);
+  };
+
+  const doConfirm = async () => {
+    try {
+      if (pendingAction === "resume") {
+        await api(`/api/card/mycard/${data.mcardId}/resume`, { method: "PATCH" });
+        window.location.reload();
+      } else if (pendingAction === "report") {
+        await api(`/api/card/mycard/${data.mcardId}/report`, { method: "PATCH" });
+        window.location.reload();
+      }
+    } catch (e) {
+      alert("처리에 실패했어요.");
+    } finally {
+      setConfirmOpen(false);
+      setPendingAction(null);
+    }
   };
 
   return (
@@ -161,22 +195,27 @@ export default function MyCardDetail() {
             <MediumBtn
               label={reportLabel}
               onClick={isWaiting ? undefined : handleReport}
-              bgColor={colors.gray100}
+              bgColor={colors.gray200}
               textColor={isWaiting ? colors.gray400 : colors.gray800}
               width={160}
-              hoverBgColor={colors.gray200}
+              hoverBgColor={colors.gray300}
             />
           </DisableWrap>
-          <MediumBtn
-            label="카드 삭제"
-            onClick={() => console.log("카드 삭제")}
-            bgColor={colors.gray100}
-            textColor={colors.error}
-            width={160}
-            hoverBgColor={colors.gray200}
-          />
         </ActionRow>
       </CardDetail>
+
+      {confirmOpen && (
+        <Modal
+          title="확인"
+          def1={confirmMsg.line1}
+          def2={confirmMsg.line2}
+          type={1}
+          btnLabel="취소"
+          onClose={() => setConfirmOpen(false)}
+          func1={() => setConfirmOpen(false)}
+          func2={doConfirm}
+        />
+      )}
     </Wrapper>
   );
 }

@@ -7,9 +7,8 @@ import fontSet from "../../styles/fonts";
 
 import BackBtn from "../../components/button/BackBtn";
 import FilterDropdown from "../../components/mypage/FilterDropdown";
-import ProgressBar from "../../components/mypage/ProgressBar";
 import HistoryList from "../../components/mypage/HistoryList";
-import { api } from "../../lib/api";
+import { api, setAccessToken } from "../../lib/api";
 
 const CATEGORY_LABEL = {
   1: "숙박비",
@@ -21,9 +20,7 @@ const CATEGORY_LABEL = {
 };
 const CATEGORY_ORDER = ["전체", ...Object.values(CATEGORY_LABEL)];
 
-const LABEL_TO_ID = Object.fromEntries(
-  Object.entries(CATEGORY_LABEL).map(([id, label]) => [label, Number(id)])
-);
+const LABEL_TO_ID = { 숙박비:1, 보험비:2, 식비:3, 교통비:4, 여가비:5, 기타:6 };
 
 function toDateYYYYMMDD(iso) {
   if (!iso) return "";
@@ -77,6 +74,7 @@ export default function MyCardHistory() {
         date: toDateYYYYMMDD(h.costDate),
         title: h.memo || "-",
         category: label,
+        categoryId: h.category,
         type: "expense",
         amount: h.usageCost,
       };
@@ -97,29 +95,48 @@ export default function MyCardHistory() {
     return arr;
   }, [items, category, array]);
 
-  // 진행바
-  const used = useMemo(() => {
-    const src = data?.histories ?? [];
-    if (category === "전체") {
-      return src.reduce((sum, h) => sum + (h.usageCost || 0), 0);
-    }
-    const catId = LABEL_TO_ID[category];
-    return src
-      .filter((h) => h.category === catId)
-      .reduce((sum, h) => sum + (h.usageCost || 0), 0);
-  }, [data, category]);
+  const handleSave = async (usageId, { memo, categoryLabel }) => {
+    const catId = LABEL_TO_ID[categoryLabel] ?? 6;
 
-  // 예산
-  const total = useMemo(() => {
-    const budgets = data?.budgets;
-    if (!budgets) return 0;
+    try {
+      // 1차 요청: 토큰 수동 주입
+      await api(`/api/mycard/${id}/history/${usageId}`, {
+        method: "PATCH",
+        body: { memo, category: catId },
+      });
+    } catch (e) {
+      // 401이면 refresh 후 한 번 재시도
+      if ((e?.message || "").includes("401")) {
+        const r = await api("/api/auth/refresh", { method: "POST" }).catch(() => null);
+        const newToken = r && (typeof r === "string" ? r : r.accessToken);
+        if (!newToken) throw e;
 
-    if (category === "전체") {
-      return budgets.total ?? used;
+        setAccessToken(newToken); // 저장
+        await api(`/api/mycard/${id}/history/${usageId}`, {
+          method: "PATCH",
+          headers: { Authorization: `Bearer ${newToken}` },
+          body: { memo, category: catId },
+        });
+      } else {
+        throw e;
+      }
     }
-    const catId = LABEL_TO_ID[category];
-    return budgets.byCategory?.[catId] ?? used;
-  }, [data, category, used]);
+
+    // 성공 시 화면 데이터 즉시 갱신
+    setData(prev => ({
+      ...prev,
+      histories: prev.histories.map(h =>
+      h.usageId === usageId
+        ? { 
+            ...h, 
+            ...(memo !== undefined ? { memo } : {}),
+            category: catId 
+          }
+        : h
+    ),
+    }));
+  };
+
 
   if (loading) {
     return (
@@ -178,13 +195,12 @@ export default function MyCardHistory() {
           />
         </FilterRow>
 
-        <ProgressBar category={category} used={used} total={total} />
-
         <HistoryList
           items={viewItems}
           showBalance={false}
           showEdit
           onClickItem={(it) => console.log("click", it)}
+          onSave={handleSave}
         />
       </HistoryDetail>
     </Wrapper>

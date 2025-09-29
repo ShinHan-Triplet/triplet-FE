@@ -3,7 +3,6 @@ import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
 import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
-import CardList from "../../components/mypage/CardList";
 import ProgressBar from "../../components/mypage/ProgressBar";
 import FilterDropdown from "../../components/mypage/FilterDropdown";
 import Train from "../../assets/img/background/trip_history_bg.png";
@@ -146,59 +145,6 @@ export default function MyTripReport() {
           <Status>{view.status}</Status>
         </Header>
 
-        <TwoCol>
-          <Col>
-            <BoxSubtitle>사용카드</BoxSubtitle>
-            {view?.card ? (
-              <CardList
-                name={`${view.card?.cardName ?? "이름 없음"} | ${
-                  view.card?.cardNickname ?? "-"
-                }`}
-                maskedNumber={view.card?.cardNum ?? ""}
-                linkedAccount={view.card?.account ?? ""}
-                width="450px"
-                checkGather
-              />
-            ) : (
-              <div style={{ color: colors.gray600 }}>
-                연결된 카드가 없습니다.
-              </div>
-            )}
-          </Col>
-
-          <Col>
-            <BoxSubtitle>여행 정보</BoxSubtitle>
-            <InfoGrid>
-              <InfoRow>
-                <InfoLabel>기간</InfoLabel>
-                <InfoValue>{`${view.startDate} ~ ${view.endDate}`}</InfoValue>
-              </InfoRow>
-              <InfoRow>
-                <InfoLabel>테마</InfoLabel>
-                <InfoValue>
-                  <ThemeChip>{view.theme ?? "-"}</ThemeChip>
-                </InfoValue>
-              </InfoRow>
-              {view.gatherName && (
-                <InfoRow>
-                  <InfoLabel>모임명</InfoLabel>
-                  <InfoValue>{view.gatherName}</InfoValue>
-                </InfoRow>
-              )}
-              <InfoRow>
-                <InfoLabel style={{ alignSelf: "flex-start" }}>멤버</InfoLabel>
-                <Members>
-                  {(view.members ?? []).map((m, idx) => (
-                    <MemberImg key={m.memberId ?? idx}>
-                      {(m.name ?? "?")[0]}
-                    </MemberImg>
-                  ))}
-                </Members>
-              </InfoRow>
-            </InfoGrid>
-          </Col>
-        </TwoCol>
-
         <ProgressBar
           category={"전체"}
           used={budgetUsed}
@@ -269,20 +215,6 @@ const Header = styled.div`
   gap: 12px;
 `;
 
-const TwoCol = styled.div`
-  display: flex;
-  gap: 20px;
-  align-items: flex-start;
-  width: 100%;
-`;
-
-const Col = styled.div`
-  width: 450px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-`;
-
 const DropdownWrap = styled.div`
   display: flex;
   justify-content: space-between;
@@ -293,18 +225,6 @@ const DropdownWrap = styled.div`
 const BoxSubtitle = styled.div`
   ${fontSet.body2_b};
   color: ${colors.black};
-`;
-
-const InfoGrid = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-`;
-
-const InfoRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 20px;
 `;
 
 const TripTitle = styled.div`
@@ -318,49 +238,6 @@ const Status = styled.span`
   color: ${colors.gray700};
   padding: 8px 16px;
   border-radius: 5px;
-`;
-
-const InfoLabel = styled.div`
-  ${fontSet.body3_m};
-  color: ${colors.black};
-  width: 70px;
-  padding: 0 0 0 20px;
-`;
-
-const InfoValue = styled.div`
-  ${fontSet.body3_m};
-  color: ${colors.black};
-  flex: 1;
-`;
-
-const ThemeChip = styled.div`
-  display: inline-block;
-  padding: 8px 16px;
-  border-radius: 5px;
-  background: ${colors.blue50};
-  color: ${colors.black};
-  ${fontSet.body3_m};
-`;
-
-const Members = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 70px);
-  gap: 10px;
-  max-width: 340px;
-  align-items: center;
-`;
-
-const MemberImg = styled.div`
-  width: 70px;
-  height: 70px;
-  border-radius: 50%;
-  background: ${colors.yellow100};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: bold;
-  color: ${colors.gray800};
 `;
 
 const TimelineStage = styled.div`

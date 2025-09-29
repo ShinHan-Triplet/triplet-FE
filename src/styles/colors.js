@@ -35,16 +35,19 @@ const colors = {
 
   // Green scale
   green300: '#77BE45',
+  green200: '#97D865',
   green100: '#C2E9A4',
   green50:  '#EEFBE4',
 
   // Pink scale
   pink300: '#ED629D',
+  pink200: '#F08FB9',
   pink100: '#F5BBD5',
   pink50:  '#FBE4EE',
 
   // Purple scale
   purple300: '#A56AD6',
+  purple200: '#BF92E5',
   purple100: '#D9BDF0',
   purple50:  '#F1E4FB',
 };

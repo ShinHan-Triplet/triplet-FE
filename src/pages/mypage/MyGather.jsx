@@ -90,6 +90,27 @@ export default function MyGather() {
     }
   };
 
+  const handleInvite = async (email) => {
+    if (acting) return;
+    if (!selected?.id || !email) return;
+
+    try {
+      setActing(true);
+      await api("/api/gather/invites/by-email", {
+        method: "POST",
+        body: { gatherId: selected.id, email },
+      });
+      alert("초대를 보냈어요!");
+
+      setIsModalOpen(false);
+      setSelected(null);
+    } catch (e) {
+      alert(e?.body?.message || e?.response?.data || e?.message || "초대에 실패했어요.");
+    } finally {
+      setActing(false);
+    }
+  };
+
   const isEmpty = groups.length === 0;
 
   return (
@@ -122,6 +143,7 @@ export default function MyGather() {
               isOwner={g.isOwner}
               linkedCard={g.linkedCard}
               onAddMember={() => {
+                setSelected({ id: g.id, name: g.name });
                 setModalGroup(g.name);
                 setModalType(2);
                 setIsModalOpen(true);
@@ -164,7 +186,7 @@ export default function MyGather() {
             modalType === 1
               ? modalAction === "delete"
                 ? "삭제 시 모임과 연결된 모든 여행 기록이 함께 삭제됩니다."
-                : "탈퇴 후에는 이 모임의 여행/기록에 더 이상 접근할 수 없습니다."
+                : "탈퇴 시 이 모임의 여행기록에 더 이상 접근할 수 없습니다."
               : "Triplet 계정이 있어야 함께할 수 있어요."
           }
           type={modalType}
@@ -178,7 +200,13 @@ export default function MyGather() {
           }}
           
           func1={() => { }}
-          func2={() => { if (!acting) handleConfirm(); }}
+          func2={(value) => {
+            if (modalType === 1) {
+              if (!acting) handleConfirm();
+            } else {
+              if (!acting) handleInvite(value);
+            }
+          }}
         />
       )}
     </Wrapper>

@@ -18,6 +18,26 @@ const formatDate = (d) => {
 };
 const formatDateRange = (s, e) => `${formatDate(s)} ~ ${formatDate(e)}`;
 
+const CATEGORY_COLOR = {
+  "숙박비": colors.blue100,
+  "보험비": colors.blue100,
+  "식비":   colors.green100,
+  "교통비": colors.yellow100,
+  "여가비": colors.purple100,
+  "기타":   colors.pink100,
+};
+const getCategoryColor = (cat) => CATEGORY_COLOR[cat] || colors.blue400;
+
+const CATEGORY_OVER_COLOR = {
+  "숙박비": colors.blue200,
+  "보험비": colors.blue200,
+  "식비":   colors.green200,
+  "교통비": colors.yellow200,
+  "여가비": colors.purple200,
+  "기타":   colors.pink200,
+};
+const getCategoryOverColor = (cat) => CATEGORY_OVER_COLOR[cat] || getCategoryColor(cat);
+
 const mapDtoToView = (dto) => {
   if (!dto) return null;
 
@@ -260,15 +280,28 @@ export default function MyTripDetail() {
           <Col>
             <Section>
               <BoxSubtitle>여행 예산</BoxSubtitle>
-              {(view?.budget ?? []).map((b) => (
-                <BudgetRow key={b.category}>
-                  <InfoLabel>{b.category}</InfoLabel>
-                  <Bar />
-                  <BudgetAmount>
-                    {Number(b.amount || 0).toLocaleString()}원
-                  </BudgetAmount>
-                </BudgetRow>
-              ))}
+              {(view?.budget ?? []).map((b) => {
+                const planned = Number(b.amount || 0);
+                const used    = Number(b.used || 0);
+                const ratio   = planned > 0 ? used / planned : 0;
+                const clamped = Math.max(0, Math.min(ratio, 1));
+                const over    = ratio > 1;
+
+                const baseBg  = getCategoryColor(b.category);
+                const fillBg  = over ? getCategoryOverColor(b.category) : baseBg;
+
+                return (
+                  <BudgetRow key={b.category}>
+                    <InfoLabel>{b.category}</InfoLabel>
+                    <Bar>
+                      <Fill $ratio={clamped} $bg={fillBg} />
+                    </Bar>
+                    <BudgetAmount $over={over}>
+                      {planned.toLocaleString()}원
+                    </BudgetAmount>
+                  </BudgetRow>
+                );
+              })}
             </Section>
           </Col>
         </TwoCol>
@@ -405,6 +438,13 @@ const InfoLabel = styled.div`
   padding: 0 0 0 20px;
 `;
 
+const BudgetAmount = styled.div`
+  width: 80px;
+  text-align: right;
+  color: ${({ $over }) => ($over ? colors.error : colors.black)};
+  ${fontSet.detail};
+`;
+
 const InfoValue = styled.div`
   ${fontSet.body3_m};
   color: ${colors.black};
@@ -452,15 +492,18 @@ const BudgetRow = styled.div`
 const Bar = styled.div`
   flex: 1;
   height: 8px;
-  background: ${colors.gray100};
+  background: ${colors.gray200};
   border-radius: 4px;
+  position: relative;
+  overflow: hidden;
 `;
 
-const BudgetAmount = styled.div`
-  width: 80px;
-  text-align: right;
-  color: ${colors.black};
-  ${fontSet.detail};
+const Fill = styled.div`
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: ${({ $ratio }) => `${$ratio * 100}%`};
+  background: ${({ $bg }) => $bg || colors.blue400};
+  transition: width 0.35s ease;
 `;
 
 const EmptyText = styled.div`

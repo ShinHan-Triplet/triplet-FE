@@ -25,15 +25,6 @@ const LABEL_TO_ID = Object.fromEntries(
   Object.entries(CATEGORY_LABEL).map(([id, label]) => [label, Number(id)])
 );
 
-// function toDateYYYYMMDD(iso) {
-//   if (!iso) return "";
-//   const d = new Date(iso);
-//   const yyyy = d.getFullYear();
-//   const mm = String(d.getMonth() + 1).padStart(2, "0");
-//   const dd = String(d.getDate()).padStart(2, "0");
-//   return `${yyyy}-${mm}-${dd}`;
-// }
-
 function toDateMMDD(iso) {
   if (!iso) return "";
   const s = String(iso);
@@ -64,13 +55,12 @@ export default function MyTripHistory({tripId}) {
 
       const resp = await api(`/api/mytrip/${id}/history`);
 
-      if (!mounted) return;
+      const cid = card?.mcardId ?? card?.id ?? null;
 
-      // resp.day 를 배열로 감싸서 days처럼 사용
       const days = resp.day ? [resp.day] : [];
       setHistory(days);
 
-      // 평탄화해서 histories 만들어주기
+      // 평탄화해서 histories 만들어주기 (mcardId 주입)
       const histories = days.flatMap((day) =>
         (day.items || []).map((h) => {
           const iso = String(h.costDateTime || day.date);
@@ -81,6 +71,7 @@ export default function MyTripHistory({tripId}) {
             memo: h.memo,
             usageCost: h.amount,
             costDate: base,
+            mcardId: h.mcardId ?? cid,
           };
         })
       );
@@ -92,6 +83,7 @@ export default function MyTripHistory({tripId}) {
         cardNickname: resp.cardNickname ?? "",
         account: resp.account ?? "",
       });
+
     } catch (e) {
       console.error("GET /api/mytrip/:id/history failed:", e);
       if (mounted) setErr("카드 사용 내역을 불러오지 못했어요.");
@@ -111,6 +103,7 @@ export default function MyTripHistory({tripId}) {
       const label = CATEGORY_LABEL[h.category] ?? "기타";
       return {
         id: h.usageId,
+        mcardId: h.mcardId ?? card?.mcardId ?? card?.id ?? null,
         date: toDateMMDD(h.costDate),
         isoDate: h.costDate,
         title: h.memo || "-",
@@ -119,7 +112,7 @@ export default function MyTripHistory({tripId}) {
         amount: h.usageCost,
       };
     });
-  }, [data]);
+  }, [data, card]);
 
   // 드롭다운(필터/정렬)
   const viewItems = useMemo(() => {
@@ -200,6 +193,30 @@ export default function MyTripHistory({tripId}) {
     );
   }
 
+  const handleSave = async (usageId, { memo, categoryLabel, mcardId: passedMcardId }) => {
+    const usedMcardId = passedMcardId ?? card?.mcardId ?? card?.id;
+    if (!usedMcardId) { alert("카드 정보가 없어 저장할 수 없어요."); return; }
+
+    const payload = {};
+    if (categoryLabel) payload.category = LABEL_TO_ID[categoryLabel];
+    if (memo !== undefined) payload.memo = (memo ?? "").trim();
+    if (Object.keys(payload).length === 0) return;
+
+    await api(`/api/mycard/${usedMcardId}/history/${usageId}`, {
+      method: "PATCH",
+      body: payload,
+    });
+
+    setData(prev => ({
+      ...prev,
+      histories: (prev?.histories ?? []).map(h =>
+        h.usageId === usageId
+          ? { ...h, category: payload.category ?? h.category, memo: payload.memo ?? h.memo }
+          : h
+      ),
+    }));
+  };
+
   return (
     <Wrapper>
       <HistoryDetail>
@@ -240,6 +257,7 @@ export default function MyTripHistory({tripId}) {
           showBalance={false}
           showEdit
           onClickItem={(it) => console.log("click", it)}
+          onSave={handleSave}
         />
       </HistoryDetail>
     </Wrapper>

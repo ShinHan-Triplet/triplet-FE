@@ -9,26 +9,16 @@ import Empty from "./MyEmpty";
 import MediumBtn from "../../components/button/MediumBtn";
 import { api } from "../../lib/api";
 
-import trip_cover_test from "../../assets/img/trip/trip_cover_test.png";
-import trip_cover1 from "../../assets/img/trip/trip_cover1.png";
-import trip_cover2 from "../../assets/img/trip/trip_cover2.png";
-import trip_cover3 from "../../assets/img/trip/trip_cover3.png";
-import trip_cover4 from "../../assets/img/trip/trip_cover4.png";
-import trip_cover5 from "../../assets/img/trip/trip_cover5.png";
-import trip_cover6 from "../../assets/img/trip/trip_cover6.png";
+const S3_BASE_URL = "https://triplet-bucket.s3.ap-northeast-2.amazonaws.com";
 
-const COVER_BY_NAME = {
-  trip_cover_test,
-  trip_cover1,
-  trip_cover2,
-  trip_cover3,
-  trip_cover4,
-  trip_cover5,
-  trip_cover6,
-};
+function toThumb(src) {
+  // 값이 없으면 TripList에서 기본 이미지 처리
+  if (!src) return "";
 
-function getCoverByFilename(name) {
-  return COVER_BY_NAME[name] ?? trip_cover_test;
+  // 상대/파일명이면 S3 베이스와 합쳐서 출력
+  const base = S3_BASE_URL.replace(/\/+$/, "");
+  const path = String(src).replace(/^\/+/, "");
+  return `${base}/${path}`;
 }
 
 function fmtDate(iso) {
@@ -65,7 +55,7 @@ export default function MyTrip() {
             ? t.members.map((m) => m.name).join(", ")
             : "",
           dateRange: `${fmtDate(t.startDate)} ~ ${fmtDate(t.endDate)}`,
-          thumbnail: getCoverByFilename(t.thumbnail || t.tripImg),
+          thumbnail: toThumb(t.thumbnail || t.tripImg),
         }));
 
         setTrips(normalized);

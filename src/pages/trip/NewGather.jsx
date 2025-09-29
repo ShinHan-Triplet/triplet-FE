@@ -176,18 +176,26 @@ export default function NewGather() {
                 <BlueTitle>모임 카드 선택</BlueTitle>
               </PageTitle>
               <GatherList>
-                {cardList.map((card) => (
-                  <MyCard
-                    key={card.id}
-                    selected={selectedCard === card.id}
-                    onClick={() => handleSelectCard(card.id)}
-                  >
-                    <GatherTitle>{card.title}</GatherTitle>
-                    <GatherCard>
-                      <BgImg src={card.cardImg} alt="" />
-                    </GatherCard>
-                  </MyCard>
-                ))}
+                <>
+                  {cardList.length === 0 ? (
+                    <EmptyNotice>
+                      카드가 없어요. 새 카드를 만들어주세요.
+                    </EmptyNotice>
+                  ) : (
+                    cardList.map((card) => (
+                      <MyCard
+                        key={card.id}
+                        selected={selectedCard === card.id}
+                        onClick={() => handleSelectCard(card.id)}
+                      >
+                        <GatherTitle>{card.title}</GatherTitle>
+                        <GatherCard>
+                          <BgImg src={card.cardImg} alt="" />
+                        </GatherCard>
+                      </MyCard>
+                    ))
+                  )}
+                </>
               </GatherList>
             </Contents>
           </Fill>
@@ -214,6 +222,13 @@ export default function NewGather() {
     </>
   );
 }
+const EmptyNotice = styled.div`
+  ${fontSet.body2_m};
+  color: ${colors.gray600};
+  text-align: center;
+  padding: 40px 0;
+  grid-column: 1 / -1;
+`;
 
 const TextContainer = styled.div`
   display: flex;

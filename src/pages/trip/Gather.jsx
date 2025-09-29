@@ -179,7 +179,11 @@ export default function Gather() {
               </PageTitle>
               <GatherList>
                 {soloTrip ? (
-                  <>
+                  soloGathering.length === 0 ? (
+                    <EmptyNotice>
+                      나만의 모임이 없어요. 새 모임을 만들어주세요.
+                    </EmptyNotice>
+                  ) : (
                     <SoloGatherList>
                       {soloGathering.map((gathering) => (
                         <GatheringCard
@@ -205,7 +209,11 @@ export default function Gather() {
                         </GatheringCard>
                       ))}
                     </SoloGatherList>
-                  </>
+                  )
+                ) : gatherings.length === 0 ? (
+                  <EmptyNotice>
+                    모임이 없어요. 새 모임을 만들어주세요.
+                  </EmptyNotice>
                 ) : (
                   <>
                     {gatherings.map((gathering) => (
@@ -240,6 +248,9 @@ export default function Gather() {
       </Container>
       {soloTrip ? (
         <>
+          {soloGathering.length > 0 && (
+            <Describe>기존 모임을 선택할 경우 인원 추가가 불가해요</Describe>
+          )}
           <BtnSpaceSolo>
             <LargeBtn
               label="지난 모임 그대로"
@@ -262,7 +273,9 @@ export default function Gather() {
         </>
       ) : (
         <>
-          <Describe>기존 모임을 선택할 경우 인원 추가가 불가해요</Describe>
+          {gatherings.length > 0 && (
+            <Describe>기존 모임을 선택할 경우 인원 추가가 불가해요</Describe>
+          )}
           <BtnSpace>
             <LargeBtn
               label="지난 모임 그대로"
@@ -286,13 +299,13 @@ export default function Gather() {
     </>
   );
 }
-
-const SoloCardList = styled.div`
-  display: grid;
-  width: 880px;
-  gap: 20px;
-  grid-template-columns: repeat(2, 1fr);
+const EmptyNotice = styled.div`
+  ${fontSet.body2_m};
+  color: ${colors.gray600};
+  text-align: center;
+  padding: 40px 0;
 `;
+
 const SoloGatherList = styled.div`
   display: flex;
   flex-direction: column;
@@ -463,7 +476,7 @@ const BtnSpaceSolo = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 100px;
+  margin-top: 40px;
   gap: 40px;
 `;
 

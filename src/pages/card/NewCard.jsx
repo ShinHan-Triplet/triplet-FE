@@ -116,6 +116,38 @@ export default function NewCard() {
     setAddr((a) => ({ ...a, [key]: v }));
   };
 
+  const digits = (s) => (s || "").replace(/\D/g, "");
+
+  function validateForm() {
+    const missing = [];
+
+    if (!name.trim()) missing.push("이름");
+
+    const phoneDigits = digits(phone);
+    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+      missing.push("휴대폰번호(10~11자리)");
+    }
+
+    if (rrn1.length !== 6 || rrn2.length !== 7) {
+      missing.push("주민등록번호(앞 6자리·뒤 7자리)");
+    }
+
+    if (!addr.postcode.trim()) missing.push("우편번호");
+    if (!addr.address.trim()) missing.push("주소");
+
+    if (digits(account).length < 1) missing.push("계좌번호");
+
+    if (pw1.length !== 4) missing.push("카드 비밀번호(4자리)");
+    if (pw2.length !== 4) missing.push("카드 비밀번호 확인(4자리)");
+    if (pw1 && pw2 && pw1 !== pw2) {
+      missing.push("비밀번호가 서로 일치하도록 다시 입력");
+    }
+
+    if (!nickname.trim()) missing.push("카드 별명");
+
+    return missing;
+  }
+
   const handleAccount = (e) =>
     setAccount(onlyDigits(e.target.value).slice(0, 20));
   const handlePostcodeComplete = (data) => {
@@ -205,37 +237,17 @@ export default function NewCard() {
     setIsModalOpen(true);
   };
 
-  // 1) 라우터 state로 온 카드(가장 우선)
   const cardFromState = location.state?.card;
 
-  // 2) 세션스토리지에 저장해둔 id (새로고침/딥링크 대비)
   const idFromStorage = sessionStorage.getItem("triplet:selectedCardId");
 
-  // 3) 최종적으로 사용할 id
   const effectiveId = cardFromState?.id ?? idFromParam ?? idFromStorage ?? null;
 
-  // 4) 카드 객체 복원
   const card = useMemo(() => {
-    if (cardFromState) return cardFromState; // 가장 빠름
+    if (cardFromState) return cardFromState;
     if (!effectiveId) return null;
-
-    // (A) 프론트에 CARD_DATA가 있으면 여기서 찾아도 됨
-    // return CARD_DATA.find(c => c.id === effectiveId) ?? null;
-
-    // (B) 서버에서 불러오는 구조라면 fetch 사용(예시)
-    // 이 경우엔 useEffect로 비동기 호출하면 돼요.
     return null;
   }, [cardFromState, effectiveId]);
-
-  // (B) 서버 호출 예시 (원한다면)
-  // useEffect(() => {
-  //   if (!card && effectiveId) {
-  //     fetch(`/api/cards/${effectiveId}`)
-  //       .then(res => res.json())
-  //       .then(data => setCard(data))
-  //       .catch(() => {/* 에러 처리 */});
-  //   }
-  // }, [card, effectiveId]);
 
   if (!effectiveId) {
     return (
@@ -376,8 +388,13 @@ export default function NewCard() {
   };
 
   const handleApply = async () => {
+    const missing = validateForm();
+    if (missing.length) {
+      alert(`${missing.join(", ")}를(을) 작성해주세요.`);
+      return;
+    }
     const fullAddress = buildAddress(addr);
-    const fullRRN = buildRRN(rrn1, rrn2);
+    const fullRRN = buildRRN({ rrn1, rrn2 });
 
     const payload = {
       cardId: effectiveId,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
@@ -6,6 +6,15 @@ import close from "../../assets/icon/close.svg";
 import MediumBtn from "../button/MediumBtn";
 import InputBox from "../input/InputBox";
 import FilterDropdown from "../mypage/FilterDropdown";
+
+const ID_TO_LABEL = Object.freeze({
+  1: "숙박비",
+  2: "보험비",
+  3: "식비",
+  4: "교통비",
+  5: "여가비",
+  6: "기타",
+});
 
 export default function Modal({
   title = "",
@@ -21,7 +30,19 @@ export default function Modal({
 }) {
   const [closing, setClosing] = useState(false);
   const handleClose = () => setClosing(true);
-  const [category, setCategory] = useState("전체");
+  const [category, setCategory] = useState("");
+  const [inputValue, setInputValue] = useState("");
+  const [memo, setMemo] = useState("");
+
+  useEffect(() => {
+    if (type !== 3) return;
+    const initial =
+      typeof categoryId === "string"
+        ? categoryId
+        : ID_TO_LABEL[Number(categoryId)] || "기타";
+    setCategory(initial);
+    setMemo(text ?? "");
+  }, [type, categoryId, text]);
 
   return (
     <ModalBg data-state={closing ? "closing" : "open"}>
@@ -72,7 +93,12 @@ export default function Modal({
           )}
           {type === 2 && (
             <>
-              <InputBox placeholder="이메일을 입력해주세요" width={480} />
+              <InputBox
+                placeholder="이메일을 입력해주세요"
+                width={480}
+                value={inputValue}
+                onChange={(v) => setInputValue(v?.target ? v.target.value : v)}
+              />
               <ModalBtnList>
                 <MediumBtn
                   label="취소"
@@ -80,8 +106,16 @@ export default function Modal({
                   bgColor={colors.gray200}
                   textColor={colors.black}
                   hoverBgColor={colors.gray300}
+                  onClick={handleClose}
                 />
-                <MediumBtn label="확인" width={120} />
+                <MediumBtn
+                  label="확인"
+                  width={120}
+                  onClick={() => {
+                    func2(inputValue);
+                    handleClose();
+                  }}
+                />
               </ModalBtnList>
             </>
           )}
@@ -92,16 +126,9 @@ export default function Modal({
                   label="카테고리"
                   value={category}
                   onChange={setCategory}
-                  options={[
-                    "식비",
-                    "교통비",
-                    "여가비",
-                    "숙박비",
-                    "보험비",
-                    "입출금",
-                  ]}
+                  options={["숙박비", "보험비", "식비", "교통비", "여가비", "기타"]}
                 />
-                <InputBox placeholder={text} width={358} />
+                <InputBox placeholder={text} width={358} value={memo} onChange={(e) => setMemo(e?.target ? e.target.value : e)}/>
               </Contain>
               <ModalBtnList>
                 <MediumBtn
@@ -110,8 +137,20 @@ export default function Modal({
                   bgColor={colors.gray200}
                   textColor={colors.black}
                   hoverBgColor={colors.gray300}
+                  onClick={handleClose}
                 />
-                <MediumBtn label="확인" width={120} />
+                <MediumBtn 
+                  label="확인"
+                  width={120}
+                  onClick={() => {
+                    const nextMemo = (memo ?? "").trim();
+                    func2({
+                      memo: nextMemo === (text ?? "") ? undefined : nextMemo,
+                      categoryLabel: category,
+                    });
+                    handleClose();
+                  }}
+                />
               </ModalBtnList>
             </>
           )}

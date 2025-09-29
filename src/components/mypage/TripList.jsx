@@ -6,27 +6,32 @@ import SmallBtn from "../button/SmallBtn";
 
 import gather from "../../assets/icon/gather.svg";
 import calendar from "../../assets/icon/calendar-blue.svg"
+import defaultThumb from "../../assets/img/trip/trip_cover.png";
 
 export default function TripList({
-  thumbnail,
+  thumbnail = defaultThumb,
   title,
   members,
   dateRange,
   onDetail,
 }) {
+  const handleImgError = (e) => {
+    const img = e.currentTarget;
+
+    if (img.src.includes(encodeURI(defaultThumb))) return;
+    img.onerror = null; // 무한 에러 방지
+    img.src = defaultThumb; // 에러 시 기본 이미지
+  };
   return (
     <TripWrap>
       <TripImg>
         <img
-          src={thumbnail}
+          src={thumbnail || defaultThumb}
           alt={`${title} 썸네일`}
-          onError={(e) => {
-            e.currentTarget.src =
-              "data:image/svg+xml;utf8," +
-              encodeURIComponent(
-                `<svg xmlns='http://www.w3.org/2000/svg' width='210' height='260'><rect width='100%' height='100%' fill='#EEEEEE'/></svg>`
-              );
-          }}
+          onError={handleImgError}
+          loading="lazy"
+          decoding="async"
+          referrerPolicy="no-referrer"
         />
       </TripImg>
 

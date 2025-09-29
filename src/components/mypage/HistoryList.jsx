@@ -25,18 +25,19 @@ const toMD = (dateStr) => {
 export default function HistoryList({
   items = [],
   onClickItem,
+  onSave,
   showBalance = true,
   showEdit = false,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalText, setModalText] = useState("");
+  const [editing, setEditing] = useState(null);
 
   const handleItemClick = (it) => {
-    setModalText(it.title);
+    setEditing(it); 
     setIsModalOpen(true);
     onClickItem?.(it);
   };
-  const closeModal = () => setIsModalOpen(false);
+  const closeModal = () => { setIsModalOpen(false); setEditing(null); };
 
   return (
     <>
@@ -51,14 +52,19 @@ export default function HistoryList({
           />
         ))}
       </List>
-      {isModalOpen && (
+      {isModalOpen && editing && (
         <Modal
           title="내역 수정하기"
           def1="알아보기 쉽게 내역을 수정하고"
           def2="원하는 기준으로 카테고리를 분류하세요."
           type={3}
-          text={modalText}
+          text={editing.title}
+          categoryId={editing.categoryId ?? editing.category ?? 6}
           onClose={closeModal}
+          func2={async ({ memo, categoryLabel }) => {
+            await onSave?.(editing.id, { memo, categoryLabel, mcardId: editing.mcardId });
+            closeModal();
+          }}
         />
       )}
     </>
@@ -84,6 +90,7 @@ function HistoryItem({ item, onClick, showBalance, showEdit }) {
               aria-label="내역 수정"
               onClick={(e) => {
                 e.stopPropagation();
+                onClick?.();
               }}
               title="수정"
             >

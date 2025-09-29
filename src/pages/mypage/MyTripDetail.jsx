@@ -5,6 +5,7 @@ import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
 import MediumBtn from "../../components/button/MediumBtn";
 import CardList from "../../components/mypage/CardList";
+import Modal from "../../components/modal/Modal";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import { api } from "../../lib/api";
@@ -84,6 +85,18 @@ export default function MyTripDetail() {
   const [loading, setLoading] = useState(true);
   const [raw, setRaw] = useState(null);
   const [error, setError] = useState("");
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const handleConfirmDelete = async () => {
+    try {
+      await api(`/api/mytrip/${view.id}`, { method: "DELETE" });
+      navigate("/mypage?tab=trip");
+    } catch (e) {
+      console.error("DELETE /api/mytrip failed", e);
+      const msg = e?.response?.data?.message || "삭제에 실패했어요.";
+      alert(msg);
+    }
+  };
 
   // 레포트 노출 여부 계산 (여행 종료 3일 이후)
   const isReportAvailable = useMemo(() => {
@@ -313,7 +326,7 @@ export default function MyTripDetail() {
             textColor={colors.error}
             width={160}
             hoverBgColor={colors.gray200}
-            onClick={() => {}}
+            onClick={() => setIsDeleteOpen(true)}
           />
           {isReportAvailable ? (
             <MediumBtn
@@ -335,6 +348,18 @@ export default function MyTripDetail() {
             />
           )}
         </BtnRow>
+        {isDeleteOpen && (
+          <Modal
+            title="여행을 삭제할까요?"
+            def1="삭제하면 되돌릴 수 없어요."
+            def2="정말 삭제하시겠어요?"
+            type={1}
+            btnLabel="취소"
+            onClose={() => setIsDeleteOpen(false)}
+            func1={() => setIsDeleteOpen(false)}
+            func2={handleConfirmDelete}
+        />
+        )}
       </TripDetail>
     </Wrapper>
   );

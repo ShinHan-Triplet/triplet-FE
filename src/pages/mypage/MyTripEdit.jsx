@@ -3,20 +3,17 @@ import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
 import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
-// import MediumBtn from "../../components/button/MediumBtn";
-// import CardList from "../../components/mypage/CardList";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useEffect, useState, useRef, useMemo } from "react";
-import { api } from "../../lib/api";
+import { api, ensureAccessToken } from "../../lib/api";
 import InputBox from "../../components/input/InputBox";
-// import { toThemeKo } from "../../components/util/TripTheme";
 import LargeBtn from "../../components/button/LargeBtn";
 import MediumBtn from "../../components/button/MediumBtn";
 import ThemeBtn from "../../components/button/ThemeBtn";
 import { DateRangePicker } from "../../components/trip/DateRange";
 import CategoryChip from "../../components/chip/CategoryChip";
 import DayCost from "../../components/trip/DayCost";
-import { toThemeKo, toThemeNum } from "../../components/util/TripTheme";
+import { toThemeKo, toThemeNumKor } from "../../components/util/TripTheme";
 
 const mapDtoToView = (dto) => {
   if (!dto) return null;
@@ -70,14 +67,7 @@ export default function MyTripEdit() {
     return n(amounts.stay) + n(amounts.insurance);
   }, [amounts]);
 
-  //   const [daysCount, setDaysCount] = useState(() => {
-  //       if (state?.days) return state.days;
-  //       const s = state?.startMs ? new Date(state.startMs) : null;
-  //       const e = state?.endMs ? new Date(state.endMs) : null;
-  //       return s && e ? diffDaysInclusive(s, e) : 0;
-  //     });
-
-  // 달력 부분 (날짜 계산산)
+  // 달력 부분 (날짜 계산)
   const toStartOfDay = (d) =>
     new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const diffDaysInclusive = (s, e) => {
@@ -97,6 +87,14 @@ export default function MyTripEdit() {
     const d = new Date(v);
     return isNaN(d) ? null : d;
   };
+
+  function toYMD(date) {
+    if (!date) return null;
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
 
   const [range, setRange] = useState({
     start: null,
@@ -203,7 +201,114 @@ export default function MyTripEdit() {
     };
   }, [id]);
 
-  const nextPage = () => {};
+  async function changeCover(tripId, file) {
+    await ensureAccessToken(window.location);
+    const meta = await api(`/api/mytrip/${tripId}/cover`, {
+      method: "POST",
+      body: JSON.stringify({ filename: file.name, contentType: file.type }),
+    });
+    return meta;
+  }
+
+  async function changeTrip() {
+    try {
+      await ensureAccessToken(window.location);
+      let coverKey = null;
+      console.log("1");
+
+      if (fileObj) {
+        // 1) presign 받기
+        console.log("2");
+        const { objectKey, uploadUrl } = await changeCover(id, fileObj);
+        console.log("3");
+        // 2) S3에 직접 업로드 (최종 경로)
+        const putRes = await fetch(uploadUrl, {
+          method: "PUT",
+          body: fileObj,
+        });
+        if (!putRes.ok) throw new Error("S3 upload failed");
+
+        coverKey = objectKey;
+      }
+      console.log("4");
+
+      // 3) PATCH로 DB 업데이트
+      await api(`/api/mytrip/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          title,
+          theme: toThemeNumKor(theme),
+          startDate: toYMD(range.start),
+          endDate: toYMD(range.end),
+          coverKey,
+          budgets: [
+            { category: "stay", amount: Number(amounts.stay || 0) },
+            { category: "insurance", amount: Number(amounts.insurance || 0) },
+          ],
+          costPlans: cost,
+        }),
+      });
+
+      alert("수정 완료!");
+      setFileObj(null);
+      setPreviewUrl("");
+    } catch (e) {
+      console.error(e);
+      alert("수정 실패");
+    }
+  }
+
+  const upsertDayCost = (day, patch) =>
+    setCost((prev) => {
+      const idx = day - 1;
+      const cur = prev[idx] ?? {
+        day,
+        food: 0,
+        transport: 0,
+        leisure: 0,
+        etc: 0,
+        checkPlan: false,
+      };
+      const next = { ...cur, ...patch };
+      const arr = [...prev];
+      arr[idx] = next;
+      return arr;
+    });
+
+  const toSnapshot = (item = {}) => ({
+    noSchedule: !item.checkPlan,
+    amounts: {
+      food: String(item.food ?? ""),
+      transport: String(item.transport ?? ""),
+      leisure: String(item.leisure ?? ""),
+      etc: String(item.etc ?? ""),
+    },
+  });
+
+  // DayCost snapshot -> cost item 반영
+  const applySnapshot = (day, snap) =>
+    setCost((prev) => {
+      const idx = day - 1;
+      const cur = prev[idx] ?? {
+        day,
+        food: 0,
+        transport: 0,
+        leisure: 0,
+        etc: 0,
+        checkPlan: false,
+      };
+      const next = {
+        ...cur,
+        checkPlan: !snap.noSchedule,
+        food: toNum(snap.amounts?.food),
+        transport: toNum(snap.amounts?.transport),
+        leisure: toNum(snap.amounts?.leisure),
+        etc: toNum(snap.amounts?.etc),
+      };
+      const arr = [...prev];
+      arr[idx] = next;
+      return arr;
+    });
 
   return (
     <Wrapper>
@@ -232,7 +337,10 @@ export default function MyTripEdit() {
                       key={t}
                       label={t}
                       selected={theme === t}
-                      onClick={() => setTheme(t)}
+                      onClick={() => {
+                        setTheme(t);
+                        console.log(theme);
+                      }}
                       width={160}
                       textColor={colors.black}
                     />
@@ -250,7 +358,6 @@ export default function MyTripEdit() {
                   <DetailTitle>여행 대표사진</DetailTitle>
                   <Photo>
                     <InputBox
-                      // placeholder={view?.thumbnail}
                       width={520}
                       value={fileName ?? ""}
                       readOnly
@@ -320,8 +427,10 @@ export default function MyTripEdit() {
                       transport={item.transport ?? 0}
                       leisure={item.leisure ?? 0}
                       etc={item.etc ?? 0}
-                      checkPlan={item.checkPlan}
+                      checkPlan={!item.checkPlan}
                       onTotalChange={handleTotalChange(day)}
+                      snapshot={toSnapshot(item)}
+                      onSnapshotChange={(snap) => applySnapshot(day, snap)}
                     />
                   );
                 })}
@@ -333,7 +442,7 @@ export default function MyTripEdit() {
           <BtnSpace>
             <LargeBtn
               label="수정하기"
-              onClick={nextPage}
+              onClick={changeTrip}
               bgColor={colors.blue400}
               textColor={colors.white}
               width={220}

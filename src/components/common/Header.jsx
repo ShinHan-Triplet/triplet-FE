@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { useAuth } from "../../auth/AuthProvider";
+import { api, setAccessToken } from "../../lib/api";
 
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
@@ -13,33 +14,10 @@ import userIcon from "../../assets/icon/user.svg";
 import bellIcon from "../../assets/icon/bell.svg";
 import bellNewIcon from "../../assets/icon/bell-new.svg";
 
-const MOCK_GATHERS = [
-  { gather_id: 5001, gather_name: "제주여행" },
-  { gather_id: 5002, gather_name: "입짧은주원과 식도락" },
-];
-
-const MOCK_GATHER_INVITES = [
-  {
-    invite_id: 90001,
-    invited_id: 101,
-    gather_id: 5001,
-    status: 1,
-    created_at: "2025-09-10T09:12:00Z",
-  },
-  {
-    invite_id: 90002,
-    invited_id: 101,
-    gather_id: 5002,
-    status: 1,
-    created_at: "2025-09-10T09:13:00Z",
-  },
-];
-
 export default function Header({ onTabChange }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -68,14 +46,25 @@ export default function Header({ onTabChange }) {
     }
   };
 
-  const handleDropdownSelect = (key) => {
-    if (key === "mypage") {
-      navigate("/mypage");
-    } else if (key === "logout") {
-      setIsLoggedIn(false);
+  const handleDropdownSelect = async (key) => {
+  if (key === "mypage") {
+    setDropdownOpen(false);
+    navigate("/mypage");
+    return;
+  }
+
+  if (key === "logout") {
+    try {
+      await api("/api/auth/logout", { method: "POST" }).catch(() => {});
+    } finally {
+      setAccessToken(null);
       setNotifications([]);
+      setDropdownOpen(false);
+      setBellOpen(false);
+      window.location.assign("/");
     }
-  };
+  }
+};
 
   const gotoLogin = () => {
     navigate("/login");
@@ -96,38 +85,61 @@ export default function Header({ onTabChange }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [dropdownOpen, bellOpen]);
 
-  // MOCK: 로그인 시 더미 알림 데이터 로드
+  // 알림 불러오기
+  const fetchInvites = async () => {
+    try {
+      const res = await api("/api/gather/invites/me");
+      const list = (Array.isArray(res) ? res : []).map((it) => ({
+        invite_id: it.inviteId,
+        gather_id: it.gatherId,
+        gather_name: it.gatherName,
+        status: it.status,
+      }));
+      setNotifications(list);
+    } catch (e) {
+      console.error("GET /api/gather/invites/me failed", e);
+    }
+  };
+
+  // 로그인 상태 변화 시 알림 데이터 최신화
   useEffect(() => {
-    if (!isLoggedIn) return;
-    const myId = 3; // 초대받은 사용자 id
-    const invitesForMe = MOCK_GATHER_INVITES.filter(
-      (it) => it.invited_id === myId
-    ).map((it) => ({
-      ...it,
-      gather_name: MOCK_GATHERS.find((g) => g.gather_id === it.gather_id)
-        .gather_name,
-    }));
-    setNotifications(invitesForMe);
-  }, [isLoggedIn]);
+    if (!isAuthed) {
+      setNotifications([]);
+      return;
+    }
+    fetchInvites();
+  }, [isAuthed]);
+
+  // 벨 아이콘 누르면 알림 데이터 최신화
+  const toggleBell = () => {
+    const next = !bellOpen;
+    setBellOpen(next);
+    if (next) fetchInvites();
+  };
+
+  // 초대 수락/거절
+  const approve = async (n) => {
+    try {
+      await api(`/api/gather/invites/${n.invite_id}/accept`, { method: "PATCH" });
+      setNotifications((prev) =>
+        prev.map((it) => (it.invite_id === n.invite_id ? { ...it, status: 2 } : it))
+      );
+    } catch (e) {
+      console.error("accept invite failed", e);
+      alert(e?.body?.message || "수락에 실패했어요.");
+    }
+  };
+  const reject = async (n) => {
+    try {
+      await api(`/api/gather/invites/${n.invite_id}/reject`, { method: "PATCH" });
+      setNotifications((prev) => prev.filter((it) => it.invite_id !== n.invite_id));
+    } catch (e) {
+      console.error("reject invite failed", e);
+      alert(e?.body?.message || "거절에 실패했어요.");
+    }
+  };
 
   const isWaiting = notifications.some((n) => n.status === 1);
-
-  const approve = (n) => {
-    setNotifications((prev) =>
-      prev.map((it) =>
-        it.invite_id === n.invite_id ? { ...it, status: 2 } : it
-      )
-    );
-    // 서버 연결:  PATCH /api/gather-invites/{id} { status:2 } + gathers_mapping insert
-  };
-  const reject = (n) => {
-    setNotifications((prev) =>
-      prev.map((it) =>
-        it.invite_id === n.invite_id ? { ...it, status: 3 } : it
-      )
-    );
-    // 서버 연결:  PATCH /api/gather-invites/{id} { status:3 }
-  };
 
   return (
     <HeaderWrap>
@@ -182,7 +194,7 @@ export default function Header({ onTabChange }) {
 
               <IconWrap ref={(el) => (iconRefs.current.bell = el)}>
                 <IconBtn
-                  onClick={() => setBellOpen((v) => !v)}
+                  onClick={toggleBell}
                   aria-haspopup="menu"
                   aria-expanded={bellOpen}
                   aria-label={isWaiting ? "새 알림 있음" : "알림"}
@@ -201,7 +213,6 @@ export default function Header({ onTabChange }) {
             </IconGroup>
           )}
         </Actions>
-
       </Inner>
     </HeaderWrap>
   );

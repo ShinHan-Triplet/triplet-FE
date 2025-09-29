@@ -90,6 +90,27 @@ export default function MyGather() {
     }
   };
 
+  const handleInvite = async (email) => {
+    if (acting) return;
+    if (!selected?.id || !email) return;
+
+    try {
+      setActing(true);
+      await api("/api/gather/invites/by-email", {
+        method: "POST",
+        body: { gatherId: selected.id, email },
+      });
+      alert("초대를 보냈어요!");
+
+      setIsModalOpen(false);
+      setSelected(null);
+    } catch (e) {
+      alert(e?.body?.message || e?.response?.data || e?.message || "초대에 실패했어요.");
+    } finally {
+      setActing(false);
+    }
+  };
+
   const isEmpty = groups.length === 0;
 
   return (
@@ -122,6 +143,7 @@ export default function MyGather() {
               isOwner={g.isOwner}
               linkedCard={g.linkedCard}
               onAddMember={() => {
+                setSelected({ id: g.id, name: g.name });
                 setModalGroup(g.name);
                 setModalType(2);
                 setIsModalOpen(true);
@@ -178,7 +200,13 @@ export default function MyGather() {
           }}
           
           func1={() => { }}
-          func2={() => { if (!acting) handleConfirm(); }}
+          func2={(value) => {
+            if (modalType === 1) {
+              if (!acting) handleConfirm();
+            } else {
+              if (!acting) handleInvite(value);
+            }
+          }}
         />
       )}
     </Wrapper>

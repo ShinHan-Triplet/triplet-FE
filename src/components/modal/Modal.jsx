@@ -22,6 +22,7 @@ export default function Modal({
   const [closing, setClosing] = useState(false);
   const handleClose = () => setClosing(true);
   const [category, setCategory] = useState("전체");
+  const [inputValue, setInputValue] = useState("");
 
   return (
     <ModalBg data-state={closing ? "closing" : "open"}>
@@ -72,7 +73,12 @@ export default function Modal({
           )}
           {type === 2 && (
             <>
-              <InputBox placeholder="이메일을 입력해주세요" width={480} />
+              <InputBox
+                placeholder="이메일을 입력해주세요"
+                width={480}
+                value={inputValue}
+                onChange={(v) => setInputValue(v?.target ? v.target.value : v)}
+              />
               <ModalBtnList>
                 <MediumBtn
                   label="취소"
@@ -80,8 +86,16 @@ export default function Modal({
                   bgColor={colors.gray200}
                   textColor={colors.black}
                   hoverBgColor={colors.gray300}
+                  onClick={handleClose}
                 />
-                <MediumBtn label="확인" width={120} />
+                <MediumBtn
+                  label="확인"
+                  width={120}
+                  onClick={() => {
+                    func2(inputValue);
+                    handleClose();
+                  }}
+                />
               </ModalBtnList>
             </>
           )}

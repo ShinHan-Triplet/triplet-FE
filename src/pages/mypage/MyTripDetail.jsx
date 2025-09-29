@@ -331,7 +331,7 @@ export default function MyTripDetail() {
               textColor={colors.white}
               width={160}
               hoverBgColor={colors.blue500}
-              onClick={() => {}}
+              onClick={() => navigate(`/mypage/trip/${view?.id}/edit`)}
             />
           )}
         </BtnRow>

@@ -143,6 +143,37 @@ export default function TripCost() {
     return daySum + stayPlusInsurance;
   }, [dayTotals, stayPlusInsurance]);
 
+  const toInt0 = (v) => {
+    const digits = String(v ?? "").replace(/\D/g, "");
+    const n = digits === "" ? 0 : Number(digits);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const normalizeBudgets = (daysCount, amounts, daySnapshots) => {
+    // stay/insurance를 숫자 0 기본값으로
+    const norm = {
+      stay: toInt0(amounts.stay),
+      insurance: toInt0(amounts.insurance),
+      days: {},
+    };
+
+    // 1..daysCount까지 모두 채워 저장 (없던 날도 0으로 생성)
+    for (let day = 1; day <= Math.max(0, daysCount); day++) {
+      const snap = daySnapshots[day] || {};
+      const a = snap.amounts || {};
+      norm.days[day] = {
+        noSchedule: !!snap.noSchedule,
+        amounts: {
+          food: toInt0(a.food),
+          transport: toInt0(a.transport),
+          leisure: toInt0(a.leisure),
+          etc: toInt0(a.etc),
+        },
+      };
+    }
+    return norm;
+  };
+
   // 3) 자동 저장(디바운스 600ms) → Redis draft.budgets 에 저장
   useEffect(() => {
     if (!authReady || !hydrated) return;
@@ -164,7 +195,7 @@ export default function TripCost() {
           !!d.noSchedule || !!(a.food || a.transport || a.leisure || a.etc)
         );
       });
-
+      const normalized = normalizeBudgets(daysCount, amounts, daySnapshots);
       // 데이터가 있으면 budgets 통째로 패치
       if (hasTop || hasDays) {
         await patchDraft({
@@ -175,9 +206,8 @@ export default function TripCost() {
           },
         });
       } else {
-        // 비어 있으면 budgets 제거 시도(서버 upsertMerge에서 null 제거 처리 권장)
         try {
-          await patchDraft({ budgets: null });
+          await patchDraft({ budgets: normalized });
         } catch {
           /* 서버가 null 제거를 지원하지 않으면 그냥 스킵 */
         }
@@ -185,7 +215,7 @@ export default function TripCost() {
     }, 600);
 
     return () => clearTimeout(saveTimer.current);
-  }, [authReady, hydrated, amounts, daySnapshots]);
+  }, [authReady, hydrated, amounts, daySnapshots, daysCount]);
 
   const nextPage = () => navigate("/trip/new/companions");
 

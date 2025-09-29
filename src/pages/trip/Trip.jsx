@@ -2,7 +2,7 @@ import styled, { css } from "styled-components";
 import colors from "../../styles/colors";
 import fontSet from "../../styles/fonts";
 import LargeBtn from "../../components/button/LargeBtn";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { loadTripDraft, clearTripDraft } from "./TripDraftSession";
 import { useEffect, useRef, useState } from "react";
 import scrollUpIcon from "../../assets/icon/scroll-up.svg";
@@ -27,6 +27,7 @@ import food from "../../assets/img/card/food.png";
 import activity from "../../assets/img/card/activity.png";
 import healing from "../../assets/img/card/healing.png";
 import etc from "../../assets/img/card/etc.png";
+import { getAccessToken } from "../../lib/api";
 
 const THEMES = [
   { name: "식도락", num: 0 },
@@ -40,6 +41,7 @@ export default function Trip() {
   const [imgIndex, setImgIndex] = useState(0);
   const [theme, setTheme] = useState(0);
   const [front, setFront] = useState("gather");
+  const location = useLocation();
 
   const handleScrollTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -119,6 +121,12 @@ export default function Trip() {
   };
 
   const goNext = () => {
+    const token = getAccessToken();
+    if (!token) {
+      alert("로그인 후 이용 가능합니다.");
+      navigate("/login", { replace: true, state: { from: location.pathname } });
+      return;
+    }
     const draft = loadTripDraft();
 
     if (!draft || (!hasDetails(draft) && !hasCost(draft))) {

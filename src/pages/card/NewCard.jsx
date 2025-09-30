@@ -9,7 +9,7 @@ import DaumPostcode from "react-daum-postcode";
 import Modal from "../../components/modal/Modal";
 
 import { useLocation, useParams, useNavigate } from "react-router-dom";
-import { useMemo, useState, useRef, useEffect } from "react";
+import React, { useMemo, useState, useRef, useEffect } from "react";
 import { api, ensureAccessToken } from "../../lib/api";
 // (권장) 공용 카드 데이터가 있으면 import 해서 fallback에 활용
 // import { CARD_DATA } from "../../data/cards"; // 공용 모듈로 빼뒀다면
@@ -88,6 +88,86 @@ const CardImg = styled.img`
   }
 `;
 
+const CardPreview = React.memo(function CardPreview({ src, alt = "" }) {
+  // const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
+  const wrapRef = useRef(null);
+  const rectRef = useRef(null);
+  const rafRef = useRef(null);
+  const [hovered, setHovered] = useState(false);
+
+  const setVars = (rx, ry) => {
+    const el = wrapRef.current;
+    if (!el) return;
+    el.style.setProperty("--rx", rx + "deg");
+    el.style.setProperty("--ry", ry + "deg");
+  };
+
+  const measure = () => {
+    if (wrapRef.current)
+      rectRef.current = wrapRef.current.getBoundingClientRect();
+  };
+
+  const reset = () => {
+    setVars(0, 0);
+    rectRef.current = null;
+    setHovered(false);
+  };
+
+  const onEnter = () => {
+    measure();
+    setHovered(true);
+  };
+
+  const onMove = (e) => {
+    if (!rectRef.current) measure();
+    const r = rectRef.current;
+    const px = (e.clientX - r.left) / r.width; // 0~1
+    const py = (e.clientY - r.top) / r.height; // 0~1
+
+    const max = 10; // 최대 기울기 각도
+    const ry = (px - 0.5) * (max * 2); // 좌우 회전
+    const rx = -(py - 0.5) * (max * 2); // 상하 회전
+
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(() => {
+        setVars(rx, ry);
+        rafRef.current = 0;
+      });
+    }
+  };
+
+  useEffect(() => {
+    const onResize = reset;
+    const onScroll = reset;
+    const onVisibility = () => document.hidden && reset();
+
+    window.addEventListener("resize", onResize);
+    window.addEventListener("scroll", onScroll, true);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      window.removeEventListener("scroll", onScroll, true);
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
+
+  return (
+    <CardImgWrap
+      ref={wrapRef}
+      onMouseMove={onMove}
+      onMouseEnter={onEnter}
+      onMouseLeave={reset}
+      data-hovered={hovered || undefined}
+      onMouseOut={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) reset();
+      }}
+    >
+      <CardImg src={src} alt={alt} />
+    </CardImgWrap>
+  );
+});
+
 export default function NewCard() {
   const location = useLocation();
   const { id: idFromParam } = useParams(); // /card/:id/apply 의 :id
@@ -98,7 +178,6 @@ export default function NewCard() {
   const soloTrip = state?.soloTrip || false;
   const checkGather = state?.checkGather || false;
   const gatherName = state?.gatherName || "";
-  console.log(gatherName);
   const [postcodeOpen, setPostcodeOpen] = useState(false);
   const [name, setName] = useState("");
   const [account, setAccount] = useState("");
@@ -263,86 +342,6 @@ export default function NewCard() {
   if (!card) {
     // CARD_DATA를 안 쓰고 서버 호출을 기다릴 때 보여줄 로딩 상태
     return <div style={{ padding: 24 }}>카드 정보를 불러오는 중...</div>;
-  }
-
-  function CardPreview({ src, alt = "" }) {
-    // const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
-    const wrapRef = useRef(null);
-    const rectRef = useRef(null);
-    const rafRef = useRef(null);
-    const [hovered, setHovered] = useState(false);
-
-    const setVars = (rx, ry) => {
-      const el = wrapRef.current;
-      if (!el) return;
-      el.style.setProperty("--rx", rx + "deg");
-      el.style.setProperty("--ry", ry + "deg");
-    };
-
-    const measure = () => {
-      if (wrapRef.current)
-        rectRef.current = wrapRef.current.getBoundingClientRect();
-    };
-
-    const reset = () => {
-      setVars(0, 0);
-      rectRef.current = null;
-      setHovered(false);
-    };
-
-    const onEnter = () => {
-      measure();
-      setHovered(true);
-    };
-
-    const onMove = (e) => {
-      if (!rectRef.current) measure();
-      const r = rectRef.current;
-      const px = (e.clientX - r.left) / r.width; // 0~1
-      const py = (e.clientY - r.top) / r.height; // 0~1
-
-      const max = 10; // 최대 기울기 각도
-      const ry = (px - 0.5) * (max * 2); // 좌우 회전
-      const rx = -(py - 0.5) * (max * 2); // 상하 회전
-
-      if (!rafRef.current) {
-        rafRef.current = requestAnimationFrame(() => {
-          setVars(rx, ry);
-          rafRef.current = 0;
-        });
-      }
-    };
-
-    useEffect(() => {
-      const onResize = reset;
-      const onScroll = reset;
-      const onVisibility = () => document.hidden && reset();
-
-      window.addEventListener("resize", onResize);
-      window.addEventListener("scroll", onScroll, true);
-      document.addEventListener("visibilitychange", onVisibility);
-      return () => {
-        window.removeEventListener("resize", onResize);
-        window.removeEventListener("scroll", onScroll, true);
-        document.removeEventListener("visibilitychange", onVisibility);
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      };
-    }, []);
-
-    return (
-      <CardImgWrap
-        ref={wrapRef}
-        onMouseMove={onMove}
-        onMouseEnter={onEnter}
-        onMouseLeave={reset}
-        data-hovered={hovered || undefined}
-        onMouseOut={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget)) reset();
-        }}
-      >
-        <CardImg src={src} alt={alt} />
-      </CardImgWrap>
-    );
   }
 
   function PostcodeModal({ onClose, onComplete }) {

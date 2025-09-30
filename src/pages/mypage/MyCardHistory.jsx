@@ -20,7 +20,14 @@ const CATEGORY_LABEL = {
 };
 const CATEGORY_ORDER = ["전체", ...Object.values(CATEGORY_LABEL)];
 
-const LABEL_TO_ID = { 숙박비:1, 보험비:2, 식비:3, 교통비:4, 여가비:5, 기타:6 };
+const LABEL_TO_ID = {
+  숙박비: 1,
+  보험비: 2,
+  식비: 3,
+  교통비: 4,
+  여가비: 5,
+  기타: 6,
+};
 
 function toDateYYYYMMDD(iso) {
   if (!iso) return "";
@@ -107,7 +114,9 @@ export default function MyCardHistory() {
     } catch (e) {
       // 401이면 refresh 후 한 번 재시도
       if ((e?.message || "").includes("401")) {
-        const r = await api("/api/auth/refresh", { method: "POST" }).catch(() => null);
+        const r = await api("/api/auth/refresh", { method: "POST" }).catch(
+          () => null
+        );
         const newToken = r && (typeof r === "string" ? r : r.accessToken);
         if (!newToken) throw e;
 
@@ -123,20 +132,19 @@ export default function MyCardHistory() {
     }
 
     // 성공 시 화면 데이터 즉시 갱신
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      histories: prev.histories.map(h =>
-      h.usageId === usageId
-        ? { 
-            ...h, 
-            ...(memo !== undefined ? { memo } : {}),
-            category: catId 
-          }
-        : h
-    ),
+      histories: prev.histories.map((h) =>
+        h.usageId === usageId
+          ? {
+              ...h,
+              ...(memo !== undefined ? { memo } : {}),
+              category: catId,
+            }
+          : h
+      ),
     }));
   };
-
 
   if (loading) {
     return (

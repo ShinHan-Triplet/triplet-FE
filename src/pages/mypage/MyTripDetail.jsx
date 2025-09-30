@@ -8,7 +8,7 @@ import CardList from "../../components/mypage/CardList";
 import Modal from "../../components/modal/Modal";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
-import { api } from "../../lib/api";
+import { api, getAuthState } from "../../lib/api";
 import { toThemeKo } from "../../components/util/TripTheme";
 
 const pad2 = (n) => String(n).padStart(2, "0");
@@ -20,30 +20,37 @@ const formatDate = (d) => {
 const formatDateRange = (s, e) => `${formatDate(s)} ~ ${formatDate(e)}`;
 
 const CATEGORY_COLOR = {
-  "숙박비": colors.blue100,
-  "보험비": colors.blue100,
-  "식비":   colors.green100,
-  "교통비": colors.yellow100,
-  "여가비": colors.purple100,
-  "기타":   colors.pink100,
+  숙박비: colors.blue100,
+  보험비: colors.blue100,
+  식비: colors.green100,
+  교통비: colors.yellow100,
+  여가비: colors.purple100,
+  기타: colors.pink100,
 };
 const getCategoryColor = (cat) => CATEGORY_COLOR[cat] || colors.blue400;
 
 const CATEGORY_OVER_COLOR = {
-  "숙박비": colors.blue200,
-  "보험비": colors.blue200,
-  "식비":   colors.green200,
-  "교통비": colors.yellow200,
-  "여가비": colors.purple200,
-  "기타":   colors.pink200,
+  숙박비: colors.blue200,
+  보험비: colors.blue200,
+  식비: colors.green200,
+  교통비: colors.yellow200,
+  여가비: colors.purple200,
+  기타: colors.pink200,
 };
-const getCategoryOverColor = (cat) => CATEGORY_OVER_COLOR[cat] || getCategoryColor(cat);
+const getCategoryOverColor = (cat) =>
+  CATEGORY_OVER_COLOR[cat] || getCategoryColor(cat);
 
 const mapDtoToView = (dto) => {
   if (!dto) return null;
 
   const start = dto.startDate;
   const end = dto.endDate;
+
+  let ownerId = null;
+  if (Array.isArray(dto.members)) {
+    const owner = dto.members.find((m) => m.checkOwner === true);
+    ownerId = owner ? owner.memberId : null;
+  }
 
   return {
     id: dto.tripId,
@@ -52,6 +59,7 @@ const mapDtoToView = (dto) => {
     members: Array.isArray(dto.members)
       ? dto.members.map((m) => m?.name ?? m?.memberName ?? "?")
       : [],
+    ownerId: ownerId,
     dateRange: formatDateRange(start, end),
     status: dto.status ?? "",
     card: dto.card
@@ -86,6 +94,7 @@ export default function MyTripDetail() {
   const [raw, setRaw] = useState(null);
   const [error, setError] = useState("");
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   const handleConfirmDelete = async () => {
     try {
@@ -127,6 +136,7 @@ export default function MyTripDetail() {
         const mapped = mapDtoToView(payload);
         if (mapped) {
           setView(mapped);
+          console.log(mapped);
         } else {
           setView(null);
           setRaw(payload);
@@ -151,6 +161,19 @@ export default function MyTripDetail() {
       alive = false;
     };
   }, [id]);
+
+  useEffect(() => {
+    (async () => {
+      const res = await getAuthState();
+      console.log("내 로그인 정보:", res.user.id);
+      setUserId(res.user.id);
+    })();
+  }, []);
+
+  const isOwner = useMemo(() => {
+    if (!view?.ownerId || !userId) return false;
+    return view.ownerId === userId;
+  }, [view?.ownerId, userId]);
 
   if (loading) {
     return (
@@ -241,13 +264,13 @@ export default function MyTripDetail() {
                   linkedAccount={view.card?.account}
                   width="450px"
                   checkGather={!!view.card?.checkGather}
-                  hasTrip = {true}
+                  hasTrip={true}
                   onHistory={() =>
                     navigate(`/mypage/trip/${view.id}/history`, {
                       state: {
                         card: view.card,
                         budgets: view.budget,
-                        total: view.total
+                        total: view.total,
                       },
                     })
                   }
@@ -295,13 +318,13 @@ export default function MyTripDetail() {
               <BoxSubtitle>여행 예산</BoxSubtitle>
               {(view?.budget ?? []).map((b) => {
                 const planned = Number(b.amount || 0);
-                const used    = Number(b.used || 0);
-                const ratio   = planned > 0 ? used / planned : 0;
+                const used = Number(b.used || 0);
+                const ratio = planned > 0 ? used / planned : 0;
                 const clamped = Math.max(0, Math.min(ratio, 1));
-                const over    = ratio > 1;
+                const over = ratio > 1;
 
-                const baseBg  = getCategoryColor(b.category);
-                const fillBg  = over ? getCategoryOverColor(b.category) : baseBg;
+                const baseBg = getCategoryColor(b.category);
+                const fillBg = over ? getCategoryOverColor(b.category) : baseBg;
 
                 return (
                   <BudgetRow key={b.category}>
@@ -320,31 +343,52 @@ export default function MyTripDetail() {
         </TwoCol>
 
         <BtnRow>
-          <MediumBtn
-            label="삭제"
-            bgColor={colors.gray100}
-            textColor={colors.error}
-            width={160}
-            hoverBgColor={colors.gray200}
-            onClick={() => setIsDeleteOpen(true)}
-          />
-          {isReportAvailable ? (
+          {isOwner ? (
+            // 방장인 경우
+            <>
+              <MediumBtn
+                label="삭제"
+                bgColor={colors.gray100}
+                textColor={colors.error}
+                width={160}
+                hoverBgColor={colors.gray200}
+                onClick={() => setIsDeleteOpen(true)}
+              />
+              {isReportAvailable ? (
+                <MediumBtn
+                  label="레포트 보기"
+                  bgColor={colors.blue400}
+                  textColor={colors.white}
+                  width={160}
+                  hoverBgColor={colors.blue500}
+                  onClick={() => navigate(`/mypage/trip/${view?.id}/report`)}
+                />
+              ) : (
+                <MediumBtn
+                  label="수정"
+                  bgColor={colors.blue400}
+                  textColor={colors.white}
+                  width={160}
+                  hoverBgColor={colors.blue500}
+                  onClick={() => navigate(`/mypage/trip/${view?.id}/edit`)}
+                />
+              )}
+            </>
+          ) : (
+            // 모임원인 경우
             <MediumBtn
               label="레포트 보기"
               bgColor={colors.blue400}
               textColor={colors.white}
               width={160}
               hoverBgColor={colors.blue500}
-              onClick={() => navigate(`/mypage/trip/${view?.id}/report`)}
-            />
-          ) : (
-            <MediumBtn
-              label="수정"
-              bgColor={colors.blue400}
-              textColor={colors.white}
-              width={160}
-              hoverBgColor={colors.blue500}
-              onClick={() => navigate(`/mypage/trip/${view?.id}/edit`)}
+              onClick={() => {
+                if (isReportAvailable) {
+                  navigate(`/mypage/trip/${view?.id}/report`);
+                } else {
+                  alert("레포트가 아직 생성되지 않았습니다.");
+                }
+              }}
             />
           )}
         </BtnRow>
@@ -358,7 +402,7 @@ export default function MyTripDetail() {
             onClose={() => setIsDeleteOpen(false)}
             func1={() => setIsDeleteOpen(false)}
             func2={handleConfirmDelete}
-        />
+          />
         )}
       </TripDetail>
     </Wrapper>

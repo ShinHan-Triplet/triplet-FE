@@ -43,6 +43,7 @@ export default function MyTrip() {
       try {
         setLoading(true);
         const res = await api("/api/mytrip");
+        console.log(res);
         const list = Array.isArray(res?.trips) ? res.trips : [];
 
         if (!mounted) return;

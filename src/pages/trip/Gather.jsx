@@ -34,7 +34,6 @@ export default function Gather() {
         setLoading(true);
         await ensureAccessToken();
         const res = await api("/api/gather/me", { method: "GET" });
-        console.log(res);
         if (!mounted) return;
 
         const ownerUi = (res?.ownerGathers ?? []).map((g) => ({

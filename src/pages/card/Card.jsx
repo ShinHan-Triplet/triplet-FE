@@ -9,6 +9,7 @@ import left from "./../../assets/icon/chevron-left.svg";
 import right from "./../../assets/icon/chevron-right.svg";
 import { api, setAccessToken } from "../../lib/api";
 import { getCardCoverById } from "../../assets/cardCoverBasic";
+import { getAccessToken } from "../../lib/api";
 
 const shine = keyframes`
   from { transform: translateX(-120%) skewX(-20deg); }
@@ -28,20 +29,10 @@ export default function Card() {
   useEffect(() => {
     (async () => {
       try {
-        const params = new URLSearchParams(location.search);
-        const tokenFromQS = params.get("accessToken");
-        if (tokenFromQS) {
-          setAccessToken(tokenFromQS);
-          window.history.replaceState({}, "", location.pathname);
-        } else {
-          const newAccess = await api("/api/auth/refresh", { method: "POST" });
-          const token =
-            typeof newAccess === "string" ? newAccess : newAccess?.accessToken;
-          if (!token) throw new Error("no access from refresh");
-          setAccessToken(token);
-        }
-
-        const res = await api(`/api/card/list`, { method: "GET" });
+        const res = await api(`/api/card/list`, {
+          method: "GET",
+          auth: "optional",
+        });
         const toUI = (c) => {
           const descStr = c.cardDesc;
           const desc = Array.isArray(descStr)
@@ -121,6 +112,12 @@ export default function Card() {
   }, []);
 
   const gotoApply = () => {
+    const token = getAccessToken();
+    if (!token) {
+      alert("로그인 후 이용 가능합니다.");
+      navigate("/login", { replace: true, state: { from: location.pathname } });
+      return;
+    }
     const prev2Url = location.pathname;
     navigate(`/card/${current.id}/apply`, {
       state: { card: current, prev2Url, checkGather: false },

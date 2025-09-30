@@ -33,7 +33,7 @@ function toDateMMDD(iso) {
   return `${mm}.${dd}`;
 }
 
-export default function MyTripHistory({tripId}) {
+export default function MyTripHistory({ tripId }) {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -47,54 +47,53 @@ export default function MyTripHistory({tripId}) {
   const totalFromDetail = location.state?.total;
 
   useEffect(() => {
-  let mounted = true;
-  (async () => {
-    try {
-      setLoading(true);
-      setErr("");
+    let mounted = true;
+    (async () => {
+      try {
+        setLoading(true);
+        setErr("");
 
-      const resp = await api(`/api/mytrip/${id}/history`);
+        const resp = await api(`/api/mytrip/${id}/history`);
 
-      const cid = card?.mcardId ?? card?.id ?? null;
+        const cid = card?.mcardId ?? card?.id ?? null;
 
-      const days = resp.day ? [resp.day] : [];
-      setHistory(days);
+        const days = resp.day ? [resp.day] : [];
+        setHistory(days);
 
-      // 평탄화해서 histories 만들어주기 (mcardId 주입)
-      const histories = days.flatMap((day) =>
-        (day.items || []).map((h) => {
-          const iso = String(h.costDateTime || day.date);
-          const base = iso.includes("T") ? iso.split("T")[0] : iso;
-          return {
-            usageId: h.usageId,
-            category: h.categoryId,
-            memo: h.memo,
-            usageCost: h.amount,
-            costDate: base,
-            mcardId: h.mcardId ?? cid,
-          };
-        })
-      );
-      setData({
-        histories,
-        budgets: resp.budgets ?? null,
-        total: totalFromDetail ?? 0,
-        cardName: resp.cardName ?? "",
-        cardNickname: resp.cardNickname ?? "",
-        account: resp.account ?? "",
-      });
-
-    } catch (e) {
-      console.error("GET /api/mytrip/:id/history failed:", e);
-      if (mounted) setErr("카드 사용 내역을 불러오지 못했어요.");
-    } finally {
-      if (mounted) setLoading(false);
-    }
-  })();
-  return () => {
-    mounted = false;
-  };
-}, [id]);
+        // 평탄화해서 histories 만들어주기 (mcardId 주입)
+        const histories = days.flatMap((day) =>
+          (day.items || []).map((h) => {
+            const iso = String(h.costDateTime || day.date);
+            const base = iso.includes("T") ? iso.split("T")[0] : iso;
+            return {
+              usageId: h.usageId,
+              category: h.categoryId,
+              memo: h.memo,
+              usageCost: h.amount,
+              costDate: base,
+              mcardId: h.mcardId ?? cid,
+            };
+          })
+        );
+        setData({
+          histories,
+          budgets: resp.budgets ?? null,
+          total: totalFromDetail ?? 0,
+          cardName: resp.cardName ?? "",
+          cardNickname: resp.cardNickname ?? "",
+          account: resp.account ?? "",
+        });
+      } catch (e) {
+        console.error("GET /api/mytrip/:id/history failed:", e);
+        if (mounted) setErr("카드 사용 내역을 불러오지 못했어요.");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [id]);
 
   // 히스토리 원본 → HistoryList용 아이템으로 변환
   const items = useMemo(() => {
@@ -122,13 +121,17 @@ export default function MyTripHistory({tripId}) {
     }
     return [...arr].sort((a, b) => {
       if (array === "오래된 순") {
-        return a.isoDate < b.isoDate ? -1
-            : a.isoDate > b.isoDate ?  1
-            : a.id - b.id;
+        return a.isoDate < b.isoDate
+          ? -1
+          : a.isoDate > b.isoDate
+          ? 1
+          : a.id - b.id;
       }
-      return a.isoDate > b.isoDate ? -1
-          : a.isoDate < b.isoDate ?  1
-          : b.id - a.id;
+      return a.isoDate > b.isoDate
+        ? -1
+        : a.isoDate < b.isoDate
+        ? 1
+        : b.id - a.id;
     });
   }, [items, category, array]);
 
@@ -160,8 +163,10 @@ export default function MyTripHistory({tripId}) {
   // 전체 예산
   const total = useMemo(() => {
     if (category === "전체") {
-      const sumAll =
-        Object.values(plannedByCategory).reduce((s, v) => s + v, 0);
+      const sumAll = Object.values(plannedByCategory).reduce(
+        (s, v) => s + v,
+        0
+      );
       return (location.state?.total ?? 0) || sumAll;
     }
     return plannedByCategory[category] ?? used;
@@ -193,9 +198,15 @@ export default function MyTripHistory({tripId}) {
     );
   }
 
-  const handleSave = async (usageId, { memo, categoryLabel, mcardId: passedMcardId }) => {
+  const handleSave = async (
+    usageId,
+    { memo, categoryLabel, mcardId: passedMcardId }
+  ) => {
     const usedMcardId = passedMcardId ?? card?.mcardId ?? card?.id;
-    if (!usedMcardId) { alert("카드 정보가 없어 저장할 수 없어요."); return; }
+    if (!usedMcardId) {
+      alert("카드 정보가 없어 저장할 수 없어요.");
+      return;
+    }
 
     const payload = {};
     if (categoryLabel) payload.category = LABEL_TO_ID[categoryLabel];
@@ -207,11 +218,15 @@ export default function MyTripHistory({tripId}) {
       body: payload,
     });
 
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
-      histories: (prev?.histories ?? []).map(h =>
+      histories: (prev?.histories ?? []).map((h) =>
         h.usageId === usageId
-          ? { ...h, category: payload.category ?? h.category, memo: payload.memo ?? h.memo }
+          ? {
+              ...h,
+              category: payload.category ?? h.category,
+              memo: payload.memo ?? h.memo,
+            }
           : h
       ),
     }));

@@ -3,7 +3,7 @@ import colors from "../../styles/colors";
 import shadows from "../../styles/shadows";
 import fontSet from "../../styles/fonts";
 import BackBtn from "../../components/button/BackBtn";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef, useMemo } from "react";
 import { api, ensureAccessToken } from "../../lib/api";
 import InputBox from "../../components/input/InputBox";
@@ -45,11 +45,11 @@ export default function MyTripEdit() {
   const [theme, setTheme] = useState("");
   const [fileName, setFileName] = useState("");
   const [dayTotals, setDayTotals] = useState({});
-  //   const [range, setRange] = useState({ start: view?.start, end: view?.end });
   const [amounts, setAmounts] = useState({ stay: "", insurance: "" });
   const [cost, setCost] = useState([]);
   const [fileObj, setFileObj] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
+  const navigate = useNavigate();
 
   const toDigits = (s) => String(s ?? "").replace(/\D/g, "");
   const formatDigits = (digits) =>
@@ -173,9 +173,7 @@ export default function MyTripEdit() {
       try {
         const res = await api(`/api/mytrip/${id}`);
         const costPlan = await api(`/api/mytrip/${id}/budgets`);
-        console.log(costPlan);
         const payload = res?.data ?? res?.result ?? res;
-        console.log(res);
         if (!alive) return;
 
         const mapped = mapDtoToView(payload);
@@ -214,13 +212,10 @@ export default function MyTripEdit() {
     try {
       await ensureAccessToken(window.location);
       let coverKey = null;
-      console.log("1");
 
       if (fileObj) {
         // 1) presign 받기
-        console.log("2");
         const { objectKey, uploadUrl } = await changeCover(id, fileObj);
-        console.log("3");
         // 2) S3에 직접 업로드 (최종 경로)
         const putRes = await fetch(uploadUrl, {
           method: "PUT",
@@ -230,7 +225,6 @@ export default function MyTripEdit() {
 
         coverKey = objectKey;
       }
-      console.log("4");
 
       // 3) PATCH로 DB 업데이트
       await api(`/api/mytrip/${id}`, {
@@ -250,30 +244,12 @@ export default function MyTripEdit() {
       });
 
       alert("수정 완료!");
-      setFileObj(null);
-      setPreviewUrl("");
+      navigate(`/mypage/trip/${id}`, { replace: true });
+      return;
     } catch (e) {
-      console.error(e);
       alert("수정 실패");
     }
   }
-
-  const upsertDayCost = (day, patch) =>
-    setCost((prev) => {
-      const idx = day - 1;
-      const cur = prev[idx] ?? {
-        day,
-        food: 0,
-        transport: 0,
-        leisure: 0,
-        etc: 0,
-        checkPlan: false,
-      };
-      const next = { ...cur, ...patch };
-      const arr = [...prev];
-      arr[idx] = next;
-      return arr;
-    });
 
   const toSnapshot = (item = {}) => ({
     noSchedule: !item.checkPlan,
@@ -339,7 +315,6 @@ export default function MyTripEdit() {
                       selected={theme === t}
                       onClick={() => {
                         setTheme(t);
-                        console.log(theme);
                       }}
                       width={160}
                       textColor={colors.black}

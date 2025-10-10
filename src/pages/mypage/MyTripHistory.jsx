@@ -271,7 +271,7 @@ export default function MyTripHistory({ tripId }) {
           items={viewItems}
           showBalance={false}
           showEdit
-          onClickItem={(it) => console.log("click", it)}
+          onClickItem={() => {}}
           onSave={handleSave}
         />
       </HistoryDetail>

@@ -33,7 +33,7 @@ export default function Login() {
         type="button"
         aria-label="네이버로 로그인"
         onClick={() => {
-          window.location.href = `http://localhost:${portNum}/oauth2/authorization/naver`;
+          window.location.href = `https://triplet.shinhanacademy.co.kr:8080/oauth2/authorization/naver`;
         }}
       />
     </BgWrap>

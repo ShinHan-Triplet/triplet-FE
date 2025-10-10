@@ -33,24 +33,33 @@ export default function HistoryList({
   const [editing, setEditing] = useState(null);
 
   const handleItemClick = (it) => {
-    setEditing(it); 
+    setEditing(it);
     setIsModalOpen(true);
     onClickItem?.(it);
   };
-  const closeModal = () => { setIsModalOpen(false); setEditing(null); };
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditing(null);
+  };
 
   return (
     <>
       <List role="list">
-        {items.map((it) => (
-          <HistoryItem
-            key={it.id}
-            item={it}
-            onClick={() => handleItemClick(it)}
-            showBalance={showBalance}
-            showEdit={showEdit}
-          />
-        ))}
+        {items.length === 0 ? (
+          <EmptyRow role="listitem">
+            <EmptyText>카드 사용 내역이 없어요.</EmptyText>
+          </EmptyRow>
+        ) : (
+          items.map((it) => (
+            <HistoryItem
+              key={it.id}
+              item={it}
+              onClick={() => handleItemClick(it)}
+              showBalance={showBalance}
+              showEdit={showEdit}
+            />
+          ))
+        )}
       </List>
       {isModalOpen && editing && (
         <Modal
@@ -62,7 +71,11 @@ export default function HistoryList({
           categoryId={editing.categoryId ?? editing.category ?? 6}
           onClose={closeModal}
           func2={async ({ memo, categoryLabel }) => {
-            await onSave?.(editing.id, { memo, categoryLabel, mcardId: editing.mcardId });
+            await onSave?.(editing.id, {
+              memo,
+              categoryLabel,
+              mcardId: editing.mcardId,
+            });
             closeModal();
           }}
         />
@@ -111,6 +124,22 @@ function HistoryItem({ item, onClick, showBalance, showEdit }) {
     </Row>
   );
 }
+
+const EmptyRow = styled.li`
+  padding: 40px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: transparent;
+  }
+`;
+
+const EmptyText = styled.div`
+  ${fontSet.body3_m};
+  color: ${colors.gray500};
+`;
 
 const List = styled.ul`
   margin: 0;
@@ -173,6 +202,7 @@ const EditBtn = styled.button`
   border-radius: 6px;
   display: grid;
   place-items: center;
+  cursor: pointer;
   color: ${colors.gray600};
 
   opacity: 0;

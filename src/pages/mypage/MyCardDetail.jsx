@@ -135,10 +135,14 @@ export default function MyCardDetail() {
   const doConfirm = async () => {
     try {
       if (pendingAction === "resume") {
-        await api(`/api/card/mycard/${data.mcardId}/resume`, { method: "PATCH" });
+        await api(`/api/card/mycard/${data.mcardId}/resume`, {
+          method: "PATCH",
+        });
         window.location.reload();
       } else if (pendingAction === "report") {
-        await api(`/api/card/mycard/${data.mcardId}/report`, { method: "PATCH" });
+        await api(`/api/card/mycard/${data.mcardId}/report`, {
+          method: "PATCH",
+        });
         window.location.reload();
       }
     } catch (e) {
@@ -152,7 +156,9 @@ export default function MyCardDetail() {
   return (
     <Wrapper>
       <CardDetail>
-        <BackBtn url="/mypage?tab=card" text="내 카드 목록" />
+        <BackRow>
+          <BackBtn url="/mypage?tab=card" text="내 카드 목록" />
+        </BackRow>
 
         <DetailGrid>
           <CardImg>
@@ -167,10 +173,12 @@ export default function MyCardDetail() {
                 <Nickname>{data.nickname}</Nickname>
               </TitleWrap>
             </HeaderRow>
-            <DetailBtn
-              url={`/mypage/card/${data.mcardId}/history`}
-              text="카드내역 보기"
-            />
+            <BackRow>
+              <DetailBtn
+                url={`/mypage/card/${data.mcardId}/history`}
+                text="카드내역 보기"
+              />
+            </BackRow>
 
             <DetailRow>
               <Section>
@@ -219,6 +227,10 @@ export default function MyCardDetail() {
     </Wrapper>
   );
 }
+
+const BackRow = styled.div`
+  align-self: flex-start;
+`;
 
 const Wrapper = styled.div`
   background: ${colors.gray100};

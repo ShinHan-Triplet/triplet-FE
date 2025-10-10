@@ -136,7 +136,6 @@ export default function MyTripDetail() {
         const mapped = mapDtoToView(payload);
         if (mapped) {
           setView(mapped);
-          console.log(mapped);
         } else {
           setView(null);
           setRaw(payload);
@@ -165,7 +164,6 @@ export default function MyTripDetail() {
   useEffect(() => {
     (async () => {
       const res = await getAuthState();
-      console.log("내 로그인 정보:", res.user.id);
       setUserId(res.user.id);
     })();
   }, []);
@@ -179,7 +177,9 @@ export default function MyTripDetail() {
     return (
       <Wrapper>
         <TripDetail>
-          <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+          <BackRow>
+            <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+          </BackRow>
           <Header>
             <h2>불러오는 중…</h2>
           </Header>
@@ -192,7 +192,9 @@ export default function MyTripDetail() {
     return (
       <Wrapper>
         <TripDetail>
-          <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+          <BackRow>
+            <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+          </BackRow>
           <Header>
             <h2 style={{ color: colors.error }}>{error}</h2>
           </Header>
@@ -218,7 +220,9 @@ export default function MyTripDetail() {
     return (
       <Wrapper>
         <TripDetail>
-          <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+          <BackRow>
+            <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+          </BackRow>
           <Header>
             <h2>여행 정보를 찾을 수 없습니다.</h2>
           </Header>
@@ -243,7 +247,9 @@ export default function MyTripDetail() {
   return (
     <Wrapper>
       <TripDetail>
-        <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+        <BackRow>
+          <BackBtn url="/mypage?tab=trip" text="내 여행기록 목록" />
+        </BackRow>
 
         <Header>
           <TripTitle>{view?.title ?? "-"}</TripTitle>
@@ -408,6 +414,10 @@ export default function MyTripDetail() {
     </Wrapper>
   );
 }
+
+const BackRow = styled.div`
+  align-self: flex-start;
+`;
 
 const Wrapper = styled.div`
   background: ${colors.gray100};

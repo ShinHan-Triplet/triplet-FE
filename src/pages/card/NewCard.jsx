@@ -11,8 +11,6 @@ import Modal from "../../components/modal/Modal";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import React, { useMemo, useState, useRef, useEffect } from "react";
 import { api, ensureAccessToken } from "../../lib/api";
-// (권장) 공용 카드 데이터가 있으면 import 해서 fallback에 활용
-// import { CARD_DATA } from "../../data/cards"; // 공용 모듈로 빼뒀다면
 
 // 입장 애니메이션
 const popIn = keyframes`
@@ -89,7 +87,6 @@ const CardImg = styled.img`
 `;
 
 const CardPreview = React.memo(function CardPreview({ src, alt = "" }) {
-  // const [tilt, setTilt] = useState({ rx: 0, ry: 0 });
   const wrapRef = useRef(null);
   const rectRef = useRef(null);
   const rafRef = useRef(null);
@@ -520,16 +517,18 @@ export default function NewCard() {
                     autoComplete="off"
                   ></InputBox>
                   <Hyphen>-</Hyphen>
-                  <InputBox
-                    placeholder="000000"
-                    width={250}
-                    value={rrn2}
-                    onChange={handleRrn2}
-                    type="password"
-                    inputMode="numeric"
-                    maxLength={7}
-                    autoComplete="off"
-                  ></InputBox>
+                  <form onSubmit={handleApply}>
+                    <InputBox
+                      placeholder="000000"
+                      width={250}
+                      value={rrn2}
+                      onChange={handleRrn2}
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={7}
+                      autoComplete="off"
+                    ></InputBox>
+                  </form>
                 </Input>
               </Detail>
 
@@ -601,31 +600,51 @@ export default function NewCard() {
             <Contents>
               <Detail>
                 <DetailTitle>비밀번호</DetailTitle>
-                <InputBox
-                  placeholder="4자리 숫자를 입력해주세요"
-                  width={520}
-                  value={pw1}
-                  onChange={handlePw1}
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  autoComplete="new-password"
-                ></InputBox>
-              </Detail>
-              <CheckPwd>
-                <Detail>
-                  <DetailTitle>비밀번호 확인</DetailTitle>
+                <form onSubmit={handleApply}>
+                  <input
+                    type="text"
+                    name="username"
+                    autoComplete="username"
+                    style={{ display: "none" }}
+                    value="dummy-user"
+                    readOnly
+                  />
                   <InputBox
-                    placeholder="비밀번호를 다시 입력해주세요"
+                    placeholder="4자리 숫자를 입력해주세요"
                     width={520}
-                    value={pw2}
-                    onChange={handlePw2}
+                    value={pw1}
+                    onChange={handlePw1}
                     type="password"
                     inputMode="numeric"
                     maxLength={4}
                     autoComplete="new-password"
-                    aria-invalid={pwMismatch ? "true" : "false"}
                   ></InputBox>
+                </form>
+              </Detail>
+              <CheckPwd>
+                <Detail>
+                  <DetailTitle>비밀번호 확인</DetailTitle>
+                  <form onSubmit={handleApply}>
+                    <input
+                      type="text"
+                      name="username"
+                      autoComplete="username"
+                      style={{ display: "none" }}
+                      value="dummy-user"
+                      readOnly
+                    />
+                    <InputBox
+                      placeholder="비밀번호를 다시 입력해주세요"
+                      width={520}
+                      value={pw2}
+                      onChange={handlePw2}
+                      type="password"
+                      inputMode="numeric"
+                      maxLength={4}
+                      autoComplete="new-password"
+                      aria-invalid={pwMismatch ? "true" : "false"}
+                    ></InputBox>
+                  </form>
                 </Detail>
                 {pwMismatch && (
                   <ErrorText role="alert">

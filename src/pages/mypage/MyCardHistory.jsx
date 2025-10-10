@@ -207,7 +207,7 @@ export default function MyCardHistory() {
           items={viewItems}
           showBalance={false}
           showEdit
-          onClickItem={(it) => console.log("click", it)}
+          onClickItem={() => {}}
           onSave={handleSave}
         />
       </HistoryDetail>
@@ -238,6 +238,7 @@ const CardBase = styled.div`
 
 const HistoryDetail = styled(CardBase)`
   padding: 30px 70px;
+  min-height: 620px;
   display: flex;
   flex-direction: column;
   gap: 30px;

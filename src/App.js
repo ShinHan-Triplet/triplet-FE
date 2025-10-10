@@ -43,95 +43,9 @@ function AppLayout() {
       {!hideFooter && <Footer />}
     </div>
   );
-
-  // return (
-  //   <div className="App">
-  //     {!hideHeader && <Header />}
-  //     <Routes>
-  //       <Route path="/" element={<Main />} />
-  //       <Route path="/login" element={<Login />} />
-  //       <Route path="/auth/callback" element={<LoginCheck />} />
-  //       <Route
-  //         path="/mypage"
-  //         element={
-  //           <RequireAuth>
-  //             <Mypage />
-  //           </RequireAuth>
-  //         }
-  //       />
-  //       <Route path="/mypage/card/:id" element={<MyCardDetail />} />
-  //       <Route path="/mypage/card/:id/history" element={<MyCardHistory />} />
-  //       <Route path="/mypage/trip/:id" element={<MyTripDetail />} />
-  //       <Route path="/mypage/trip/:id/report" element={<MyTripReport />} />
-  //       <Route path="/mypage/trip/:id/edit" element={<MyTripEdit />} />
-  //       <Route path="/mypage/trip/:id/history" element={<MyTripHistory />} />
-  //       <Route path="/trip" element={<Trip />} />
-  //       <Route
-  //         path="/trip/new/details"
-  //         element={
-  //           <RequireAuth>
-  //             <NewTrip />
-  //           </RequireAuth>
-  //         }
-  //       />
-  //       <Route
-  //         path="/trip/new/cost"
-  //         element={
-  //           <RequireAuth>
-  //             <TripCost />
-  //           </RequireAuth>
-  //         }
-  //       />
-  //       <Route
-  //         path="/trip/new/companions"
-  //         element={
-  //           <RequireAuth>
-  //             <Gather />
-  //           </RequireAuth>
-  //         }
-  //       />
-  //       <Route
-  //         path="/trip/new/gather"
-  //         element={
-  //           <RequireAuth>
-  //             <NewGather />
-  //           </RequireAuth>
-  //         }
-  //       />
-  //       <Route
-  //         path="/trip/new/card"
-  //         element={
-  //           <RequireAuth>
-  //             <TripCard />
-  //           </RequireAuth>
-  //         }
-  //       />
-  //       <Route path="/card" element={<Card />} />
-  //       <Route
-  //         path="/card/:id/apply"
-  //         element={
-  //           <RequireAuth>
-  //             <NewCard />
-  //           </RequireAuth>
-  //         }
-  //       />
-  //       {/* <Route path="*" element={<Error />} /> */}
-  //     </Routes>
-  //     {!hideFooter && <Footer />}
-  //   </div>
-  // );
 }
 
 function App() {
-  // return (
-  //   <BrowserRouter>
-  //     <ScrollToTop />
-  //     <Routes>
-  //       <Route path="/*" element={<AppLayout />} />
-  //       <Route path="*" element={<Error />} />
-  //     </Routes>
-  //   </BrowserRouter>
-  // );
   return (
     <BrowserRouter>
       <ScrollToTop />
